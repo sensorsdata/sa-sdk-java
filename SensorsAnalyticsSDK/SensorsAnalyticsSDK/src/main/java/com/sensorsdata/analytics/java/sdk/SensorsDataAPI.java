@@ -156,7 +156,7 @@ public class SensorsDataAPI {
   }
 
   /**
-   * 用于记录用户登陆事件，将两个ID在数据分析系统中关联
+   * 这个接口是一个较为复杂的功能，请在使用前先阅读相关说明:http://www.sensorsdata.cn/manual/track_signup.html，并在必要时联系我们的技术支持人员。
    *
    * @param distinctId        新的用户ID
    * @param originDistinctId  旧的用户ID
@@ -168,7 +168,7 @@ public class SensorsDataAPI {
   }
 
   /**
-   * 用于记录用户登陆事件，将两个ID在数据分析系统中关联，并设置一个或多个事件属性。属性取值可接受类型为
+   * 这个接口是一个较为复杂的功能，请在使用前先阅读相关说明:http://www.sensorsdata.cn/manual/track_signup.html，并在必要时联系我们的技术支持人员。
    * {@link Number}, {@link String}, {@link Date}和{@linkList<?>}，若属性包含 $time 字段，则
    * 它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    *
