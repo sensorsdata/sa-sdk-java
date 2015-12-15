@@ -1,5 +1,9 @@
 package com.sensorsdata.analytics.java.sdk;
 
+import com.sensorsdata.analytics.java.sdk.exceptions.ConnectErrorException;
+import com.sensorsdata.analytics.java.sdk.exceptions.FlushErrorException;
+import com.sensorsdata.analytics.java.sdk.exceptions.InvalidArgumentException;
+import com.sensorsdata.analytics.java.sdk.exceptions.QueueLimitExceededException;
 import com.sensorsdata.analytics.java.sdk.util.Base64Coder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,7 +28,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -47,9 +50,11 @@ public class SensorsDataAPI {
   private final static int EXECUTE_THREAD_SUBMMIT_TTL = 3 * 1000;
   private final static int EXECUTE_QUEUE_SIZE = 32768;
 
-  private final static Pattern KEY_PATTERN = Pattern.compile("^[a-zA-Z_$][a-zA-Z\\d_$]*$");
-  public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss"
+  private final static Pattern KEY_PATTERN = Pattern.compile("^((?!^distinct_id$|^original_id$|^time$|^event$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$");
+  private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss"
       + ".SSS");
+
+  private static SensorsDataAPI instance = null;
 
   private final String eventsEndPoint;
   private final int flushInterval;
@@ -59,21 +64,69 @@ public class SensorsDataAPI {
 
   private final ThreadPoolExecutor executor;
   private final ThreadPoolExecutor timerExecutor;
-  private long lastFlushTime;
-  private Map<String, Object> superProperties;
-  private List<Map<String, Object>> taskObjectList;
+
+  private final Map<String, Object> superProperties;
+
+  private final List<Map<String, Object>> taskObjectList;
 
   private ObjectMapper jsonObjectMapper;
 
+  private long lastFlushTime;
+
   /**
-   * 构造函数
+   * 返回已经初始化的SensorsDataAPI单例
    *
-   * @param serverUrl     接收日志的服务器地址
-   * @param flushInterval 日志发送的最大时间间隔，单位毫秒
+   * 调用之前必须先调用 {@link #sharedInstanceWithServerURL(String)} 或 {@link #sharedInstanceWithConfigure(String,
+   * int, int, boolean)} 初始化单例
+   *
+   * @return SensorsDataAPI单例
+   */
+  public static SensorsDataAPI sharedInstance() {
+    if (instance == null) {
+      log.error("SensorsDataAPI must be initialized before calling sharedInstance.");
+    }
+    return instance;
+  }
+
+  /**
+   * 根据传入的所部署的SensorsAnalytics服务器的URL，返回一个SensorsDataAPI的单例。默认刷新周期为60秒或缓存1000条数据，默认关闭Debug
+   * 模式。更多说明请参考 {@link #sharedInstanceWithConfigure(String, int, int, boolean)}
+   *
+   * @param serverUrl 接收日志的SensorsAnalytics服务器URL
+   * @return SensorsDataAPI单例
+   */
+  public static SensorsDataAPI sharedInstanceWithServerURL(String serverUrl) {
+    return sharedInstanceWithConfigure(serverUrl, 60 * 1000, 1000, false);
+  }
+
+  /**
+   * 根据传入的配置，返回一个SensorsAnalyticsSDK的单例。
+   * <p>
+   * flushInterval是指两次发送的时间间隔，bulkSize是指本地日志缓存队列长度的发送阈值。在每次调用{@link #track(String, String)
+   * }、{@link #trackSignUp(String, String)}、{@link #profileSet(String, java.util.Map)} 等方法时，都会检查如下条件，以判断是否向服务器上传数据:
+   * 1. 当前是否是WIFI/3G/4G网络条件
+   * 2. 与上次发送的时间间隔是否大于 flushInterval 或 缓存队列长度是否大于 bulkSize
+   * 如果满足这两个条件，则向服务器发送一次数据；如果不满足，则把数据加入到队列中，等待下次发送。需要注意的是，为了避免占用过多内存，当频繁记录日志时，队列最多只缓存32768条数据。
+   *
+   * @param serverUrl     接收日志的SensorsAnalytics服务器URL
+   * @param flushInterval 日志发送的时间间隔，单位毫秒
    * @param bulkSize      日志缓存的最大值，超过此值将立即进行发送
    * @param debugMode     Debug模式，该模式下会输出调试日志
    */
-  public SensorsDataAPI(
+  public static SensorsDataAPI sharedInstanceWithConfigure(
+      String serverUrl,
+      int flushInterval,
+      int bulkSize,
+      boolean debugMode) {
+    if (instance == null) {
+      instance = new SensorsDataAPI(serverUrl, flushInterval, bulkSize, debugMode);
+    } else {
+      log.warn("SensorsDataAPI has been initialized. Ignore the configures.");
+    }
+    return instance;
+  }
+
+  SensorsDataAPI(
       String serverUrl,
       int flushInterval,
       int bulkSize,
@@ -84,6 +137,7 @@ public class SensorsDataAPI {
     this.sendingGZipContent = true;
     this.debugMode = debugMode;
 
+    this.superProperties = new HashMap<String, Object>();
     clearSuperProperties();
 
     this.taskObjectList = new ArrayList<Map<String, Object>>();
@@ -123,7 +177,7 @@ public class SensorsDataAPI {
    * 清除长期属性
    */
   public void clearSuperProperties() {
-    this.superProperties = new HashMap<String, Object>();
+    this.superProperties.clear();
     this.superProperties.put("$lib", "java");
   }
 
@@ -133,7 +187,8 @@ public class SensorsDataAPI {
    * @param distinctId  用户ID
    * @param eventName   事件名称
    */
-  public void track(String distinctId, String eventName) throws SensorsDataException {
+  public void track(String distinctId, String eventName)
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     checkKey(eventName);
     addEvent(distinctId, null, eventName, null);
@@ -148,7 +203,7 @@ public class SensorsDataAPI {
    * @param properties    事件的属性
    */
   public void track(String distinctId, String eventName, Map<String, Object> properties)
-      throws SensorsDataException {
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     checkKey(eventName);
     checkTypeInProperties(properties);
@@ -158,10 +213,11 @@ public class SensorsDataAPI {
   /**
    * 这个接口是一个较为复杂的功能，请在使用前先阅读相关说明:http://www.sensorsdata.cn/manual/track_signup.html，并在必要时联系我们的技术支持人员。
    *
-   * @param distinctId        新的用户ID
-   * @param originDistinctId  旧的用户ID
+   * @param distinctId       新的用户ID
+   * @param originDistinctId 旧的用户ID
    */
-  public void trackSignUp(String distinctId, String originDistinctId) throws SensorsDataException {
+  public void trackSignUp(String distinctId, String originDistinctId)
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     checkDistinctId(originDistinctId);
     addEvent(distinctId, originDistinctId, "$SignUp", null);
@@ -177,7 +233,7 @@ public class SensorsDataAPI {
    * @param properties       事件的属性
    */
   public void trackSignUp(String distinctId, String originDistinctId,
-      Map<String, Object> properties) throws SensorsDataException {
+      Map<String, Object> properties) throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     checkDistinctId(originDistinctId);
     checkTypeInProperties(properties);
@@ -193,7 +249,7 @@ public class SensorsDataAPI {
    * @param properties    用户的属性
    */
   public void profileSet(String distinctId, Map<String, Object> properties)
-      throws SensorsDataException {
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     checkTypeInProperties(properties);
     addProfile(distinctId, "profile_set", properties);
@@ -207,7 +263,7 @@ public class SensorsDataAPI {
    * @param value         属性的值
    */
   public void profileSet(String distinctId, String property, Object value)
-      throws SensorsDataException {
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
@@ -227,7 +283,7 @@ public class SensorsDataAPI {
    * @param properties    用户的属性
    */
   public void profileSetOnce(String distinctId, Map<String, Object> properties)
-      throws SensorsDataException {
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     checkTypeInProperties(properties);
     addProfile(distinctId, "profile_set_once", properties);
@@ -242,7 +298,7 @@ public class SensorsDataAPI {
    * @param value         属性的值
    */
   public void profileSetOnce(String distinctId, String property, Object value)
-      throws SensorsDataException {
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
@@ -258,12 +314,13 @@ public class SensorsDataAPI {
    * @param properties    用户的属性
    */
   public void profileIncrement(String distinctId, Map<String, Object> properties)
-      throws SensorsDataException {
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     for (Map.Entry<String, Object> prop : properties.entrySet()) {
       checkKey(prop.getKey());
       if (!(prop.getValue() instanceof Number)) {
-        throw new SensorsDataException("The value type in properties should be a numerical type.");
+        throw new InvalidArgumentException(
+            "The value type in properties should be a numerical type.");
       }
     }
     addProfile(distinctId, "profile_increment", properties);
@@ -277,7 +334,7 @@ public class SensorsDataAPI {
    * @param value         属性的值
    */
   public void profileIncrement(String distinctId, String property, long value)
-      throws SensorsDataException {
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     checkKey(property);
     Map<String, Object> properties = new HashMap<String, Object>();
@@ -291,7 +348,8 @@ public class SensorsDataAPI {
    * @param distinctId    用户ID
    * @param property      属性名称
    */
-  public void profileUnset(String distinctId, String property) throws SensorsDataException {
+  public void profileUnset(String distinctId, String property)
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, true);
@@ -304,7 +362,8 @@ public class SensorsDataAPI {
    *
    * @param distinctId    用户ID
    */
-  public void delete(String distinctId) throws SensorsDataException {
+  public void delete(String distinctId)
+      throws InvalidArgumentException, QueueLimitExceededException {
     checkDistinctId(distinctId);
     addProfile(distinctId, "profile_unset", null);
   }
@@ -312,14 +371,14 @@ public class SensorsDataAPI {
   /**
    * 立即发送缓存中的所有日志
    */
-  public void flush() throws SensorsDataException {
+  public void flush() throws ConnectErrorException, FlushErrorException {
     _flush(0);
   }
 
   /**
    * 停止SensorsDataAPI所有线程，API停止前会清空所有本地数据
    */
-  public void shutdown() throws SensorsDataException {
+  public void shutdown() throws ConnectErrorException, FlushErrorException {
     _flush(0);
 
     timerExecutor.shutdown();
@@ -340,7 +399,7 @@ public class SensorsDataAPI {
   }
 
   private void addEvent(String distinctId, String originDistinceId, String eventName,
-      Map<String, Object> properties) throws SensorsDataException {
+      Map<String, Object> properties) throws QueueLimitExceededException {
     Map<String, Object> dataObj = new HashMap<String, Object>();
 
     if (eventName.equals("$SignUp")) {
@@ -359,17 +418,12 @@ public class SensorsDataAPI {
 
     Map<String, Object> propertiesObj = new HashMap<String, Object>();
 
-    for (Iterator<Map.Entry<String, Object>> iter = superProperties.entrySet().iterator(); iter
-        .hasNext(); ) {
-      Map.Entry<String, Object> item = iter.next();
+    for (Map.Entry<String, Object> item : superProperties.entrySet()) {
       propertiesObj.put(item.getKey(), item.getValue());
     }
 
     if (properties != null) {
-      for (Iterator<Map.Entry<String, Object>> iter = properties.entrySet().iterator(); iter
-          .hasNext(); ) {
-        Map.Entry<String, Object> item = iter.next();
-
+      for (Map.Entry<String, Object> item : properties.entrySet()) {
         if (item.getKey().equals("$time")) {
           dataObj.put("time", ((Date) item.getValue()).getTime());
           continue;
@@ -384,7 +438,7 @@ public class SensorsDataAPI {
   }
 
   private void addProfile(String distinctId, String actionType, Map<String, Object> properties)
-      throws SensorsDataException {
+      throws QueueLimitExceededException {
     Map<String, Object> dataObj = new HashMap<String, Object>();
     dataObj.put("type", actionType);
     dataObj.put("distinct_id", distinctId);
@@ -394,10 +448,7 @@ public class SensorsDataAPI {
     Map<String, Object> propertiesObj = new HashMap<String, Object>();
 
     if (properties != null) {
-      for (Iterator<Map.Entry<String, Object>> iter = properties.entrySet().iterator(); iter
-          .hasNext(); ) {
-        Map.Entry<String, Object> item = iter.next();
-
+      for (Map.Entry<String, Object> item : properties.entrySet()) {
         if (item.getKey().equals("$time")) {
           dataObj.put("time", ((Date) item.getValue()).getTime());
           continue;
@@ -411,11 +462,11 @@ public class SensorsDataAPI {
     addToTaskObjectList(dataObj);
   }
 
-  private void addToTaskObjectList(Map<String, Object> taskObject) throws SensorsDataException {
+  private void addToTaskObjectList(Map<String, Object> taskObject) throws QueueLimitExceededException {
     synchronized (this.taskObjectList) {
       this.taskObjectList.add(taskObject);
       if (this.taskObjectList.size() > EXECUTE_QUEUE_SIZE) {
-        throw new SensorsDataException("The maximum length of sending queue is " +
+        throw new QueueLimitExceededException("The maximum length of sending queue is " +
             EXECUTE_QUEUE_SIZE);
       }
       if (this.taskObjectList.size() > bulkUploadLimit) {
@@ -428,7 +479,7 @@ public class SensorsDataAPI {
     }
   }
 
-  private void _flush(int uploadLimit) throws SensorsDataException {
+  private void _flush(int uploadLimit) throws FlushErrorException, ConnectErrorException {
     List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
     synchronized (this.taskObjectList) {
       if (this.taskObjectList.isEmpty() || (this.taskObjectList.size() < uploadLimit &&
@@ -465,15 +516,14 @@ public class SensorsDataAPI {
 
       HttpResponse response = httpClient.execute(httpPost);
       if (response.getStatusLine().getStatusCode() != 200) {
-        throw new SensorsDataException(String.format("Response error. [status=%d error='%s']",
-            response.getStatusLine().getStatusCode(),
-            response.getStatusLine().getReasonPhrase()));
+        throw new FlushErrorException(String.format("Response error. [status=%d error='%s']",
+            response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase()));
       }
       EntityUtils.consume(response.getEntity());
     } catch (ClientProtocolException e) {
-      throw new SensorsDataException(e);
+      throw new ConnectErrorException(e);
     } catch (IOException e) {
-      throw new SensorsDataException(e);
+      throw new ConnectErrorException(e);
     }
 
     this.lastFlushTime = System.currentTimeMillis();
@@ -505,36 +555,37 @@ public class SensorsDataAPI {
     return null;
   }
 
-  private void checkDistinctId(String key) throws SensorsDataException {
+  private void checkDistinctId(String key) throws InvalidArgumentException {
     if (key == null || key.length() < 1) {
-      throw new SensorsDataException("The distinct_id is empty.");
+      throw new InvalidArgumentException("The distinct_id is empty.");
     }
   }
 
-  private void checkKey(String key) throws SensorsDataException {
+  private void checkKey(String key) throws InvalidArgumentException {
     if (key == null || key.length() < 1) {
-      throw new SensorsDataException("The key is empty.");
+      throw new InvalidArgumentException("The key is empty.");
     }
 
     if (!(KEY_PATTERN.matcher(key).matches())) {
-      throw new SensorsDataException("The key '" + key + "' is invalid.");
+      throw new InvalidArgumentException("The key '" + key + "' is invalid.");
     }
   }
 
-  private void checkValue(String key, Object value) throws SensorsDataException {
-    if (!(value instanceof Number)&& !(value instanceof Date)
-        && !(value instanceof String) && !(value instanceof List<?>)) {
-      throw new SensorsDataException("The value type in properties should be a basic type: "
+  private void checkValue(String key, Object value) throws InvalidArgumentException {
+    if (!(value instanceof Number) && !(value instanceof Date) && !(value instanceof String)
+        && !(value instanceof List<?>)) {
+      throw new InvalidArgumentException("The value type in properties should be a basic type: "
           + "Number, String, Date, List<?>.");
     }
 
     if (key.equals("$time") && !(value instanceof Date)) {
-      throw new SensorsDataException("The value type of '$time' in properties should be a "
-          + "java.util.Date type.");
+      throw new InvalidArgumentException(
+          "The value type of '$time' in properties should be a " + "java.util.Date type.");
     }
   }
 
-  private void checkTypeInProperties(Map<String, Object> properties) throws SensorsDataException {
+  private void checkTypeInProperties(Map<String, Object> properties)
+      throws InvalidArgumentException {
     for (Map.Entry<String, Object> prop : properties.entrySet()) {
       checkKey(prop.getKey());
       checkValue(prop.getKey(), prop.getValue());
@@ -559,8 +610,10 @@ public class SensorsDataAPI {
     public void run() {
       try {
         _flush(this.uploadLimit);
-      } catch (SensorsDataException e) {
-        log.warn(e.getMessage(), e);
+      } catch (FlushErrorException e) {
+        log.error(e.getMessage(), e);
+      } catch (ConnectErrorException e) {
+        log.error(e.getMessage(), e);
       }
     }
 
