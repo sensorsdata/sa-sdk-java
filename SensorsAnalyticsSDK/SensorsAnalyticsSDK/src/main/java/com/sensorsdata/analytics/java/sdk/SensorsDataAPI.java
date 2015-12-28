@@ -50,9 +50,11 @@ public class SensorsDataAPI {
   private final static int EXECUTE_THREAD_SUBMMIT_TTL = 3 * 1000;
   private final static int EXECUTE_QUEUE_SIZE = 32768;
 
-  private final static Pattern KEY_PATTERN = Pattern.compile("^((?!^distinct_id$|^original_id$|^time$|^event$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$");
-  private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss"
-      + ".SSS");
+  private final static Pattern KEY_PATTERN = Pattern.compile(
+      "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
+      Pattern.CASE_INSENSITIVE);
+  private final static SimpleDateFormat DATE_FORMAT =
+      new SimpleDateFormat("yyyy-mm-dd hh:mm:ss.SSS");
 
   private static SensorsDataAPI instance = null;
 
@@ -557,7 +559,10 @@ public class SensorsDataAPI {
 
   private void checkDistinctId(String key) throws InvalidArgumentException {
     if (key == null || key.length() < 1) {
-      throw new InvalidArgumentException("The distinct_id is empty.");
+      throw new InvalidArgumentException("The distinct_id or original_id is empty.");
+    }
+    if (key.length() > 255) {
+      throw new InvalidArgumentException("The max_length of distinct_id or original_id is 255.");
     }
   }
 
@@ -565,7 +570,6 @@ public class SensorsDataAPI {
     if (key == null || key.length() < 1) {
       throw new InvalidArgumentException("The key is empty.");
     }
-
     if (!(KEY_PATTERN.matcher(key).matches())) {
       throw new InvalidArgumentException("The key '" + key + "' is invalid.");
     }
