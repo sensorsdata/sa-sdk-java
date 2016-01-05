@@ -576,10 +576,10 @@ public class SensorsDataAPI {
   }
 
   private void checkValue(String key, Object value) throws InvalidArgumentException {
-    if (!(value instanceof Number) && !(value instanceof Date) && !(value instanceof String)
-        && !(value instanceof List<?>)) {
+    if (!(value instanceof Number) && !(value instanceof Date) && !(value instanceof String) &&
+        !(value instanceof Boolean) && !(value instanceof List<?>)) {
       throw new InvalidArgumentException("The value type in properties should be a basic type: "
-          + "Number, String, Date, List<?>.");
+          + "Number, String, Date, Boolean, List<?>.");
     }
 
     if (key.equals("$time") && !(value instanceof Date)) {
