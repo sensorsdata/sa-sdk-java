@@ -11,10 +11,10 @@ public class HelloSensorsAnalytics {
 
   public static void main(String[] args) throws Exception {
     SensorsDataAPI.sharedInstanceWithConfigure(
-        "http://aws03:8006/sa",     // 日志服务器地址
+        "http://sa_host:8006/sa",   // 日志服务器地址
         5000,                       // 日志发送时间间隔，单位毫秒
         100,                        // 最大缓存条目数，达到后立刻发送
-        true                        // 是否Debug模式，该模式下会输出调试日志
+        false                       // 是否打开Debug模式
     );
 
     /*

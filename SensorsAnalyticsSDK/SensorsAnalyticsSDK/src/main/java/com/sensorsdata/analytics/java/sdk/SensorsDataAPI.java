@@ -1,15 +1,18 @@
 package com.sensorsdata.analytics.java.sdk;
 
 import com.sensorsdata.analytics.java.sdk.exceptions.ConnectErrorException;
+import com.sensorsdata.analytics.java.sdk.exceptions.DebugModeException;
 import com.sensorsdata.analytics.java.sdk.exceptions.FlushErrorException;
 import com.sensorsdata.analytics.java.sdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.java.sdk.exceptions.QueueLimitExceededException;
 import com.sensorsdata.analytics.java.sdk.util.Base64Coder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -49,6 +52,7 @@ public class SensorsDataAPI {
   private final static int EXECUTE_THREAD_NUMBER = 1;
   private final static int EXECUTE_THREAD_SUBMMIT_TTL = 3 * 1000;
   private final static int EXECUTE_QUEUE_SIZE = 32768;
+  private final static String SDK_VERSION = "1.3.0";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -121,6 +125,12 @@ public class SensorsDataAPI {
       int bulkSize,
       boolean debugMode) {
     if (instance == null) {
+      if (debugMode && !serverUrl.endsWith("debug")) {
+        String error = String.format("The server url of SensorsAnalytics must ends with 'debug' "
+            + "while DEBUG mode is "
+            + "defined. [url='%s' expected_url='http://example.com/debug']", serverUrl);
+        throw new DebugModeException(error);
+      }
       instance = new SensorsDataAPI(serverUrl, flushInterval, bulkSize, debugMode);
     } else {
       log.warn("SensorsDataAPI has been initialized. Ignore the configures.");
@@ -181,6 +191,7 @@ public class SensorsDataAPI {
   public void clearSuperProperties() {
     this.superProperties.clear();
     this.superProperties.put("$lib", "java");
+    this.superProperties.put("$lib_version", SDK_VERSION);
   }
 
   /**
@@ -464,18 +475,34 @@ public class SensorsDataAPI {
     addToTaskObjectList(dataObj);
   }
 
-  private void addToTaskObjectList(Map<String, Object> taskObject) throws QueueLimitExceededException {
+  private void addToTaskObjectList(Map<String, Object> taskObject) throws
+      QueueLimitExceededException {
     synchronized (this.taskObjectList) {
       this.taskObjectList.add(taskObject);
       if (this.taskObjectList.size() > EXECUTE_QUEUE_SIZE) {
         throw new QueueLimitExceededException("The maximum length of sending queue is " +
             EXECUTE_QUEUE_SIZE);
       }
-      if (this.taskObjectList.size() > bulkUploadLimit) {
+
+      if (this.debugMode) {
         try {
-          executor.submit(new SubmitTask(bulkUploadLimit));
-        } catch (RejectedExecutionException e) {
-          // do nothing
+          _flush(1);
+        } catch (FlushErrorException e) {
+          String error = String.format(
+              "Unexpected response from SensorsAnalytics server. [error='%s']", e.getMessage());
+          throw new DebugModeException(error);
+        } catch (ConnectErrorException e) {
+          String error = String.format(
+              "Failed to connect the SensorsAnalytics server. [error='%s']", e.getMessage());
+          throw new DebugModeException(error);
+        }
+      } else {
+        if (this.taskObjectList.size() > bulkUploadLimit) {
+          try {
+            executor.submit(new SubmitTask(bulkUploadLimit));
+          } catch (RejectedExecutionException e) {
+            // do nothing
+          }
         }
       }
     }
@@ -484,8 +511,9 @@ public class SensorsDataAPI {
   private void _flush(int uploadLimit) throws FlushErrorException, ConnectErrorException {
     List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
     synchronized (this.taskObjectList) {
-      if (this.taskObjectList.isEmpty() || (this.taskObjectList.size() < uploadLimit &&
-          uploadLimit > 0)) {
+      this.lastFlushTime = System.currentTimeMillis();
+
+      if (this.taskObjectList.isEmpty() || this.taskObjectList.size() < uploadLimit) {
         return;
       }
       for (Map<String, Object> task : this.taskObjectList) {
@@ -494,15 +522,10 @@ public class SensorsDataAPI {
       this.taskObjectList.clear();
     }
 
-    char[] dataEncoded = encodeTasks(data);
-    if (dataEncoded == null) {
-      return;
-    }
-
-    CloseableHttpClient httpClient = HttpClients.createDefault();
-    HttpPost httpPost = new HttpPost(eventsEndPoint);
-
     try {
+      CloseableHttpClient httpClient = HttpClients.createDefault();
+      HttpPost httpPost = new HttpPost(eventsEndPoint);
+
       List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
 
       if (sendingGZipContent) {
@@ -511,17 +534,34 @@ public class SensorsDataAPI {
         nameValuePairs.add(new BasicNameValuePair("gzip", "0"));
       }
 
-      nameValuePairs.add(new BasicNameValuePair("data_list", new String(dataEncoded)));
+      String dataJson = this.jsonObjectMapper.writeValueAsString(data);
+      nameValuePairs.add(new BasicNameValuePair("data_list", new String(encodeTasks(dataJson))));
 
       httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
       httpPost.addHeader("User-Agent", "SensorsAnalytics Java SDK");
 
       HttpResponse response = httpClient.execute(httpPost);
-      if (response.getStatusLine().getStatusCode() != 200) {
+      int response_code = response.getStatusLine().getStatusCode();
+      String response_body = EntityUtils.toString(response.getEntity(), "UTF-8");
+
+      if (this.debugMode) {
+        if (response_code == 200) {
+          log.debug(String.format("valid message: [%s]", dataJson));
+        } else {
+          log.debug(String.format("invalid message: [%s]", dataJson));
+          log.debug(String.format("ret_code: %d", response_code));
+          log.debug(String.format("ret_content: %s", response_body));
+        }
+      }
+
+      if (response_code != 200) {
         throw new FlushErrorException(String.format("Response error. [status=%d error='%s']",
             response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase()));
       }
-      EntityUtils.consume(response.getEntity());
+    } catch (JsonGenerationException e) {
+      throw new FlushErrorException(e);
+    } catch (JsonMappingException e) {
+      throw new FlushErrorException(e);
     } catch (ClientProtocolException e) {
       throw new ConnectErrorException(e);
     } catch (IOException e) {
@@ -531,30 +571,18 @@ public class SensorsDataAPI {
     this.lastFlushTime = System.currentTimeMillis();
   }
 
-  private char[] encodeTasks(List<Map<String, Object>> data) {
-    try {
-      byte[] dataJson = this.jsonObjectMapper.writeValueAsBytes(data);
-      if (this.debugMode) {
-        log.debug("Sent new log: " + this.jsonObjectMapper.writeValueAsString(data));
-      }
-      if (sendingGZipContent) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream(dataJson.length);
-        GZIPOutputStream gos = new GZIPOutputStream(os);
-        gos.write(dataJson);
-        gos.close();
-        byte[] compressed = os.toByteArray();
-        os.close();
-        return Base64Coder.encode(compressed);
-      } else {
-        return Base64Coder.encode(dataJson);
-      }
-
-    } catch (JsonProcessingException e) {
-      log.error(e.getMessage(), e);
-    } catch (IOException e) {
-      log.error(e.getMessage(), e);
+  private char[] encodeTasks(String data) throws IOException {
+    if (sendingGZipContent) {
+      ByteArrayOutputStream os = new ByteArrayOutputStream(data.getBytes().length);
+      GZIPOutputStream gos = new GZIPOutputStream(os);
+      gos.write(data.getBytes());
+      gos.close();
+      byte[] compressed = os.toByteArray();
+      os.close();
+      return Base64Coder.encode(compressed);
+    } else {
+      return Base64Coder.encode(data.getBytes());
     }
-    return null;
   }
 
   private void checkDistinctId(String key) throws InvalidArgumentException {
@@ -641,7 +669,7 @@ public class SensorsDataAPI {
       }
 
       try {
-        executor.submit(new SubmitTask(0));
+        executor.submit(new SubmitTask(1));
       } catch (RejectedExecutionException e) {
         // do nothing
       }
