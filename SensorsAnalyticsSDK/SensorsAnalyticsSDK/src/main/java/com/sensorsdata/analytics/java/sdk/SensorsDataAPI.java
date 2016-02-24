@@ -4,7 +4,6 @@ import com.sensorsdata.analytics.java.sdk.exceptions.ConnectErrorException;
 import com.sensorsdata.analytics.java.sdk.exceptions.DebugModeException;
 import com.sensorsdata.analytics.java.sdk.exceptions.FlushErrorException;
 import com.sensorsdata.analytics.java.sdk.exceptions.InvalidArgumentException;
-import com.sensorsdata.analytics.java.sdk.exceptions.QueueLimitExceededException;
 import com.sensorsdata.analytics.java.sdk.util.Base64Coder;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -12,7 +11,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -33,7 +31,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
@@ -44,14 +44,12 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * SensorsData Analytics API
- * 提供各种日志记录、用户属性记录的功能
  */
 public class SensorsDataAPI {
 
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
-  private final static int EXECUTE_THREAD_NUMBER = 1;
-  private final static int EXECUTE_THREAD_SUBMMIT_TTL = 3 * 1000;
-  private final static int EXECUTE_QUEUE_SIZE = 32768;
+
+  private final static int EXECUTE_THREAD_NUMBER = 10;
   private final static String SDK_VERSION = "1.3.0";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
@@ -66,10 +64,9 @@ public class SensorsDataAPI {
   private final int flushInterval;
   private final int bulkUploadLimit;
   private final boolean sendingGZipContent;
-  private final boolean debugMode;
+  private final DebugMode debugMode;
 
   private final ThreadPoolExecutor executor;
-  private final ThreadPoolExecutor timerExecutor;
 
   private final Map<String, Object> superProperties;
 
@@ -77,13 +74,48 @@ public class SensorsDataAPI {
 
   private ObjectMapper jsonObjectMapper;
 
-  private long lastFlushTime;
+
+  /**
+   * Debug模式，用于检验数据导入是否正确。该模式下，事件会逐条实时发送到SensorsAnalytics，并根据返回值检查
+   * 数据导入是否正确。
+   * <p>
+   * Debug模式的具体使用方式，请参考:
+   * http://www.sensorsdata.cn/manual/debug_mode.html
+   * <p>
+   * Debug模式有三种：
+   * NONE - 关闭DEBUG模式
+   * DEBUG_ONLY - 打开DEBUG模式，但该模式下发送的数据仅用于调试，不进行数据导入
+   * DEBUG_AND_TRACK - 打开DEBUG模式，并将数据导入到SensorsAnalytics中
+   */
+  public enum DebugMode {
+    DEBUG_OFF(false, false),
+    DEBUG_ONLY(true, false),
+    DEBUG_AND_TRACK(true, true);
+
+    private final boolean mDebugMode;
+    private final boolean mDebugWriteData;
+
+    DebugMode(boolean debugMode, boolean debugWriteData) {
+      mDebugMode = debugMode;
+      mDebugWriteData = debugWriteData;
+    }
+
+    boolean isDebugMode() {
+      return mDebugMode;
+    }
+
+    boolean isDebugWriteData() {
+      return mDebugWriteData;
+    }
+  }
 
   /**
    * 返回已经初始化的SensorsDataAPI单例
-   *
-   * 调用之前必须先调用 {@link #sharedInstanceWithServerURL(String)} 或 {@link #sharedInstanceWithConfigure(String,
-   * int, int, boolean)} 初始化单例
+   * <p>
+   * 调用之前必须先调用 {@link #sharedInstanceWithServerURL(String)} 或
+   * {@link #sharedInstanceWithConfigure(String, int, int,
+   * com.sensorsdata.analytics.java.sdk.SensorsDataAPI.DebugMode)}
+   * 进行初始化
    *
    * @return SensorsDataAPI单例
    */
@@ -95,40 +127,49 @@ public class SensorsDataAPI {
   }
 
   /**
-   * 根据传入的所部署的SensorsAnalytics服务器的URL，返回一个SensorsDataAPI的单例。默认刷新周期为60秒或缓存1000条数据，默认关闭Debug
-   * 模式。更多说明请参考 {@link #sharedInstanceWithConfigure(String, int, int, boolean)}
+   * 根据传入的所部署的SensorsAnalytics服务器的URL，返回一个SensorsDataAPI的单例。默认刷新周期为1秒或缓
+   * 存1000条数据，默认关闭Debug模式。更多说明请参考
+   * {@link #sharedInstanceWithConfigure(String, int, int,
+   * com.sensorsdata.analytics.java.sdk.SensorsDataAPI.DebugMode)}
    *
    * @param serverUrl 接收日志的SensorsAnalytics服务器URL
+   *
    * @return SensorsDataAPI单例
    */
-  public static SensorsDataAPI sharedInstanceWithServerURL(String serverUrl) {
-    return sharedInstanceWithConfigure(serverUrl, 60 * 1000, 1000, false);
+  public static SensorsDataAPI sharedInstanceWithServerURL(final String serverUrl) {
+    return sharedInstanceWithConfigure(serverUrl, 1 * 1000, 1000, DebugMode.DEBUG_OFF);
   }
 
   /**
    * 根据传入的配置，返回一个SensorsAnalyticsSDK的单例。
    * <p>
-   * flushInterval是指两次发送的时间间隔，bulkSize是指本地日志缓存队列长度的发送阈值。在每次调用{@link #track(String, String)
-   * }、{@link #trackSignUp(String, String)}、{@link #profileSet(String, java.util.Map)} 等方法时，都会检查如下条件，以判断是否向服务器上传数据:
+   * flushInterval是指两次发送的时间间隔，bulkSize是发送缓存日志条目数的阈值。
+   * <p>
+   * 在每次调用{@link #track(String, String)}、{@link #trackSignUp(String, String)}、
+   * {@link #profileSet(String, java.util.Map)} 等方法时，都会检查如下条件，以判断是否向服务器上传数据:
+   * <p>
    * 1. 当前是否是WIFI/3G/4G网络条件
    * 2. 与上次发送的时间间隔是否大于 flushInterval 或 缓存队列长度是否大于 bulkSize
-   * 如果满足这两个条件，则向服务器发送一次数据；如果不满足，则把数据加入到队列中，等待下次发送。需要注意的是，为了避免占用过多内存，当频繁记录日志时，队列最多只缓存32768条数据。
+   * <p>
+   * 如果满足这两个条件之一，则向服务器发送一次数据；如果不满足，则把数据加入到队列中，等待下次发送。
+   * <p>
+   * 需要注意的是，当频繁记录事件时，需要小心缓存队列占用过多内存。此时可以通过 {@link #flush()} 强制触发
+   * 日志发送
    *
    * @param serverUrl     接收日志的SensorsAnalytics服务器URL
    * @param flushInterval 日志发送的时间间隔，单位毫秒
    * @param bulkSize      日志缓存的最大值，超过此值将立即进行发送
    * @param debugMode     Debug模式，该模式下会输出调试日志
+   *
+   * @return SensorsDataAPI实例
    */
-  public static SensorsDataAPI sharedInstanceWithConfigure(
-      String serverUrl,
-      int flushInterval,
-      int bulkSize,
-      boolean debugMode) {
+  public static SensorsDataAPI sharedInstanceWithConfigure(final String serverUrl,
+      final int flushInterval, final int bulkSize, final DebugMode debugMode) {
     if (instance == null) {
-      if (debugMode && !serverUrl.endsWith("debug")) {
-        String error = String.format("The server url of SensorsAnalytics must ends with 'debug' "
-            + "while DEBUG mode is "
-            + "defined. [url='%s' expected_url='http://example.com/debug']", serverUrl);
+      if (debugMode.isDebugMode() && !serverUrl.endsWith("debug")) {
+        String error = String.format(
+            "The server url of SensorsAnalytics must ends with 'debug' " + "while DEBUG mode is "
+                + "defined. [url='%s' expected_url='http://example.com/debug']", serverUrl);
         throw new DebugModeException(error);
       }
       instance = new SensorsDataAPI(serverUrl, flushInterval, bulkSize, debugMode);
@@ -138,11 +179,8 @@ public class SensorsDataAPI {
     return instance;
   }
 
-  SensorsDataAPI(
-      String serverUrl,
-      int flushInterval,
-      int bulkSize,
-      boolean debugMode) {
+  SensorsDataAPI(final String serverUrl, final int flushInterval, final int bulkSize,
+      final DebugMode debugMode) {
     this.eventsEndPoint = serverUrl;
     this.flushInterval = flushInterval;
     this.bulkUploadLimit = bulkSize;
@@ -154,16 +192,15 @@ public class SensorsDataAPI {
 
     this.taskObjectList = new ArrayList<Map<String, Object>>();
 
-    this.lastFlushTime = System.currentTimeMillis();
-
-    this.executor = new ThreadPoolExecutor(EXECUTE_THREAD_NUMBER, EXECUTE_THREAD_NUMBER,
-        EXECUTE_THREAD_SUBMMIT_TTL, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>
-        (1), new LowPriorityThreadFactory());
-
-    this.timerExecutor = new ThreadPoolExecutor(EXECUTE_THREAD_NUMBER, EXECUTE_THREAD_NUMBER,
-        EXECUTE_THREAD_SUBMMIT_TTL, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
-        new LowPriorityThreadFactory());
-    this.timerExecutor.execute(new FlushTask());
+    this.executor = new ThreadPoolExecutor(EXECUTE_THREAD_NUMBER, EXECUTE_THREAD_NUMBER, 0L,
+        TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+      public Thread newThread(Runnable r) {
+        Thread t = new Thread(r);
+        t.setPriority(Thread.MIN_PRIORITY);
+        return t;
+      }
+    });
+    this.executor.execute(new FlushTask());
 
     this.jsonObjectMapper = new ObjectMapper();
     // 容忍json中出现未知的列
@@ -175,9 +212,15 @@ public class SensorsDataAPI {
   }
 
   /**
-   * 设置长期属性，所有track接口记录的事件都会拥有该属性
+   * 用来设置每个事件都带有的一些公共属性
+   * <p>
+   * 当track的Properties，superProperties和SDK自动生成的automaticProperties有相同的key时，遵循如下的优先级：
+   *    track.properties > superProperties > automaticProperties
+   * 另外，当这个接口被多次调用时，是用新传入的数据去merge先前的数据
+   * 例如，在调用接口前，dict是 {"a":1, "b": "bbb"}，传入的dict是 {"b": 123, "c": "asd"}，则merge后
+   * 的结果是 {"a":1, "b": 123, "c": "asd"}
    *
-   * @param superPropertiesMap  事件的一个或多个属性
+   * @param superPropertiesMap 一个或多个公共属性
    */
   public void registerSuperProperties(Map<String, Object> superPropertiesMap) {
     for (Map.Entry<String, Object> item : superPropertiesMap.entrySet()) {
@@ -186,71 +229,85 @@ public class SensorsDataAPI {
   }
 
   /**
-   * 清除长期属性
+   * 清除公共属性
    */
   public void clearSuperProperties() {
     this.superProperties.clear();
-    this.superProperties.put("$lib", "java");
+    this.superProperties.put("$lib", "Java");
     this.superProperties.put("$lib_version", SDK_VERSION);
   }
 
   /**
-   * 记录一个没有属性的事件
+   * 记录一个没有任何属性的事件
    *
-   * @param distinctId  用户ID
-   * @param eventName   事件名称
+   * @param distinctId 用户ID
+   * @param eventName  事件名称
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void track(String distinctId, String eventName)
-      throws InvalidArgumentException, QueueLimitExceededException {
-    checkDistinctId(distinctId);
-    checkKey(eventName);
-    addEvent(distinctId, null, eventName, null);
+  public Future<Boolean> track(String distinctId, String eventName)
+      throws InvalidArgumentException {
+    return track(distinctId, eventName, null);
   }
 
   /**
    * 记录一个拥有一个或多个属性的事件。属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和
    * {@link List<?>}，若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    *
-   * @param distinctId    用户ID
-   * @param eventName     事件名称
-   * @param properties    事件的属性
+   * @param distinctId 用户ID
+   * @param eventName  事件名称
+   * @param properties 事件的属性
+   *
+   * @return {@link java.util.concurrent.Future}对象。本方法会异步执行，正常情况下不需要关心该返回对象。
+   * 若需要等待track及flush同步完成，可调用该对象的 <code>.get()</code> 方法，它会阻塞直到track及flush
+   * 执行结束。执行过程中任何异常都会触发 {@link ExecutionException}。
    */
-  public void track(String distinctId, String eventName, Map<String, Object> properties)
-      throws InvalidArgumentException, QueueLimitExceededException {
+  public Future<Boolean> track(String distinctId, String eventName, Map<String, Object> properties)
+      throws InvalidArgumentException {
     checkDistinctId(distinctId);
     checkKey(eventName);
     checkTypeInProperties(properties);
-    addEvent(distinctId, null, eventName, properties);
+    return addEvent(distinctId, null, eventName, properties);
   }
 
   /**
-   * 这个接口是一个较为复杂的功能，请在使用前先阅读相关说明:http://www.sensorsdata.cn/manual/track_signup.html，并在必要时联系我们的技术支持人员。
+   * 这个接口是一个较为复杂的功能，请在使用前先阅读相关说明:
+   * http://www.sensorsdata.cn/manual/track_signup.html
+   * 并在必要时联系我们的技术支持人员。
    *
    * @param distinctId       新的用户ID
    * @param originDistinctId 旧的用户ID
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void trackSignUp(String distinctId, String originDistinctId)
-      throws InvalidArgumentException, QueueLimitExceededException {
-    checkDistinctId(distinctId);
-    checkDistinctId(originDistinctId);
-    addEvent(distinctId, originDistinctId, "$SignUp", null);
+  public Future<Boolean> trackSignUp(String distinctId, String originDistinctId)
+      throws InvalidArgumentException {
+    return trackSignUp(distinctId, originDistinctId, null);
   }
 
   /**
-   * 这个接口是一个较为复杂的功能，请在使用前先阅读相关说明:http://www.sensorsdata.cn/manual/track_signup.html，并在必要时联系我们的技术支持人员。
-   * {@link Number}, {@link String}, {@link Date}和{@linkList<?>}，若属性包含 $time 字段，则
-   * 它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
+   * 这个接口是一个较为复杂的功能，请在使用前先阅读相关说明:
+   * http://www.sensorsdata.cn/manual/track_signup.html
+   * 并在必要时联系我们的技术支持人员。
+   * <p>
+   * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@linkList<?>}，若属性包
+   * 含 $time 字段，它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    *
    * @param distinctId       新的用户ID
    * @param originDistinctId 旧的用户ID
    * @param properties       事件的属性
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void trackSignUp(String distinctId, String originDistinctId,
-      Map<String, Object> properties) throws InvalidArgumentException, QueueLimitExceededException {
+  public Future<Boolean> trackSignUp(String distinctId, String originDistinctId,
+      Map<String, Object> properties) throws InvalidArgumentException {
     checkDistinctId(distinctId);
     checkDistinctId(originDistinctId);
     checkTypeInProperties(properties);
-    addEvent(distinctId, originDistinctId, "$SignUp", properties);
+    return addEvent(distinctId, originDistinctId, "$SignUp", properties);
   }
 
   /**
@@ -258,76 +315,87 @@ public class SensorsDataAPI {
    * 若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    * 如果要设置的properties的key，之前在这个用户的profile中已经存在，则覆盖，否则，新创建
    *
-   * @param distinctId    用户ID
-   * @param properties    用户的属性
+   * @param distinctId 用户ID
+   * @param properties 用户的属性
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void profileSet(String distinctId, Map<String, Object> properties)
-      throws InvalidArgumentException, QueueLimitExceededException {
+  public Future<Boolean> profileSet(String distinctId, Map<String, Object> properties)
+      throws InvalidArgumentException {
     checkDistinctId(distinctId);
     checkTypeInProperties(properties);
-    addProfile(distinctId, "profile_set", properties);
+    return addProfile(distinctId, "profile_set", properties);
   }
 
   /**
    * 设置用户的属性。这个接口只能设置单个key对应的内容，同样，如果已经存在，则覆盖，否则，新创建
    *
-   * @param distinctId    用户ID
-   * @param property      属性名称
-   * @param value         属性的值
+   * @param distinctId 用户ID
+   * @param property   属性名称
+   * @param value      属性的值
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void profileSet(String distinctId, String property, Object value)
-      throws InvalidArgumentException, QueueLimitExceededException {
-    checkDistinctId(distinctId);
+  public Future<Boolean> profileSet(String distinctId, String property, Object value)
+      throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
-    checkTypeInProperties(properties);
-    addProfile(distinctId, "profile_set", properties);
+    return profileSet(distinctId, properties);
   }
 
   /**
    * 首次设置用户的属性。
    * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@linkList<?>}，
    * 若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
-   *
+   * <p>
    * 与profileSet接口不同的是：
-   *    如果要设置的properties的key，在这个用户的profile中已经存在，则不处理，否则，新创建
+   * 如果要设置的properties的key，在这个用户的profile中已经存在，则不处理，否则，新创建
    *
-   * @param distinctId    用户ID
-   * @param properties    用户的属性
+   * @param distinctId 用户ID
+   * @param properties 用户的属性
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void profileSetOnce(String distinctId, Map<String, Object> properties)
-      throws InvalidArgumentException, QueueLimitExceededException {
+  public Future<Boolean> profileSetOnce(String distinctId, Map<String, Object> properties)
+      throws InvalidArgumentException {
     checkDistinctId(distinctId);
     checkTypeInProperties(properties);
-    addProfile(distinctId, "profile_set_once", properties);
+    return addProfile(distinctId, "profile_set_once", properties);
   }
 
   /**
    * 首次设置用户的属性。这个接口只能设置单个key对应的内容。
    * 与profileSet接口不同的是，如果key的内容之前已经存在，则不处理，否则，重新创建
    *
-   * @param distinctId    用户ID
-   * @param property      属性名称
-   * @param value         属性的值
+   * @param distinctId 用户ID
+   * @param property   属性名称
+   * @param value      属性的值
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void profileSetOnce(String distinctId, String property, Object value)
-      throws InvalidArgumentException, QueueLimitExceededException {
-    checkDistinctId(distinctId);
+  public Future<Boolean> profileSetOnce(String distinctId, String property, Object value)
+      throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
-    checkTypeInProperties(properties);
-    addProfile(distinctId, "profile_set_once", properties);
+    return profileSetOnce(distinctId, properties);
   }
 
   /**
    * 为用户的一个或多个属性累加一个数值，若该属性不存在，则创建它并设置默认值为0。属性取值只接受{@link Number}
    * 类型
    *
-   * @param distinctId    用户ID
-   * @param properties    用户的属性
+   * @param distinctId 用户ID
+   * @param properties 用户的属性
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void profileIncrement(String distinctId, Map<String, Object> properties)
-      throws InvalidArgumentException, QueueLimitExceededException {
+  public Future<Boolean> profileIncrement(String distinctId, Map<String, Object> properties)
+      throws InvalidArgumentException {
     checkDistinctId(distinctId);
     for (Map.Entry<String, Object> prop : properties.entrySet()) {
       checkKey(prop.getKey());
@@ -336,74 +404,78 @@ public class SensorsDataAPI {
             "The value type in properties should be a numerical type.");
       }
     }
-    addProfile(distinctId, "profile_increment", properties);
+    return addProfile(distinctId, "profile_increment", properties);
   }
 
   /**
    * 为用户的属性累加一个数值，若该属性不存在，则创建它并设置默认值为0
    *
-   * @param distinctId    用户ID
-   * @param property      属性名称
-   * @param value         属性的值
+   * @param distinctId 用户ID
+   * @param property   属性名称
+   * @param value      属性的值
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void profileIncrement(String distinctId, String property, long value)
-      throws InvalidArgumentException, QueueLimitExceededException {
-    checkDistinctId(distinctId);
-    checkKey(property);
+  public Future<Boolean> profileIncrement(String distinctId, String property, long value)
+      throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
-    addProfile(distinctId, "profile_increment", properties);
+    return profileIncrement(distinctId, properties);
   }
 
   /**
    * 删除用户某一个属性
    *
-   * @param distinctId    用户ID
-   * @param property      属性名称
+   * @param distinctId 用户ID
+   * @param property   属性名称
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void profileUnset(String distinctId, String property)
-      throws InvalidArgumentException, QueueLimitExceededException {
+  public Future<Boolean> profileUnset(String distinctId, String property)
+      throws InvalidArgumentException {
     checkDistinctId(distinctId);
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, true);
     checkTypeInProperties(properties);
-    addProfile(distinctId, "profile_unset", properties);
+    return addProfile(distinctId, "profile_unset", properties);
   }
 
   /**
    * 删除一个用户的所有属性
    *
-   * @param distinctId    用户ID
+   * @param distinctId 用户ID
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
    */
-  public void delete(String distinctId)
-      throws InvalidArgumentException, QueueLimitExceededException {
+  public Future<Boolean> profileDelete(String distinctId)
+      throws InvalidArgumentException {
     checkDistinctId(distinctId);
-    addProfile(distinctId, "profile_unset", null);
+    return addProfile(distinctId, "profile_unset", null);
   }
 
   /**
-   * 立即发送缓存中的所有日志
+   * 立即发送缓存中的所有日志，阻塞等待直到发送完成
    */
-  public void flush() throws ConnectErrorException, FlushErrorException {
-    _flush(0);
+  public void flush() {
+    Future<Boolean> task = enqueueAndFlush(null, 0);
+    try {
+      task.get();
+    } catch (InterruptedException e) {
+      log.error(e.getMessage(), e);
+    } catch (ExecutionException e) {
+      log.error(e.getMessage(), e);
+    }
   }
 
   /**
    * 停止SensorsDataAPI所有线程，API停止前会清空所有本地数据
    */
-  public void shutdown() throws ConnectErrorException, FlushErrorException {
-    _flush(0);
-
-    timerExecutor.shutdown();
-
-    try {
-      timerExecutor.awaitTermination(30, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      log.error(e.getMessage(), e);
-    }
-
+  public void shutdown() {
+    flush();
     executor.shutdown();
-
     try {
       executor.awaitTermination(30, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
@@ -411,8 +483,8 @@ public class SensorsDataAPI {
     }
   }
 
-  private void addEvent(String distinctId, String originDistinceId, String eventName,
-      Map<String, Object> properties) throws QueueLimitExceededException {
+  private Future<Boolean> addEvent(String distinctId, String originDistinceId, String eventName,
+      Map<String, Object> properties) {
     Map<String, Object> dataObj = new HashMap<String, Object>();
 
     if (eventName.equals("$SignUp")) {
@@ -447,11 +519,11 @@ public class SensorsDataAPI {
     }
 
     dataObj.put("properties", propertiesObj);
-    addToTaskObjectList(dataObj);
+    return addToTaskObjectList(dataObj);
   }
 
-  private void addProfile(String distinctId, String actionType, Map<String, Object> properties)
-      throws QueueLimitExceededException {
+  private Future<Boolean> addProfile(String distinctId, String actionType,
+      Map<String, Object> properties) {
     Map<String, Object> dataObj = new HashMap<String, Object>();
     dataObj.put("type", actionType);
     dataObj.put("distinct_id", distinctId);
@@ -472,117 +544,59 @@ public class SensorsDataAPI {
     }
 
     dataObj.put("properties", propertiesObj);
-    addToTaskObjectList(dataObj);
+
+    return addToTaskObjectList(dataObj);
   }
 
-  private void addToTaskObjectList(Map<String, Object> taskObject) throws
-      QueueLimitExceededException {
-    synchronized (this.taskObjectList) {
-      this.taskObjectList.add(taskObject);
-      if (this.taskObjectList.size() > EXECUTE_QUEUE_SIZE) {
-        throw new QueueLimitExceededException("The maximum length of sending queue is " +
-            EXECUTE_QUEUE_SIZE);
-      }
-
-      if (this.debugMode) {
-        try {
-          _flush(1);
-        } catch (FlushErrorException e) {
-          String error = String.format(
-              "Unexpected response from SensorsAnalytics server. [error='%s']", e.getMessage());
+  private Future<Boolean> addToTaskObjectList(Map<String, Object> event) {
+    if (this.debugMode.isDebugMode()) {
+      Future<Boolean> task = enqueueAndFlush(event, 0);
+      try {
+        task.get();
+      } catch (InterruptedException e) {
+        throw new DebugModeException(e.getMessage());
+      } catch (ExecutionException e) {
+        if (e.getCause() instanceof FlushErrorException) {
+          String error = String
+              .format("Unexpected response from SensorsAnalytics server. [error='%s']",
+                  e.getMessage());
           throw new DebugModeException(error);
-        } catch (ConnectErrorException e) {
-          String error = String.format(
-              "Failed to connect the SensorsAnalytics server. [error='%s']", e.getMessage());
+        } else if (e.getCause() instanceof ConnectErrorException) {
+          String error = String
+              .format("Unexpected response from SensorsAnalytics server. [error='%s']",
+                  e.getMessage());
           throw new DebugModeException(error);
-        }
-      } else {
-        if (this.taskObjectList.size() > bulkUploadLimit) {
-          try {
-            executor.submit(new SubmitTask(bulkUploadLimit));
-          } catch (RejectedExecutionException e) {
-            // do nothing
-          }
+        } else {
+          throw new DebugModeException(e.getMessage());
         }
       }
+      return task;
+    } else {
+      return enqueueAndFlush(event, this.bulkUploadLimit);
     }
   }
 
-  private void _flush(int uploadLimit) throws FlushErrorException, ConnectErrorException {
+  private Future<Boolean> enqueueAndFlush(final Map<String, Object> event, final int flushBulk) {
     List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
-    synchronized (this.taskObjectList) {
-      this.lastFlushTime = System.currentTimeMillis();
 
-      if (this.taskObjectList.isEmpty() || this.taskObjectList.size() < uploadLimit) {
-        return;
+    synchronized (this.taskObjectList) {
+      if (null != event) {
+        this.taskObjectList.add(event);
       }
-      for (Map<String, Object> task : this.taskObjectList) {
-        data.add(task);
+
+      if (this.taskObjectList.isEmpty() || this.taskObjectList.size() < flushBulk) {
+        // 返回空任务
+        return executor.submit(new Callable<Boolean>() {
+          @Override public Boolean call() throws Exception {
+            return true;
+          }
+        });
       }
+
+      data.addAll(this.taskObjectList);
       this.taskObjectList.clear();
     }
-
-    try {
-      CloseableHttpClient httpClient = HttpClients.createDefault();
-      HttpPost httpPost = new HttpPost(eventsEndPoint);
-
-      List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
-
-      if (sendingGZipContent) {
-        nameValuePairs.add(new BasicNameValuePair("gzip", "1"));
-      } else {
-        nameValuePairs.add(new BasicNameValuePair("gzip", "0"));
-      }
-
-      String dataJson = this.jsonObjectMapper.writeValueAsString(data);
-      nameValuePairs.add(new BasicNameValuePair("data_list", new String(encodeTasks(dataJson))));
-
-      httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-      httpPost.addHeader("User-Agent", "SensorsAnalytics Java SDK");
-
-      HttpResponse response = httpClient.execute(httpPost);
-      int response_code = response.getStatusLine().getStatusCode();
-      String response_body = EntityUtils.toString(response.getEntity(), "UTF-8");
-
-      if (this.debugMode) {
-        if (response_code == 200) {
-          log.debug(String.format("valid message: [%s]", dataJson));
-        } else {
-          log.debug(String.format("invalid message: [%s]", dataJson));
-          log.debug(String.format("ret_code: %d", response_code));
-          log.debug(String.format("ret_content: %s", response_body));
-        }
-      }
-
-      if (response_code != 200) {
-        throw new FlushErrorException(String.format("Response error. [status=%d error='%s']",
-            response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase()));
-      }
-    } catch (JsonGenerationException e) {
-      throw new FlushErrorException(e);
-    } catch (JsonMappingException e) {
-      throw new FlushErrorException(e);
-    } catch (ClientProtocolException e) {
-      throw new ConnectErrorException(e);
-    } catch (IOException e) {
-      throw new ConnectErrorException(e);
-    }
-
-    this.lastFlushTime = System.currentTimeMillis();
-  }
-
-  private char[] encodeTasks(String data) throws IOException {
-    if (sendingGZipContent) {
-      ByteArrayOutputStream os = new ByteArrayOutputStream(data.getBytes().length);
-      GZIPOutputStream gos = new GZIPOutputStream(os);
-      gos.write(data.getBytes());
-      gos.close();
-      byte[] compressed = os.toByteArray();
-      os.close();
-      return Base64Coder.encode(compressed);
-    } else {
-      return Base64Coder.encode(data.getBytes());
-    }
+    return this.executor.submit(new SubmitTask(data));
   }
 
   private void checkDistinctId(String key) throws InvalidArgumentException {
@@ -618,68 +632,126 @@ public class SensorsDataAPI {
 
   private void checkTypeInProperties(Map<String, Object> properties)
       throws InvalidArgumentException {
+    if (null == properties) {
+      return;
+    }
     for (Map.Entry<String, Object> prop : properties.entrySet()) {
       checkKey(prop.getKey());
       checkValue(prop.getKey(), prop.getValue());
     }
   }
 
-  private class LowPriorityThreadFactory implements ThreadFactory {
+  private class SubmitTask implements Callable<Boolean> {
 
-    public Thread newThread(Runnable r) {
-      Thread t = new Thread(r);
-      t.setPriority(Thread.MIN_PRIORITY);
-      return t;
+    public SubmitTask(final List<Map<String, Object>> data) {
+      this.data = data;
     }
 
-  }
-
-  private class SubmitTask implements Runnable {
-    public SubmitTask(int uploadLimit) {
-      this.uploadLimit = uploadLimit;
-    }
-
-    public void run() {
+    @Override public Boolean call() {
       try {
-        _flush(this.uploadLimit);
+        return sendData(this.data);
       } catch (FlushErrorException e) {
         log.error(e.getMessage(), e);
       } catch (ConnectErrorException e) {
         log.error(e.getMessage(), e);
       }
+      return false;
     }
 
-    private final int uploadLimit;
+    private Boolean sendData(final List<Map<String, Object>> data)
+        throws FlushErrorException, ConnectErrorException {
+      try {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(eventsEndPoint);
+
+        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+
+        if (sendingGZipContent) {
+          nameValuePairs.add(new BasicNameValuePair("gzip", "1"));
+        } else {
+          nameValuePairs.add(new BasicNameValuePair("gzip", "0"));
+        }
+
+        String dataJson = jsonObjectMapper.writeValueAsString(data);
+        nameValuePairs.add(new BasicNameValuePair("data_list", new String(encodeTasks(dataJson))));
+
+        httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+        httpPost.addHeader("User-Agent", "SensorsAnalytics Java SDK");
+        if (debugMode.isDebugMode() && !debugMode.isDebugWriteData()) {
+          httpPost.addHeader("Dry-Run", "true");
+        }
+
+        HttpResponse response = httpClient.execute(httpPost);
+        int response_code = response.getStatusLine().getStatusCode();
+        String response_body = EntityUtils.toString(response.getEntity(), "UTF-8");
+
+        if (debugMode.isDebugMode()) {
+          System.out.println
+              ("==========================================================================");
+          if (response_code == 200) {
+            System.out.println(String.format("valid message: [%s]", dataJson));
+          } else {
+            System.out.println(String.format("invalid message: [%s]", dataJson));
+            System.out.println(String.format("ret_code: %d", response_code));
+            System.out.println(String.format("ret_content: %s", response_body));
+          }
+        }
+
+        if (response_code != 200) {
+          throw new FlushErrorException(String.format("Response error. [status=%d error='%s']",
+              response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase()));
+        }
+
+        return true;
+      } catch (JsonGenerationException e) {
+        throw new FlushErrorException(e);
+      } catch (JsonMappingException e) {
+        throw new FlushErrorException(e);
+      } catch (ClientProtocolException e) {
+        throw new ConnectErrorException(e);
+      } catch (IOException e) {
+        throw new ConnectErrorException(e);
+      }
+    }
+
+    private char[] encodeTasks(String data) throws IOException {
+      if (sendingGZipContent) {
+        ByteArrayOutputStream os = new ByteArrayOutputStream(data.getBytes().length);
+        GZIPOutputStream gos = new GZIPOutputStream(os);
+        gos.write(data.getBytes());
+        gos.close();
+        byte[] compressed = os.toByteArray();
+        os.close();
+        return Base64Coder.encode(compressed);
+      } else {
+        return Base64Coder.encode(data.getBytes());
+      }
+    }
+
+    private final List<Map<String, Object>> data;
   }
+
 
   private class FlushTask implements Runnable {
 
-    public FlushTask() {
-    }
-
-    public void run() {
-      long waitTime = lastFlushTime + flushInterval - System.currentTimeMillis();
-      while (waitTime > 0) {
-        try {
-          Thread.sleep(waitTime);
-        } catch (InterruptedException e) {
-          log.error(e.getMessage(), e);
-        }
-        waitTime = lastFlushTime + flushInterval - System.currentTimeMillis();
-      }
+    @Override public void run() {
 
       try {
-        executor.submit(new SubmitTask(1));
+        Thread.sleep(flushInterval);
+      } catch (InterruptedException e) {
+        log.warn(e.getMessage(), e);
+      }
+
+      if (executor.isShutdown()) {
+        return;
+      }
+
+      flush();
+
+      try {
+        executor.submit(new FlushTask());
       } catch (RejectedExecutionException e) {
         // do nothing
-      }
-
-      try {
-        if (!timerExecutor.isShutdown()) {
-          timerExecutor.submit(new FlushTask());
-        }
-      } catch (RejectedExecutionException e) {
-        log.warn(e.getMessage(), e);
       }
     }
   }
