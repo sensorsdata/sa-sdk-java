@@ -6,9 +6,9 @@
     <artifactId>java_sdk_demo</artifactId>
 
     <parent>
-        <artifactId>java_sdk_parent</artifactId>
+        <artifactId>SensorsAnalyticsSDK</artifactId>
         <groupId>com.sensorsdata.analytics</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.3.0</version>
     </parent>
 
     <build>
@@ -93,7 +93,7 @@
         <dependency>
             <groupId>com.sensorsdata.analytics</groupId>
             <artifactId>java_sdk</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.3.0</version>
         </dependency>
     </dependencies>
 
