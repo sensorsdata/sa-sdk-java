@@ -1,10 +1,10 @@
-package com.sensorsdata.analytics.java.sdk;
+package com.sensorsdata.analytics.javasdk;
 
-import com.sensorsdata.analytics.java.sdk.exceptions.ConnectErrorException;
-import com.sensorsdata.analytics.java.sdk.exceptions.DebugModeException;
-import com.sensorsdata.analytics.java.sdk.exceptions.FlushErrorException;
-import com.sensorsdata.analytics.java.sdk.exceptions.InvalidArgumentException;
-import com.sensorsdata.analytics.java.sdk.util.Base64Coder;
+import com.sensorsdata.analytics.javasdk.exceptions.ConnectErrorException;
+import com.sensorsdata.analytics.javasdk.exceptions.DebugModeException;
+import com.sensorsdata.analytics.javasdk.exceptions.FlushErrorException;
+import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+import com.sensorsdata.analytics.javasdk.util.Base64Coder;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -114,7 +114,7 @@ public class SensorsDataAPI {
    * <p>
    * 调用之前必须先调用 {@link #sharedInstanceWithServerURL(String)} 或
    * {@link #sharedInstanceWithConfigure(String, int, int,
-   * com.sensorsdata.analytics.java.sdk.SensorsDataAPI.DebugMode)}
+   * com.sensorsdata.analytics.javasdk.SensorsDataAPI.DebugMode)}
    * 进行初始化
    *
    * @return SensorsDataAPI单例
@@ -130,14 +130,14 @@ public class SensorsDataAPI {
    * 根据传入的所部署的SensorsAnalytics服务器的URL，返回一个SensorsDataAPI的单例。默认刷新周期为1秒或缓
    * 存1000条数据，默认关闭Debug模式。更多说明请参考
    * {@link #sharedInstanceWithConfigure(String, int, int,
-   * com.sensorsdata.analytics.java.sdk.SensorsDataAPI.DebugMode)}
+   * com.sensorsdata.analytics.javasdk.SensorsDataAPI.DebugMode)}
    *
    * @param serverUrl 接收日志的SensorsAnalytics服务器URL
    *
    * @return SensorsDataAPI单例
    */
   public static SensorsDataAPI sharedInstanceWithServerURL(final String serverUrl) {
-    return sharedInstanceWithConfigure(serverUrl, 1 * 1000, 1000, DebugMode.DEBUG_OFF);
+    return sharedInstanceWithConfigure(serverUrl, 1000, 1000, DebugMode.DEBUG_OFF);
   }
 
   /**
@@ -215,7 +215,7 @@ public class SensorsDataAPI {
    * 用来设置每个事件都带有的一些公共属性
    * <p>
    * 当track的Properties，superProperties和SDK自动生成的automaticProperties有相同的key时，遵循如下的优先级：
-   *    track.properties > superProperties > automaticProperties
+   *    track.properties 高于 superProperties 高于 automaticProperties
    * 另外，当这个接口被多次调用时，是用新传入的数据去merge先前的数据
    * 例如，在调用接口前，dict是 {"a":1, "b": "bbb"}，传入的dict是 {"b": 123, "c": "asd"}，则merge后
    * 的结果是 {"a":1, "b": 123, "c": "asd"}
@@ -253,7 +253,7 @@ public class SensorsDataAPI {
 
   /**
    * 记录一个拥有一个或多个属性的事件。属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和
-   * {@link List<?>}，若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
+   * {@link List}，若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    *
    * @param distinctId 用户ID
    * @param eventName  事件名称
@@ -262,6 +262,8 @@ public class SensorsDataAPI {
    * @return {@link java.util.concurrent.Future}对象。本方法会异步执行，正常情况下不需要关心该返回对象。
    * 若需要等待track及flush同步完成，可调用该对象的 <code>.get()</code> 方法，它会阻塞直到track及flush
    * 执行结束。执行过程中任何异常都会触发 {@link ExecutionException}。
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> track(String distinctId, String eventName, Map<String, Object> properties)
       throws InvalidArgumentException {
@@ -281,6 +283,8 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> trackSignUp(String distinctId, String originDistinctId)
       throws InvalidArgumentException {
@@ -292,7 +296,7 @@ public class SensorsDataAPI {
    * http://www.sensorsdata.cn/manual/track_signup.html
    * 并在必要时联系我们的技术支持人员。
    * <p>
-   * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@linkList<?>}，若属性包
+   * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}，若属性包
    * 含 $time 字段，它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    *
    * @param distinctId       新的用户ID
@@ -301,17 +305,20 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> trackSignUp(String distinctId, String originDistinctId,
       Map<String, Object> properties) throws InvalidArgumentException {
     checkDistinctId(distinctId);
     checkDistinctId(originDistinctId);
+
     checkTypeInProperties(properties);
     return addEvent(distinctId, originDistinctId, "$SignUp", properties);
   }
 
   /**
-   * 设置用户的属性。属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@linkList<?>}，
+   * 设置用户的属性。属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}，
    * 若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    * 如果要设置的properties的key，之前在这个用户的profile中已经存在，则覆盖，否则，新创建
    *
@@ -320,6 +327,8 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> profileSet(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
@@ -337,6 +346,8 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> profileSet(String distinctId, String property, Object value)
       throws InvalidArgumentException {
@@ -347,7 +358,7 @@ public class SensorsDataAPI {
 
   /**
    * 首次设置用户的属性。
-   * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@linkList<?>}，
+   * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}，
    * 若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    * <p>
    * 与profileSet接口不同的是：
@@ -358,6 +369,8 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> profileSetOnce(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
@@ -376,6 +389,8 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> profileSetOnce(String distinctId, String property, Object value)
       throws InvalidArgumentException {
@@ -393,6 +408,8 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> profileIncrement(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
@@ -416,6 +433,8 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> profileIncrement(String distinctId, String property, long value)
       throws InvalidArgumentException {
@@ -432,6 +451,8 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> profileUnset(String distinctId, String property)
       throws InvalidArgumentException {
@@ -449,6 +470,8 @@ public class SensorsDataAPI {
    *
    * @return {@link java.util.concurrent.Future} 对象，参考
    * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
   public Future<Boolean> profileDelete(String distinctId)
       throws InvalidArgumentException {

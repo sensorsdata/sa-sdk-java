@@ -1,4 +1,4 @@
-package com.sensorsdata.analytics.java.sdk.exceptions;
+package com.sensorsdata.analytics.javasdk.exceptions;
 
 /**
  * Debug模式下的错误

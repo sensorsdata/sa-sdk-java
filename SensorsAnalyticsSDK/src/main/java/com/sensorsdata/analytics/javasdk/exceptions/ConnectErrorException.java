@@ -1,4 +1,4 @@
-package com.sensorsdata.analytics.java.sdk.exceptions;
+package com.sensorsdata.analytics.javasdk.exceptions;
 
 /**
  * 网络故障，无法连接Sensors Analytics服务器

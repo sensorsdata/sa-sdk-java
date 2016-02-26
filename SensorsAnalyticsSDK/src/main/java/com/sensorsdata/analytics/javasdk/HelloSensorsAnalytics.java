@@ -1,6 +1,4 @@
-package com.sensorsdata.analytics.java.demo;
-
-import com.sensorsdata.analytics.java.sdk.SensorsDataAPI;
+package com.sensorsdata.analytics.javasdk;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
