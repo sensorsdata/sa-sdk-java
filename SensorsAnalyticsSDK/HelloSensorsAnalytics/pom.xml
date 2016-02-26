@@ -3,13 +3,36 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>java_sdk_demo</artifactId>
 
     <parent>
         <artifactId>SensorsAnalyticsSDK</artifactId>
         <groupId>com.sensorsdata.analytics</groupId>
         <version>1.3.0</version>
     </parent>
+
+    <packaging>jar</packaging>
+
+    <groupId>com.sensorsdata.analytics.java</groupId>
+    <name>SensorsAnalyticsJavaSDKDemo</name>
+    <artifactId>java_sdk_demo</artifactId>
+    <version>1.3.0</version>
+    <description>The official Java SDK of Sensors Analytics</description>
+    <url>http://sensorsdata.cn</url>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Yuhan ZOU</name>
+            <email>zouyuhan@sensorsdata.cn</email>
+            <url>http://sensorsdata.cn</url>
+        </developer>
+    </developers>
 
     <build>
         <plugins>
