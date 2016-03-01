@@ -50,7 +50,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.3.0";
+  private final static String SDK_VERSION = "1.3.1";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -78,14 +78,14 @@ public class SensorsDataAPI {
   /**
    * Debug模式，用于检验数据导入是否正确。该模式下，事件会逐条实时发送到SensorsAnalytics，并根据返回值检查
    * 数据导入是否正确。
-   * <p>
+   *
    * Debug模式的具体使用方式，请参考:
-   * http://www.sensorsdata.cn/manual/debug_mode.html
-   * <p>
+   *   http://www.sensorsdata.cn/manual/debug_mode.html
+   *
    * Debug模式有三种：
-   * NONE - 关闭DEBUG模式
-   * DEBUG_ONLY - 打开DEBUG模式，但该模式下发送的数据仅用于调试，不进行数据导入
-   * DEBUG_AND_TRACK - 打开DEBUG模式，并将数据导入到SensorsAnalytics中
+   *   NONE - 关闭DEBUG模式
+   *   DEBUG_ONLY - 打开DEBUG模式，但该模式下发送的数据仅用于调试，不进行数据导入
+   *   DEBUG_AND_TRACK - 打开DEBUG模式，并将数据导入到SensorsAnalytics中
    */
   public enum DebugMode {
     DEBUG_OFF(false, false),
@@ -111,7 +111,7 @@ public class SensorsDataAPI {
 
   /**
    * 返回已经初始化的SensorsDataAPI单例
-   * <p>
+   *
    * 调用之前必须先调用 {@link #sharedInstanceWithServerURL(String)} 或
    * {@link #sharedInstanceWithConfigure(String, int, int,
    * com.sensorsdata.analytics.javasdk.SensorsDataAPI.DebugMode)}
@@ -142,17 +142,17 @@ public class SensorsDataAPI {
 
   /**
    * 根据传入的配置，返回一个SensorsAnalyticsSDK的单例。
-   * <p>
+   *
    * flushInterval是指两次发送的时间间隔，bulkSize是发送缓存日志条目数的阈值。
-   * <p>
+   *
    * 在每次调用{@link #track(String, String)}、{@link #trackSignUp(String, String)}、
    * {@link #profileSet(String, java.util.Map)} 等方法时，都会检查如下条件，以判断是否向服务器上传数据:
-   * <p>
-   * 1. 当前是否是WIFI/3G/4G网络条件
-   * 2. 与上次发送的时间间隔是否大于 flushInterval 或 缓存队列长度是否大于 bulkSize
-   * <p>
+   *
+   *   1. 当前是否是WIFI/3G/4G网络条件
+   *   2. 与上次发送的时间间隔是否大于 flushInterval 或 缓存队列长度是否大于 bulkSize
+   *
    * 如果满足这两个条件之一，则向服务器发送一次数据；如果不满足，则把数据加入到队列中，等待下次发送。
-   * <p>
+   *
    * 需要注意的是，当频繁记录事件时，需要小心缓存队列占用过多内存。此时可以通过 {@link #flush()} 强制触发
    * 日志发送
    *
@@ -166,10 +166,12 @@ public class SensorsDataAPI {
   public static SensorsDataAPI sharedInstanceWithConfigure(final String serverUrl,
       final int flushInterval, final int bulkSize, final DebugMode debugMode) {
     if (instance == null) {
-      if (debugMode.isDebugMode() && !serverUrl.endsWith("debug")) {
+      String serverUrlPath = serverUrl.lastIndexOf("?") > 0 ? serverUrl.substring(0, serverUrl
+          .lastIndexOf("?")) : serverUrl;
+      if (debugMode.isDebugMode() && !(serverUrlPath.endsWith("debug"))) {
         String error = String.format(
             "The server url of SensorsAnalytics must ends with 'debug' " + "while DEBUG mode is "
-                + "defined. [url='%s' expected_url='http://example.com/debug']", serverUrl);
+                + "defined. [url='%s' expected_url='http://example.com/debug?token=xxx']", serverUrl);
         throw new DebugModeException(error);
       }
       instance = new SensorsDataAPI(serverUrl, flushInterval, bulkSize, debugMode);
@@ -212,11 +214,13 @@ public class SensorsDataAPI {
   }
 
   /**
-   * 用来设置每个事件都带有的一些公共属性
-   * <p>
+   * 设置每个事件都带有的一些公共属性
+   *
    * 当track的Properties，superProperties和SDK自动生成的automaticProperties有相同的key时，遵循如下的优先级：
    *    track.properties 高于 superProperties 高于 automaticProperties
+   *
    * 另外，当这个接口被多次调用时，是用新传入的数据去merge先前的数据
+   *
    * 例如，在调用接口前，dict是 {"a":1, "b": "bbb"}，传入的dict是 {"b": 123, "c": "asd"}，则merge后
    * 的结果是 {"a":1, "b": 123, "c": "asd"}
    *
@@ -267,13 +271,12 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> track(String distinctId, String eventName, Map<String, Object> properties)
       throws InvalidArgumentException {
-    checkDistinctId(distinctId);
-    checkKey(eventName);
-    checkTypeInProperties(properties);
-    return addEvent(distinctId, null, eventName, properties);
+    return addEvent(distinctId, distinctId, "track", eventName, properties);
   }
 
   /**
+   * 记录用户注册事件
+   *
    * 这个接口是一个较为复杂的功能，请在使用前先阅读相关说明:
    * http://www.sensorsdata.cn/manual/track_signup.html
    * 并在必要时联系我们的技术支持人员。
@@ -292,6 +295,8 @@ public class SensorsDataAPI {
   }
 
   /**
+   * 记录用户注册事件
+   *
    * 这个接口是一个较为复杂的功能，请在使用前先阅读相关说明:
    * http://www.sensorsdata.cn/manual/track_signup.html
    * 并在必要时联系我们的技术支持人员。
@@ -310,16 +315,13 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> trackSignUp(String distinctId, String originDistinctId,
       Map<String, Object> properties) throws InvalidArgumentException {
-    checkDistinctId(distinctId);
-    checkDistinctId(originDistinctId);
-
-    checkTypeInProperties(properties);
-    return addEvent(distinctId, originDistinctId, "$SignUp", properties);
+    return addEvent(distinctId, originDistinctId, "track_signup", "$SignUp", properties);
   }
 
   /**
    * 设置用户的属性。属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}，
    * 若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
+   *
    * 如果要设置的properties的key，之前在这个用户的profile中已经存在，则覆盖，否则，新创建
    *
    * @param distinctId 用户ID
@@ -332,9 +334,7 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> profileSet(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    checkDistinctId(distinctId);
-    checkTypeInProperties(properties);
-    return addProfile(distinctId, "profile_set", properties);
+    return addEvent(distinctId, distinctId, "profile_set", null, properties);
   }
 
   /**
@@ -360,7 +360,7 @@ public class SensorsDataAPI {
    * 首次设置用户的属性。
    * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}，
    * 若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
-   * <p>
+   *
    * 与profileSet接口不同的是：
    * 如果要设置的properties的key，在这个用户的profile中已经存在，则不处理，否则，新创建
    *
@@ -374,9 +374,7 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> profileSetOnce(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    checkDistinctId(distinctId);
-    checkTypeInProperties(properties);
-    return addProfile(distinctId, "profile_set_once", properties);
+    return addEvent(distinctId, distinctId, "profile_set_once", null, properties);
   }
 
   /**
@@ -400,8 +398,8 @@ public class SensorsDataAPI {
   }
 
   /**
-   * 为用户的一个或多个属性累加一个数值，若该属性不存在，则创建它并设置默认值为0。属性取值只接受{@link Number}
-   * 类型
+   * 为用户的一个或多个数值类型的属性累加一个数值，若该属性不存在，则创建它并设置默认值为0。属性取值只接受
+   * {@link Number}类型
    *
    * @param distinctId 用户ID
    * @param properties 用户的属性
@@ -413,19 +411,11 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> profileIncrement(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    checkDistinctId(distinctId);
-    for (Map.Entry<String, Object> prop : properties.entrySet()) {
-      checkKey(prop.getKey());
-      if (!(prop.getValue() instanceof Number)) {
-        throw new InvalidArgumentException(
-            "The value type in properties should be a numerical type.");
-      }
-    }
-    return addProfile(distinctId, "profile_increment", properties);
+    return addEvent(distinctId, distinctId, "profile_increment", null, properties);
   }
 
   /**
-   * 为用户的属性累加一个数值，若该属性不存在，则创建它并设置默认值为0
+   * 为用户的数值类型的属性累加一个数值，若该属性不存在，则创建它并设置默认值为0
    *
    * @param distinctId 用户ID
    * @param property   属性名称
@@ -444,6 +434,44 @@ public class SensorsDataAPI {
   }
 
   /**
+   * 为用户的一个或多个数组类型的属性追加字符串，属性取值类型必须为 {@link java.util.List}，且列表中元素的类型
+   * 必须为 {@link java.lang.String}
+   *
+   * @param distinctId 用户ID
+   * @param properties 用户的属性
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
+   */
+  public Future<Boolean> profileAppend(String distinctId, Map<String, Object> properties)
+      throws InvalidArgumentException {
+    return addEvent(distinctId, distinctId, "profile_append", null, properties);
+  }
+
+  /**
+   * 为用户的数组类型的属性追加一个字符串
+   *
+   * @param distinctId 用户ID
+   * @param property   属性名称
+   * @param value      属性的值
+   *
+   * @return {@link java.util.concurrent.Future} 对象，参考
+   * {@link #track(String, String, java.util.Map)}
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
+   */
+  public Future<Boolean> profileAppend(String distinctId, String property, String value)
+      throws InvalidArgumentException {
+    List<String> values = new ArrayList<String>();
+    values.add(value);
+    Map<String, Object> properties = new HashMap<String, Object>();
+    properties.put(property, values);
+    return profileAppend(distinctId, properties);
+  }
+
+  /**
    * 删除用户某一个属性
    *
    * @param distinctId 用户ID
@@ -456,27 +484,9 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> profileUnset(String distinctId, String property)
       throws InvalidArgumentException {
-    checkDistinctId(distinctId);
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, true);
-    checkTypeInProperties(properties);
-    return addProfile(distinctId, "profile_unset", properties);
-  }
-
-  /**
-   * 删除一个用户的所有属性
-   *
-   * @param distinctId 用户ID
-   *
-   * @return {@link java.util.concurrent.Future} 对象，参考
-   * {@link #track(String, String, java.util.Map)}
-   *
-   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
-   */
-  public Future<Boolean> profileDelete(String distinctId)
-      throws InvalidArgumentException {
-    checkDistinctId(distinctId);
-    return addProfile(distinctId, "profile_unset", null);
+    return addEvent(distinctId, distinctId, "profile_unset", null, properties);
   }
 
   /**
@@ -506,72 +516,39 @@ public class SensorsDataAPI {
     }
   }
 
-  private Future<Boolean> addEvent(String distinctId, String originDistinceId, String eventName,
-      Map<String, Object> properties) {
-    Map<String, Object> dataObj = new HashMap<String, Object>();
-
-    if (eventName.equals("$SignUp")) {
-      dataObj.put("type", "track_signup");
-    } else {
-      dataObj.put("type", "track");
+  private Future<Boolean> addEvent(String distinctId, String originDistinceId, String actionType,
+      String eventName, Map<String, Object> properties) throws InvalidArgumentException {
+    assertKey("Distinct Id", distinctId);
+    assertKey("Original Distinct Id", originDistinceId);
+    if (actionType.equals("track")) {
+      assertKey("Event Name", eventName);
     }
+    assertProperties(actionType, properties);
 
-    dataObj.put("event", eventName);
-    dataObj.put("time", System.currentTimeMillis());
+    long time = extract_time_from_properties(properties);
 
-    dataObj.put("distinct_id", distinctId);
-    if (originDistinceId != null) {
-      dataObj.put("original_id", originDistinceId);
+    Map<String, Object> eventProperties = new HashMap<String, Object>();
+    if (actionType.equals("track") || actionType.equals("track_signup")) {
+      eventProperties.putAll(superProperties);
     }
-
-    Map<String, Object> propertiesObj = new HashMap<String, Object>();
-
-    for (Map.Entry<String, Object> item : superProperties.entrySet()) {
-      propertiesObj.put(item.getKey(), item.getValue());
-    }
-
     if (properties != null) {
-      for (Map.Entry<String, Object> item : properties.entrySet()) {
-        if (item.getKey().equals("$time")) {
-          dataObj.put("time", ((Date) item.getValue()).getTime());
-          continue;
-        }
-
-        propertiesObj.put(item.getKey(), item.getValue());
-      }
+      eventProperties.putAll(properties);
     }
 
-    dataObj.put("properties", propertiesObj);
-    return addToTaskObjectList(dataObj);
-  }
+    Map<String, Object> event = new HashMap<String, Object>();
 
-  private Future<Boolean> addProfile(String distinctId, String actionType,
-      Map<String, Object> properties) {
-    Map<String, Object> dataObj = new HashMap<String, Object>();
-    dataObj.put("type", actionType);
-    dataObj.put("distinct_id", distinctId);
+    event.put("type", actionType);
+    event.put("time", time);
+    event.put("distinct_id", distinctId);
+    event.put("properties", eventProperties);
 
-    dataObj.put("time", System.currentTimeMillis());
-
-    Map<String, Object> propertiesObj = new HashMap<String, Object>();
-
-    if (properties != null) {
-      for (Map.Entry<String, Object> item : properties.entrySet()) {
-        if (item.getKey().equals("$time")) {
-          dataObj.put("time", ((Date) item.getValue()).getTime());
-          continue;
-        }
-
-        propertiesObj.put(item.getKey(), item.getValue());
-      }
+    if (actionType.equals("track") || actionType.equals("track_signup")) {
+      event.put("event", eventName);
+    }
+    if (actionType.equals("track_signup")) {
+      event.put("original_id", originDistinceId);
     }
 
-    dataObj.put("properties", propertiesObj);
-
-    return addToTaskObjectList(dataObj);
-  }
-
-  private Future<Boolean> addToTaskObjectList(Map<String, Object> event) {
     if (this.debugMode.isDebugMode()) {
       Future<Boolean> task = enqueueAndFlush(event, 0);
       try {
@@ -610,7 +587,8 @@ public class SensorsDataAPI {
       if (this.taskObjectList.isEmpty() || this.taskObjectList.size() < flushBulk) {
         // 返回空任务
         return executor.submit(new Callable<Boolean>() {
-          @Override public Boolean call() throws Exception {
+          @Override
+          public Boolean call() throws Exception {
             return true;
           }
         });
@@ -622,45 +600,68 @@ public class SensorsDataAPI {
     return this.executor.submit(new SubmitTask(data));
   }
 
-  private void checkDistinctId(String key) throws InvalidArgumentException {
+  private long extract_time_from_properties(Map<String, Object> properties) {
+    if (properties == null || !properties.containsKey("$time")) {
+      return System.currentTimeMillis();
+    }
+    Date time = (Date)properties.get("$time");
+    properties.remove("$time");
+    return time.getTime();
+  }
+
+  private void assertKey(String type, String key) throws InvalidArgumentException {
     if (key == null || key.length() < 1) {
-      throw new InvalidArgumentException("The distinct_id or original_id is empty.");
+      throw new InvalidArgumentException("The " + type + " is empty.");
     }
     if (key.length() > 255) {
-      throw new InvalidArgumentException("The max_length of distinct_id or original_id is 255.");
+      throw new InvalidArgumentException("The " + type + " is too long, max length is 255.");
     }
   }
 
-  private void checkKey(String key) throws InvalidArgumentException {
-    if (key == null || key.length() < 1) {
-      throw new InvalidArgumentException("The key is empty.");
-    }
+  private void assertKeyWithRegex(String type, String key) throws InvalidArgumentException {
+    assertKey(type, key);
     if (!(KEY_PATTERN.matcher(key).matches())) {
-      throw new InvalidArgumentException("The key '" + key + "' is invalid.");
+      throw new InvalidArgumentException("The " + type + "'" + key + "' is invalid.");
     }
   }
 
-  private void checkValue(String key, Object value) throws InvalidArgumentException {
-    if (!(value instanceof Number) && !(value instanceof Date) && !(value instanceof String) &&
-        !(value instanceof Boolean) && !(value instanceof List<?>)) {
-      throw new InvalidArgumentException("The value type in properties should be a basic type: "
-          + "Number, String, Date, Boolean, List<?>.");
-    }
-
-    if (key.equals("$time") && !(value instanceof Date)) {
-      throw new InvalidArgumentException(
-          "The value type of '$time' in properties should be a " + "java.util.Date type.");
-    }
-  }
-
-  private void checkTypeInProperties(Map<String, Object> properties)
+  private void assertProperties(String eventType, Map<String, Object> properties)
       throws InvalidArgumentException {
     if (null == properties) {
       return;
     }
-    for (Map.Entry<String, Object> prop : properties.entrySet()) {
-      checkKey(prop.getKey());
-      checkValue(prop.getKey(), prop.getValue());
+    for (Map.Entry<String, Object> property : properties.entrySet()) {
+      assertKeyWithRegex("property", property.getKey());
+
+      if (!(property.getValue() instanceof Number) && !(property.getValue() instanceof Date) && !
+          (property.getValue() instanceof String) && !(property.getValue() instanceof Boolean) &&
+          !(property.getValue() instanceof List<?>)) {
+        throw new InvalidArgumentException("The property value should be a basic type: "
+            + "Number, String, Date, Boolean, List<String>.");
+      }
+
+      if (property.getKey().equals("$time") && !(property.getValue() instanceof Date)) {
+        throw new InvalidArgumentException(
+            "The property value of key '$time' should be a java.util.Date type.");
+      }
+
+      if (eventType.equals("profile_increment")) {
+        if (!(property.getValue() instanceof Number)) {
+          throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be a "
+              + "Number.");
+        }
+      } else if (eventType.equals("profile_append")) {
+        if (!(property.getValue() instanceof List<?>)) {
+          throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be a "
+              + "List<String>.");
+        }
+        for (Object v : (List<Object>)property.getValue()) {
+          if (!(v instanceof String)) {
+            throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be "
+                + "a List<String>.");
+          }
+        }
+      }
     }
   }
 
@@ -670,15 +671,18 @@ public class SensorsDataAPI {
       this.data = data;
     }
 
-    @Override public Boolean call() {
+    @Override public Boolean call() throws FlushErrorException, ConnectErrorException {
       try {
         return sendData(this.data);
       } catch (FlushErrorException e) {
         log.error(e.getMessage(), e);
+        System.out.println("Sensors Analytics SDK ERROR: " + e.getMessage());
+        throw e;
       } catch (ConnectErrorException e) {
         log.error(e.getMessage(), e);
+        System.out.println("Sensors Analytics SDK ERROR: " + e.getMessage());
+        throw e;
       }
-      return false;
     }
 
     private Boolean sendData(final List<Map<String, Object>> data)
