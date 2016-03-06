@@ -16,6 +16,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -25,6 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -50,7 +54,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.3.1";
+  private final static String SDK_VERSION = "1.3.2";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -166,15 +170,20 @@ public class SensorsDataAPI {
   public static SensorsDataAPI sharedInstanceWithConfigure(final String serverUrl,
       final int flushInterval, final int bulkSize, final DebugMode debugMode) {
     if (instance == null) {
-      String serverUrlPath = serverUrl.lastIndexOf("?") > 0 ? serverUrl.substring(0, serverUrl
-          .lastIndexOf("?")) : serverUrl;
-      if (debugMode.isDebugMode() && !(serverUrlPath.endsWith("debug"))) {
-        String error = String.format(
-            "The server url of SensorsAnalytics must ends with 'debug' " + "while DEBUG mode is "
-                + "defined. [url='%s' expected_url='http://example.com/debug?token=xxx']", serverUrl);
-        throw new DebugModeException(error);
+      String url = serverUrl;
+      if (debugMode.isDebugMode()) {
+        try {
+          // 将 URI Path 替换成 Debug 模式的 '/debug'
+          URIBuilder builder = new URIBuilder(new URI(serverUrl));
+          builder.setPath("/debug");
+          url = builder.build().toURL().toString();
+        } catch (URISyntaxException e) {
+          throw new DebugModeException("Invalid server url of Sensors Analytics.");
+        } catch (MalformedURLException e) {
+          throw new DebugModeException("Invalid server url of Sensors Analytics.");
+        }
       }
-      instance = new SensorsDataAPI(serverUrl, flushInterval, bulkSize, debugMode);
+      instance = new SensorsDataAPI(url, flushInterval, bulkSize, debugMode);
     } else {
       log.warn("SensorsDataAPI has been initialized. Ignore the configures.");
     }
