@@ -1,36 +1,43 @@
 package com.sensorsdata.analytics.javasdk;
 
+import sun.management.Sensor;
+
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class HelloSensorsAnalytics {
 
   public static void main(String[] args) throws Exception {
-    SensorsDataAPI.sharedInstanceWithConfigure(
-        "http://sa_host:8006/sa",   // 日志服务器地址
-        1000,                       // 日志发送时间间隔，单位毫秒
-        100,                        // 最大缓存条目数，达到后立刻发送
-        SensorsDataAPI.DebugMode.DEBUG_OFF  // 是否打开Debug模式
-    );
+    // Sensors Analytics 采集事件的 URL
+    final String SA_SERVER_URL = "http://{sa_host}:8006/sa?token={token}";
+    // Debug 模式选项：
+    //   SensorsDataAPI.DebugMode.DEBUG_OFF - 关闭 Debug 模式
+    //   SensorsDataAPI.DebugMode.DEBUG_ONLY - 打开DEBUG模式，但该模式下发送的数据仅用于调试，不进行数据导入
+    //   SensorsDataAPI.DebugMode.DEBUG_AND_TRACK - 打开DEBUG模式，并将数据导入到 Sensors Analytics 中
+    final SensorsDataAPI.DebugMode SA_DEBUG_MODE = SensorsDataAPI.DebugMode.DEBUG_AND_TRACK;
 
-    /*
-    在这个Demo中，我们以一个典型的电商产品为例，描述一个用户从匿名访问网站，到下单购买商品，再到申请售后服务，
-    这样一个整个环节，使用Sensors Analytics（以下简称SA）的产品，应该如何记录日志。
+    // 初始化 Sensors Analytics SDK
+    SensorsDataAPI.sharedInstanceWithServerURL(SA_SERVER_URL, SA_DEBUG_MODE);
 
-    特别需要注意的是，这个Demo只是描述SA的数据记录能力，并不是说使用者要完全照搬这些Event和Property的设计，
-    使用者还是需要结合自己产品的实际需要，来做相应的设计和规划
-    */
+    // 在这个 Demo 中，我们以一个典型的电商产品为例，描述一个用户从匿名访问网站，到下单购买商品，再到申请售后服务，
+    // 这样一个整个环节，使用 Sensors Analytics（以下简称 SA）的产品，应该如何记录日志。
+
+    // 特别需要注意的是，这个 Demo 只是描述 SA 的数据记录能力，并不是说使用者要完全照搬这些 Event 和 Property
+    // 的设计，使用者还是需要结合自己产品的实际需要，来做相应的设计和规划
 
     // 1. 用户匿名访问网站
     String cookieId = "ABCDEF123456789"; // 用户未登录时，可以使用产品自己生成的cookieId来标注用户
     Map<String, Object> properties = new HashMap<String, Object>();
     // 1.1 访问首页
-    /*
-    前面有$开头的property字段，是SA提供给用户的预置字段
-    对于预置字段，已经确定好了字段类型和字段的显示名
-    */
+
+    // 前面有$开头的property字段，是SA提供给用户的预置字段
+    // 对于预置字段，已经确定好了字段类型和字段的显示名
     properties.clear();
     properties.put("$time", new Date());                // 这条event发生的时间，如果不设置的话，则默认是当前时间
     properties.put("$os", "Windows");                   // 通过请求中的UA，可以解析出用户使用设备的操作系统是windows的

@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * SensorsData Analytics API
+ * Sensors Analytics SDK
  */
 public class SensorsDataAPI {
 
@@ -114,10 +114,11 @@ public class SensorsDataAPI {
   }
 
   /**
-   * 返回已经初始化的SensorsDataAPI单例
+   * 返回已经初始化的 SensorsDataAPI 单例
    *
-   * 调用之前必须先调用 {@link #sharedInstanceWithServerURL(String)} 或
-   * {@link #sharedInstanceWithConfigure(String, int, int,
+   * 调用之前必须先调用 {@link #sharedInstanceWithServerURL(String,
+   * com.sensorsdata.analytics.javasdk.SensorsDataAPI.DebugMode)} 或 {@link
+   * #sharedInstanceWithConfigure(String, int, int,
    * com.sensorsdata.analytics.javasdk.SensorsDataAPI.DebugMode)}
    * 进行初始化
    *
@@ -131,39 +132,44 @@ public class SensorsDataAPI {
   }
 
   /**
-   * 根据传入的所部署的SensorsAnalytics服务器的URL，返回一个SensorsDataAPI的单例。默认刷新周期为1秒或缓
-   * 存1000条数据，默认关闭Debug模式。更多说明请参考
+   * 初始化 Sensors Analytics SDK，并返回 SensorsDataAPI 的单例
+   *
+   * 默认刷新周期为1秒或缓存1000条数据。更多说明请参考
    * {@link #sharedInstanceWithConfigure(String, int, int,
    * com.sensorsdata.analytics.javasdk.SensorsDataAPI.DebugMode)}
    *
-   * @param serverUrl 接收日志的SensorsAnalytics服务器URL
+   * @param serverUrl Sensors Analytics 采集数据的 Url
+   * @param debugMode Debug模式选项，参考
+   *                  {@link com.sensorsdata.analytics.javasdk.SensorsDataAPI.DebugMode}
    *
    * @return SensorsDataAPI单例
    */
-  public static SensorsDataAPI sharedInstanceWithServerURL(final String serverUrl) {
-    return sharedInstanceWithConfigure(serverUrl, 1000, 1000, DebugMode.DEBUG_OFF);
+  public static SensorsDataAPI sharedInstanceWithServerURL(final String serverUrl, final
+  DebugMode debugMode) {
+    return sharedInstanceWithConfigure(serverUrl, 1000, 1000, debugMode);
   }
 
   /**
-   * 根据传入的配置，返回一个SensorsAnalyticsSDK的单例。
+   * 初始化 Sensors Analytics SDK，并返回 SensorsDataAPI 的单例
    *
    * flushInterval是指两次发送的时间间隔，bulkSize是发送缓存日志条目数的阈值。
    *
    * 在每次调用{@link #track(String, String)}、{@link #trackSignUp(String, String)}、
    * {@link #profileSet(String, java.util.Map)} 等方法时，都会检查如下条件，以判断是否向服务器上传数据:
    *
-   *   1. 当前是否是WIFI/3G/4G网络条件
-   *   2. 与上次发送的时间间隔是否大于 flushInterval 或 缓存队列长度是否大于 bulkSize
+   *   1. 上次发送的时间间隔是否大于 flushInterval
+   *   2. 缓存队列长度是否大于 bulkSize
    *
    * 如果满足这两个条件之一，则向服务器发送一次数据；如果不满足，则把数据加入到队列中，等待下次发送。
    *
    * 需要注意的是，当频繁记录事件时，需要小心缓存队列占用过多内存。此时可以通过 {@link #flush()} 强制触发
    * 日志发送
    *
-   * @param serverUrl     接收日志的SensorsAnalytics服务器URL
+   * @param serverUrl     Sensors Analytics 采集数据的 Url
    * @param flushInterval 日志发送的时间间隔，单位毫秒
    * @param bulkSize      日志缓存的最大值，超过此值将立即进行发送
-   * @param debugMode     Debug模式，该模式下会输出调试日志
+   * @param debugMode     Debug模式选项，参考
+   *                      {@link com.sensorsdata.analytics.javasdk.SensorsDataAPI.DebugMode}
    *
    * @return SensorsDataAPI实例
    */
@@ -656,6 +662,26 @@ public class SensorsDataAPI {
             "The property value of key '$time' should be a java.util.Date type.");
       }
 
+      // List 类型的属性值，List 元素必须为 String 类型
+      if (property.getValue() instanceof List<?>) {
+        for (Object v : (List<Object>) property.getValue()) {
+          if (!(v instanceof String)) {
+            throw new InvalidArgumentException("The property value should be a basic type: "
+                + "Number, String, Date, Boolean, List<String>.");
+          }
+          if (((String) v).length() > 255) {
+            throw new InvalidArgumentException("The property value is too long");
+          }
+        }
+      }
+
+      // String 类型的属性值，长度不能超过255
+      if (property.getValue() instanceof String) {
+        if (((String) property.getValue()).length() > 255) {
+          throw new InvalidArgumentException("The property value is too long");
+        }
+      }
+
       if (eventType.equals("profile_increment")) {
         if (!(property.getValue() instanceof Number)) {
           throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be a "
@@ -665,12 +691,6 @@ public class SensorsDataAPI {
         if (!(property.getValue() instanceof List<?>)) {
           throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be a "
               + "List<String>.");
-        }
-        for (Object v : (List<Object>)property.getValue()) {
-          if (!(v instanceof String)) {
-            throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be "
-                + "a List<String>.");
-          }
         }
       }
     }
