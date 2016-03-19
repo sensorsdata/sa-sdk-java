@@ -54,13 +54,13 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.3.2";
+  private final static String SDK_VERSION = "1.3.4";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
       Pattern.CASE_INSENSITIVE);
   private final static SimpleDateFormat DATE_FORMAT =
-      new SimpleDateFormat("yyyy-mm-dd hh:mm:ss.SSS");
+      new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
 
   private static SensorsDataAPI instance = null;
 
