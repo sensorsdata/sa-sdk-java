@@ -14,11 +14,11 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.3.4";
+  private final static String SDK_VERSION = "1.3.6";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -719,7 +719,7 @@ public class SensorsDataAPI {
     private Boolean sendData(final List<Map<String, Object>> data)
         throws FlushErrorException, ConnectErrorException {
       try {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpClient httpClient = new DefaultHttpClient();
         HttpPost httpPost = new HttpPost(eventsEndPoint);
 
         List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
