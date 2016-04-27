@@ -54,7 +54,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.3.6";
+  private final static String SDK_VERSION = "1.3.7";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -134,7 +134,7 @@ public class SensorsDataAPI {
   /**
    * 初始化 Sensors Analytics SDK，并返回 SensorsDataAPI 的单例
    *
-   * 默认刷新周期为1秒或缓存1000条数据。更多说明请参考
+   * 默认刷新周期为1秒或缓存100条数据。更多说明请参考
    * {@link #sharedInstanceWithConfigure(String, int, int,
    * com.sensorsdata.analytics.javasdk.SensorsDataAPI.DebugMode)}
    *
@@ -146,7 +146,7 @@ public class SensorsDataAPI {
    */
   public static SensorsDataAPI sharedInstanceWithServerURL(final String serverUrl, final
   DebugMode debugMode) {
-    return sharedInstanceWithConfigure(serverUrl, 1000, 1000, debugMode);
+    return sharedInstanceWithConfigure(serverUrl, 1000, 100, debugMode);
   }
 
   /**
@@ -704,7 +704,17 @@ public class SensorsDataAPI {
 
     @Override public Boolean call() throws FlushErrorException, ConnectErrorException {
       try {
-        return sendData(this.data);
+        // 每次发送不超过 100 条数据到 Sensors Analytics
+        int sendingPos = 0;
+        while (sendingPos < this.data.size()) {
+          int sendingSize = Math.min(this.data.size(), 100);
+
+          if (!sendData(this.data.subList(sendingPos, sendingPos + sendingSize))) {
+            return false;
+          }
+
+          sendingPos += sendingSize;
+        }
       } catch (FlushErrorException e) {
         log.error(e.getMessage(), e);
         System.out.println("Sensors Analytics SDK ERROR: " + e.getMessage());
@@ -714,6 +724,7 @@ public class SensorsDataAPI {
         System.out.println("Sensors Analytics SDK ERROR: " + e.getMessage());
         throw e;
       }
+      return true;
     }
 
     private Boolean sendData(final List<Map<String, Object>> data)
@@ -786,7 +797,7 @@ public class SensorsDataAPI {
       }
     }
 
-    private final List<Map<String, Object>> data;
+    private List<Map<String, Object>> data;
   }
 
 
