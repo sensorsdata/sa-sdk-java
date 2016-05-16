@@ -54,7 +54,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.3.8";
+  private final static String SDK_VERSION = "1.4.0";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -269,7 +269,7 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> track(String distinctId, String eventName)
       throws InvalidArgumentException {
-    return track(distinctId, eventName, null);
+    return addEvent(distinctId, null, "track", eventName, null);
   }
 
   /**
@@ -288,7 +288,7 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> track(String distinctId, String eventName, Map<String, Object> properties)
       throws InvalidArgumentException {
-    return addEvent(distinctId, distinctId, "track", eventName, properties);
+    return addEvent(distinctId, null, "track", eventName, properties);
   }
 
   /**
@@ -308,7 +308,7 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> trackSignUp(String distinctId, String originDistinctId)
       throws InvalidArgumentException {
-    return trackSignUp(distinctId, originDistinctId, null);
+    return addEvent(distinctId, originDistinctId, "track_signup", "$SignUp", null);
   }
 
   /**
@@ -351,7 +351,7 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> profileSet(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    return addEvent(distinctId, distinctId, "profile_set", null, properties);
+    return addEvent(distinctId, null, "profile_set", null, properties);
   }
 
   /**
@@ -370,7 +370,7 @@ public class SensorsDataAPI {
       throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
-    return profileSet(distinctId, properties);
+    return addEvent(distinctId, null, "profile_set", null, properties);
   }
 
   /**
@@ -391,7 +391,7 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> profileSetOnce(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    return addEvent(distinctId, distinctId, "profile_set_once", null, properties);
+    return addEvent(distinctId, null, "profile_set_once", null, properties);
   }
 
   /**
@@ -411,7 +411,7 @@ public class SensorsDataAPI {
       throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
-    return profileSetOnce(distinctId, properties);
+    return addEvent(distinctId, null, "profile_set_once", null, properties);
   }
 
   /**
@@ -428,7 +428,7 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> profileIncrement(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    return addEvent(distinctId, distinctId, "profile_increment", null, properties);
+    return addEvent(distinctId, null, "profile_increment", null, properties);
   }
 
   /**
@@ -447,7 +447,7 @@ public class SensorsDataAPI {
       throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
-    return profileIncrement(distinctId, properties);
+    return addEvent(distinctId, null, "profile_increment", null, properties);
   }
 
   /**
@@ -464,7 +464,7 @@ public class SensorsDataAPI {
    */
   public Future<Boolean> profileAppend(String distinctId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    return addEvent(distinctId, distinctId, "profile_append", null, properties);
+    return addEvent(distinctId, null, "profile_append", null, properties);
   }
 
   /**
@@ -485,7 +485,7 @@ public class SensorsDataAPI {
     values.add(value);
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, values);
-    return profileAppend(distinctId, properties);
+    return addEvent(distinctId, null, "profile_append", null, properties);
   }
 
   /**
@@ -503,7 +503,7 @@ public class SensorsDataAPI {
       throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, true);
-    return addEvent(distinctId, distinctId, "profile_unset", null, properties);
+    return addEvent(distinctId, null, "profile_unset", null, properties);
   }
 
   /**
@@ -536,11 +536,12 @@ public class SensorsDataAPI {
   private Future<Boolean> addEvent(String distinctId, String originDistinceId, String actionType,
       String eventName, Map<String, Object> properties) throws InvalidArgumentException {
     assertKey("Distinct Id", distinctId);
-    assertKey("Original Distinct Id", originDistinceId);
+    assertProperties(actionType, properties);
     if (actionType.equals("track")) {
       assertKey("Event Name", eventName);
+    } else if (actionType.equals("track_signup")) {
+      assertKey("Original Distinct Id", originDistinceId);
     }
-    assertProperties(actionType, properties);
 
     long time = extract_time_from_properties(properties);
 
@@ -552,17 +553,20 @@ public class SensorsDataAPI {
       eventProperties.putAll(properties);
     }
 
+    Map<String, String> libProperties = getLibProperties();
+
     Map<String, Object> event = new HashMap<String, Object>();
 
     event.put("type", actionType);
     event.put("time", time);
     event.put("distinct_id", distinctId);
     event.put("properties", eventProperties);
+    event.put("lib", libProperties);
 
-    if (actionType.equals("track") || actionType.equals("track_signup")) {
+    if (actionType.equals("track")) {
       event.put("event", eventName);
-    }
-    if (actionType.equals("track_signup")) {
+    } else if (actionType.equals("track_signup")) {
+      event.put("event", eventName);
       event.put("original_id", originDistinceId);
     }
 
@@ -615,6 +619,27 @@ public class SensorsDataAPI {
       this.taskObjectList.clear();
     }
     return this.executor.submit(new SubmitTask(data));
+  }
+
+  private Map<String, String> getLibProperties() {
+    Map<String, String> libProperties = new HashMap<String, String>();
+    libProperties.put("$lib", "Java");
+    libProperties.put("$lib_version", SDK_VERSION);
+    libProperties.put("$lib_method", "code");
+
+    if (this.superProperties.containsKey("$app_version")) {
+      libProperties.put("$app_version", (String) this.superProperties.get("$app_version"));
+    }
+
+    StackTraceElement[] trace = (new Exception()).getStackTrace();
+
+    if (trace.length > 3) {
+      StackTraceElement traceElement = trace[3];
+      libProperties.put("$lib_detail", String.format("%s##%s##%s##%s", traceElement.getClassName(),
+          traceElement.getMethodName(), traceElement.getFileName(), traceElement.getLineNumber()));
+    }
+
+    return libProperties;
   }
 
   private long extract_time_from_properties(Map<String, Object> properties) {
