@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -54,7 +55,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.4.0";
+  private final static String SDK_VERSION = "1.4.1";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -809,16 +810,17 @@ public class SensorsDataAPI {
     }
 
     private char[] encodeTasks(String data) throws IOException {
+      byte[] bytes = data.getBytes(Charset.forName("UTF-8"));
       if (sendingGZipContent) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream(data.getBytes().length);
+        ByteArrayOutputStream os = new ByteArrayOutputStream(bytes.length);
         GZIPOutputStream gos = new GZIPOutputStream(os);
-        gos.write(data.getBytes());
+        gos.write(bytes);
         gos.close();
         byte[] compressed = os.toByteArray();
         os.close();
         return Base64Coder.encode(compressed);
       } else {
-        return Base64Coder.encode(data.getBytes());
+        return Base64Coder.encode(bytes);
       }
     }
 
