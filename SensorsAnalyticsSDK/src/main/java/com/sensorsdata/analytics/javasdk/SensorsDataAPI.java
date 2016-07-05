@@ -55,7 +55,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.4.1";
+  private final static String SDK_VERSION = "1.5.0";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -512,12 +512,14 @@ public class SensorsDataAPI {
    */
   public void flush() {
     Future<Boolean> task = enqueueAndFlush(null, 0);
-    try {
-      task.get();
-    } catch (InterruptedException e) {
-      log.error(e.getMessage(), e);
-    } catch (ExecutionException e) {
-      log.error(e.getMessage(), e);
+    if (task != null) {
+      try {
+        task.get();
+      } catch (InterruptedException e) {
+        log.error(e.getMessage(), e);
+      } catch (ExecutionException e) {
+        log.error(e.getMessage(), e);
+      }
     }
   }
 
@@ -573,23 +575,25 @@ public class SensorsDataAPI {
 
     if (this.debugMode.isDebugMode()) {
       Future<Boolean> task = enqueueAndFlush(event, 0);
-      try {
-        task.get();
-      } catch (InterruptedException e) {
-        throw new DebugModeException(e.getMessage());
-      } catch (ExecutionException e) {
-        if (e.getCause() instanceof FlushErrorException) {
-          String error = String
-              .format("Unexpected response from SensorsAnalytics server. [error='%s']",
-                  e.getMessage());
-          throw new DebugModeException(error);
-        } else if (e.getCause() instanceof ConnectErrorException) {
-          String error = String
-              .format("Unexpected response from SensorsAnalytics server. [error='%s']",
-                  e.getMessage());
-          throw new DebugModeException(error);
-        } else {
+      if (task != null) {
+        try {
+          task.get();
+        } catch (InterruptedException e) {
           throw new DebugModeException(e.getMessage());
+        } catch (ExecutionException e) {
+          if (e.getCause() instanceof FlushErrorException) {
+            String error = String
+                .format("Unexpected response from SensorsAnalytics server. [error='%s']",
+                    e.getMessage());
+            throw new DebugModeException(error);
+          } else if (e.getCause() instanceof ConnectErrorException) {
+            String error = String
+                .format("Unexpected response from SensorsAnalytics server. [error='%s']",
+                    e.getMessage());
+            throw new DebugModeException(error);
+          } else {
+            throw new DebugModeException(e.getMessage());
+          }
         }
       }
       return task;
@@ -602,18 +606,14 @@ public class SensorsDataAPI {
     List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
 
     synchronized (this.taskObjectList) {
-      if (null != event) {
-        this.taskObjectList.add(event);
+      if (null == event) {
+        return null;
       }
 
-      if (this.taskObjectList.isEmpty() || this.taskObjectList.size() < flushBulk) {
+      this.taskObjectList.add(event);
+      if (this.taskObjectList.size() < flushBulk) {
         // 返回空任务
-        return executor.submit(new Callable<Boolean>() {
-          @Override
-          public Boolean call() throws Exception {
-            return true;
-          }
-        });
+        return null;
       }
 
       data.addAll(this.taskObjectList);
@@ -792,7 +792,7 @@ public class SensorsDataAPI {
           }
         }
 
-        if (response_code != 200) {
+        if (response_code < 200 || response_code >= 300) {
           throw new FlushErrorException(String.format("Response error. [status=%d error='%s']",
               response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase()));
         }
