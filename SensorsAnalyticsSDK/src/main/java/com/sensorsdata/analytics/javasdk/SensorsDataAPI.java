@@ -56,7 +56,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.5.1";
+  private final static String SDK_VERSION = "1.5.2";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -522,7 +522,7 @@ public class SensorsDataAPI {
    * 立即发送缓存中的所有日志，阻塞等待直到发送完成
    */
   public void flush() {
-    Future<Boolean> task = enqueueAndFlush(null, 0);
+    Future<Boolean> task = enqueueAndFlush(null, 1);
     if (task != null) {
       try {
         task.get();
@@ -585,7 +585,7 @@ public class SensorsDataAPI {
     }
 
     if (this.debugMode.isDebugMode()) {
-      Future<Boolean> task = enqueueAndFlush(event, 0);
+      Future<Boolean> task = enqueueAndFlush(event, 1);
       if (task != null) {
         try {
           task.get();
@@ -617,11 +617,11 @@ public class SensorsDataAPI {
     List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
 
     synchronized (this.taskObjectList) {
-      if (null == event) {
-        return null;
+      // XXX: flush时，会调用 enqueueAndFlush(null, 1)，修改需注意
+      if (event != null) {
+        this.taskObjectList.add(event);
       }
 
-      this.taskObjectList.add(event);
       if (this.taskObjectList.size() < flushBulk) {
         // 返回空任务
         return null;
