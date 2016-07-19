@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -55,7 +56,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.5.0";
+  private final static String SDK_VERSION = "1.5.1";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -182,13 +183,23 @@ public class SensorsDataAPI {
         try {
           // 将 URI Path 替换成 Debug 模式的 '/debug'
           URIBuilder builder = new URIBuilder(new URI(serverUrl));
-          builder.setPath("/debug");
+          String[] urlPathes = builder.getPath().split("/");
+          urlPathes[urlPathes.length - 1] = "debug";
+          builder.setPath(String.join("/", urlPathes));
           url = builder.build().toURL().toString();
         } catch (URISyntaxException e) {
-          throw new DebugModeException("Invalid server url of Sensors Analytics.");
+          throw new DebugModeException(e);
         } catch (MalformedURLException e) {
-          throw new DebugModeException("Invalid server url of Sensors Analytics.");
+          throw new DebugModeException(e);
         }
+        String infoMsg = String.format(
+            "Sensors Analytics SDK is initialized in DEBUG mode with url: %s", url);
+        log.info(infoMsg);
+        System.out.println(infoMsg);
+      } else {
+        String infoMsg = String.format("Sensors Analytics SDK is initialized with url: %s", url);
+        log.info(infoMsg);
+        System.out.println(infoMsg);
       }
       instance = new SensorsDataAPI(url, flushInterval, bulkSize, debugMode);
     } else {
@@ -690,21 +701,28 @@ public class SensorsDataAPI {
 
       // List 类型的属性值，List 元素必须为 String 类型
       if (property.getValue() instanceof List<?>) {
-        for (Object v : (List<Object>) property.getValue()) {
-          if (!(v instanceof String)) {
+        for (final ListIterator<Object> it = ((List<Object>)property.getValue()).listIterator
+            (); it.hasNext();) {
+          Object element = it.next();
+          if (!(element instanceof String)) {
             throw new InvalidArgumentException("The property value should be a basic type: "
                 + "Number, String, Date, Boolean, List<String>.");
           }
-          if (((String) v).length() > 255) {
-            throw new InvalidArgumentException("The property value is too long");
+          if (((String) element).length() > 8192) {
+            it.set(((String) element).substring(0, 8192));
+            log.warn(String.format("Element in property '%s' with LIST type is cut off while it's "
+                + "too long", (String) element));
           }
         }
       }
 
       // String 类型的属性值，长度不能超过255
       if (property.getValue() instanceof String) {
-        if (((String) property.getValue()).length() > 255) {
-          throw new InvalidArgumentException("The property value is too long");
+        String value = (String) property.getValue();
+        if (value.length() > 8192) {
+          property.setValue(value.substring(0, 8192));
+          log.warn(String.format("Property '%s' with STRING type is cut off while it's too long"
+              + "."), value);
         }
       }
 
