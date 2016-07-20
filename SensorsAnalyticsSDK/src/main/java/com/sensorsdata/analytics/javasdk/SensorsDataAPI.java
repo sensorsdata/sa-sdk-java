@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -56,7 +57,7 @@ public class SensorsDataAPI {
   private final static Logger log = LoggerFactory.getLogger(SensorsDataAPI.class);
 
   private final static int EXECUTE_THREAD_NUMBER = 10;
-  private final static String SDK_VERSION = "1.5.2";
+  private final static String SDK_VERSION = "1.5.3";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -185,7 +186,7 @@ public class SensorsDataAPI {
           URIBuilder builder = new URIBuilder(new URI(serverUrl));
           String[] urlPathes = builder.getPath().split("/");
           urlPathes[urlPathes.length - 1] = "debug";
-          builder.setPath(String.join("/", urlPathes));
+          builder.setPath(strJoin(urlPathes, "/"));
           url = builder.build().toURL().toString();
         } catch (URISyntaxException e) {
           throw new DebugModeException(e);
@@ -739,6 +740,17 @@ public class SensorsDataAPI {
       }
     }
   }
+
+  public static String strJoin(String[] arr, String sep) {
+    StringBuilder sbStr = new StringBuilder();
+    for (int i = 0, il = arr.length; i < il; i++) {
+      if (i > 0)
+        sbStr.append(sep);
+      sbStr.append(arr[i]);
+    }
+    return sbStr.toString();
+  }
+
 
   private class SubmitTask implements Callable<Boolean> {
 
