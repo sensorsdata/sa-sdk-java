@@ -137,11 +137,20 @@ public class SensorsAnalytics {
 
     private int flushCount = 0;
 
+    public BatchConsumer(final String serverUrl) {
+      this(serverUrl, MAX_FLUSH_BULK_SIZE);
+    }
+
     public BatchConsumer(final String serverUrl, final int bulkSize) {
+      this(serverUrl, bulkSize, false);
+    }
+
+    public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException) {
       this.messageList = new ArrayList<Map<String, Object>>();
       this.httpConsumer = new HttpConsumer(serverUrl, null);
       this.jsonMapper = getJsonObjectMapper();
       this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
+      this.throwException = throwException;
     }
 
     @Override public void send(Map<String, Object> message) {
@@ -170,19 +179,23 @@ public class SensorsAnalytics {
         } catch (IOException e) {
           log.error(String
               .format("Failed to dump message with BatchConsumer, retied %d times.", reties), e);
-          System.out.println(String
-              .format("Failed to dump message with BatchConsumer, retied %d times.", reties));
-          // XXX: 发生错误时，默认1秒后才重试
-          retryTime = System.currentTimeMillis() + 1000;
-          reties = reties + 1;
+          if (throwException) {
+            throw new RuntimeException(e);
+          } else {
+            // XXX: 发生错误时，默认0.1秒后才重试
+            retryTime = System.currentTimeMillis() + 100;
+            reties = reties + 1;
+          }
         } catch (HttpConsumer.HttpConsumerException e) {
           log.error(String
               .format("Failed to dump message with BatchConsumer, retied %d times.", reties), e);
-          System.out.println(String
-              .format("Failed to dump message with BatchConsumer, retied %d times.", reties));
-          // XXX: 发生错误时，默认1秒后才重试
-          retryTime = System.currentTimeMillis() + 1000;
-          reties = reties + 1;
+          if (throwException) {
+            throw new RuntimeException(e);
+          } else {
+            // XXX: 发生错误时，默认0.1秒后才重试
+            retryTime = System.currentTimeMillis() + 100;
+            reties = reties + 1;
+          }
         }
       }
     }
@@ -197,6 +210,7 @@ public class SensorsAnalytics {
     private final HttpConsumer httpConsumer;
     private final ObjectMapper jsonMapper;
     private final int bulkSize;
+    private final boolean throwException;
 
     // Batch 发送重试时间
     private long retryTime = 0;
@@ -891,7 +905,7 @@ public class SensorsAnalytics {
 
   private final static Logger log = LoggerFactory.getLogger(SensorsAnalytics.class);
 
-  private final static String SDK_VERSION = "2.0.2";
+  private final static String SDK_VERSION = "2.0.3";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
