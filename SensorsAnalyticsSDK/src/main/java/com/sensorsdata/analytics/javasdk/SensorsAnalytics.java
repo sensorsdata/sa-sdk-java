@@ -17,6 +17,10 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.DailyRollingFileAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.spi.LoggingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -330,6 +334,41 @@ public class SensorsAnalytics {
     private final Writer writer;
   }
 
+
+  public static class LoggingConsumer implements Consumer {
+    final DailyRollingFileAppender dailyRollingFileAppender;
+    private final ObjectMapper jsonMapper;
+    org.apache.log4j.Logger logger;
+
+    public LoggingConsumer(String filename) throws IOException {
+      dailyRollingFileAppender =
+          new DailyRollingFileAppender(new PatternLayout("%m"), filename, "'.'yyyy-MM-dd");
+      dailyRollingFileAppender.setThreshold(Level.INFO);
+      dailyRollingFileAppender.activateOptions();
+      logger = org.apache.log4j.Logger.getLogger("SensorsAnalyticsLogger");
+      this.jsonMapper = getJsonObjectMapper();
+    }
+
+    @Override public void send(Map<String, Object> message) {
+      LoggingEvent loggingEvent = null;
+      try {
+        loggingEvent = new LoggingEvent(null, logger, System.currentTimeMillis(), Level.INFO,
+            jsonMapper.writeValueAsString(message) + "\n", null);
+      } catch (JsonProcessingException e) {
+        log.warn("fail to process json", e);
+      }
+      synchronized (dailyRollingFileAppender) {
+        dailyRollingFileAppender.append(loggingEvent);
+      }
+    }
+
+    @Override public void flush() {
+    }
+
+    @Override public void close() {
+      dailyRollingFileAppender.close();
+    }
+  }
 
   public SensorsAnalytics(final Consumer consumer) {
     this.consumer = consumer;
