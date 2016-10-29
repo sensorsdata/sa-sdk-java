@@ -19,35 +19,8 @@ public class HelloSensorsAnalytics {
 //    final SensorsAnalytics sa =
 //        new SensorsAnalytics(new SensorsAnalytics.BatchConsumer(SA_SERVER_URL, 10));
 
-    // AsyncBatchConsumer
-//    ThreadPoolExecutor executor =
-//        new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
-//            new ThreadFactory() {
-//              public Thread newThread(Runnable r) {
-//                Thread t = new Thread(r);
-//                t.setPriority(Thread.MIN_PRIORITY);
-//                return t;
-//              }
-//            });
-//    SensorsAnalytics.AsyncBatchConsumerCallback callback =
-//        new SensorsAnalytics.AsyncBatchConsumerCallback() {
-//          @Override public void onFlushTask(Future<Boolean> task) {
-//            try {
-//              task.get();
-//            } catch (InterruptedException e) {
-//              e.printStackTrace();
-//            } catch (ExecutionException e) {
-//              e.printStackTrace();
-//            }
-//          }
-//        };
-//    final SensorsAnalytics sa = new SensorsAnalytics(
-//        new SensorsAnalytics.AsyncBatchConsumer(SA_SERVER_URL, 10, executor, callback));
-
-    // ConsoleConsumer
-//    Writer writer = new PrintWriter(System.out);
-//    final SensorsAnalytics sa = new SensorsAnalytics(new SensorsAnalytics.ConsoleConsumer(writer));
-//    writer.flush();
+    // LoggingConsumer
+//    final SensorsAnalytics sa = new SensorsAnalytics(new SensorsAnalytics.LoggingConsumer("/data/file.log"));
 
     // 在这个 Demo 中，我们以一个典型的电商产品为例，描述一个用户从匿名访问网站，到下单购买商品，再到申请售后服务，
     // 这样一个整个环节，使用 Sensors Analytics（以下简称 SA）的产品，应该如何记录日志。

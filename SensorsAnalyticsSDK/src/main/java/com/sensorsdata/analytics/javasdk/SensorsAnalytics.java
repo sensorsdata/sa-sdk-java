@@ -220,10 +220,17 @@ public class SensorsAnalytics {
   }
 
 
+  @Deprecated
   public interface AsyncBatchConsumerCallback {
     void onFlushTask(Future<Boolean> task);
   }
 
+
+  /**
+   * @deprecated Async模式下，开发者需要仔细处理缓存中的数据，如由于异步发送不及时导致缓存队列过大、程序停止时缓
+   * 存队列清空等问题。因此我们建议开发者使用 LoggingConsumer 结合 LogAgent 工具导入数据。
+   */
+  @Deprecated
   public static class AsyncBatchConsumer implements Consumer {
 
     public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
@@ -905,7 +912,7 @@ public class SensorsAnalytics {
 
   private final static Logger log = LoggerFactory.getLogger(SensorsAnalytics.class);
 
-  private final static String SDK_VERSION = "2.0.3";
+  private final static String SDK_VERSION = "2.0.4";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
