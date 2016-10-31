@@ -637,6 +637,17 @@ public class SensorsAnalytics {
   }
 
   /**
+   * 删除用户所有属性
+   *
+   * @param distinctId 用户ID
+   *
+   * @throws InvalidArgumentException distinctId 不符合命名规范时抛出该异常
+   */
+  public void profileDelete(String distinctId) throws InvalidArgumentException {
+    addEvent(distinctId, null, "profile_delete", null, new HashMap<String, Object>());
+  }
+
+  /**
    * 立即发送缓存中的所有日志
    */
   public void flush() {
@@ -912,7 +923,7 @@ public class SensorsAnalytics {
 
   private final static Logger log = LoggerFactory.getLogger(SensorsAnalytics.class);
 
-  private final static String SDK_VERSION = "2.0.4";
+  private final static String SDK_VERSION = "2.0.5";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
