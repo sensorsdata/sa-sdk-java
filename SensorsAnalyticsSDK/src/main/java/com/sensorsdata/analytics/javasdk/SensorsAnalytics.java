@@ -25,11 +25,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -377,6 +381,7 @@ public class SensorsAnalytics {
             jsonMapper.writeValueAsString(message) + "\n", null);
       } catch (JsonProcessingException e) {
         log.warn("fail to process json", e);
+        return;
       }
       synchronized (dailyRollingFileAppender) {
         dailyRollingFileAppender.append(loggingEvent);
@@ -388,6 +393,87 @@ public class SensorsAnalytics {
 
     @Override public void close() {
       dailyRollingFileAppender.close();
+    }
+  }
+
+
+  public static class ConcurrentLoggingConsumer implements Consumer {
+    private final ObjectMapper jsonMapper;
+    private final String filenamePrefix;
+    private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private FileOutputStream currentFileOutputStream = null;
+    private String currentFileName = null;
+
+    public ConcurrentLoggingConsumer(String filenamePrefix) throws IOException {
+      this.filenamePrefix = filenamePrefix;
+      this.jsonMapper = getJsonObjectMapper();
+    }
+
+    @Override public synchronized void send(Map<String, Object> message) {
+      Date now = new Date();
+      String filename = constructFileName(now);
+      if (currentFileOutputStream == null || !currentFileName.equals(filename)) {
+        if (currentFileOutputStream != null) {
+          try {
+            currentFileOutputStream.close();
+            log.info("close old file. [filename={}]", currentFileName);
+          } catch (IOException e) {
+            log.warn("fail to close output stream", e);
+          }
+        }
+        try {
+          currentFileOutputStream = new FileOutputStream(filename, true);
+          currentFileName = filename;
+          log.info("switch to new file. [filename={}]", filename);
+        } catch (FileNotFoundException e) {
+          log.warn("fail to open file.", e);
+          return;
+        }
+      }
+
+      String messageInString;
+      try {
+        messageInString = jsonMapper.writeValueAsString(message) + "\n";
+      } catch (JsonProcessingException e) {
+        log.warn("fail to process json", e);
+        return;
+      }
+
+      FileLock lock = null;
+      try {
+        final FileChannel channel = currentFileOutputStream.getChannel();
+        lock = channel.lock(0, Long.MAX_VALUE, false);
+        currentFileOutputStream.write(messageInString.getBytes());
+      } catch (Exception e) {
+        log.warn("fail to write file.", e);
+      } finally {
+        if (lock != null) {
+          try {
+            lock.release();
+          } catch (IOException e) {
+            log.warn("fail to release file lock.", e);
+          }
+        }
+      }
+    }
+
+    private String constructFileName(Date now) {
+      return filenamePrefix + "." + simpleDateFormat.format(now);
+    }
+
+    @Override public void flush() {
+    }
+
+    @Override public synchronized void close() {
+      if (currentFileOutputStream != null) {
+        try {
+          currentFileOutputStream.close();
+          currentFileOutputStream = null;
+          currentFileName = null;
+        } catch (IOException e) {
+          log.warn("fail to close file.", e);
+        }
+      }
     }
   }
 
@@ -923,7 +1009,7 @@ public class SensorsAnalytics {
 
   private final static Logger log = LoggerFactory.getLogger(SensorsAnalytics.class);
 
-  private final static String SDK_VERSION = "2.0.8";
+  private final static String SDK_VERSION = "2.0.9";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
