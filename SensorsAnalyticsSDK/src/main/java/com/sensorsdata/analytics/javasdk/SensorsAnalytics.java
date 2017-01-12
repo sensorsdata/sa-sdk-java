@@ -398,62 +398,92 @@ public class SensorsAnalytics {
 
 
   public static class ConcurrentLoggingConsumer implements Consumer {
+
+    static class LoggingFileWriter {
+
+      private final String fileName;
+      private final FileOutputStream outputStream;
+
+      LoggingFileWriter(final String fileName) throws FileNotFoundException {
+        this.outputStream = new FileOutputStream(fileName, true);
+        this.fileName = fileName;
+      }
+
+      void close() {
+        try {
+          outputStream.close();
+          log.info("closed old file. [filename={}]", fileName);
+        } catch (Exception e) {
+          log.warn("fail to close output stream.", e);
+        }
+      }
+
+      boolean isValid(final String fileName) {
+        return this.fileName.equals(fileName);
+      }
+
+      boolean write(final StringBuilder sb) {
+        boolean result = true;
+
+        FileLock lock = null;
+        try {
+          final FileChannel channel = outputStream.getChannel();
+          lock = channel.lock(0, Long.MAX_VALUE, false);
+          outputStream.write(sb.toString().getBytes("UTF-8"));
+        } catch (Exception e) {
+          log.warn("fail to write file.", e);
+          result = false;
+        } finally {
+          if (lock != null) {
+            try {
+              lock.release();
+            } catch (IOException e) {
+              log.warn("fail to release file lock.", e);
+            }
+          }
+        }
+
+        return result;
+      }
+
+    }
+
+    private final static int BUFFER_LIMITATION = 1 * 1024 * 1024 * 1024;    // 1G
+
     private final ObjectMapper jsonMapper;
     private final String filenamePrefix;
+    private final StringBuilder messageBuffer;
+    private final int bufferSize;
     private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private FileOutputStream currentFileOutputStream = null;
-    private String currentFileName = null;
+
+    private LoggingFileWriter fileWriter;
 
     public ConcurrentLoggingConsumer(String filenamePrefix) throws IOException {
+      this(filenamePrefix, 8192);
+    }
+
+    public ConcurrentLoggingConsumer(String filenamePrefix, int bufferSize) throws IOException {
       this.filenamePrefix = filenamePrefix;
       this.jsonMapper = getJsonObjectMapper();
+      this.messageBuffer = new StringBuilder(bufferSize);
+      this.bufferSize = bufferSize;
     }
 
     @Override public synchronized void send(Map<String, Object> message) {
-      Date now = new Date();
-      String filename = constructFileName(now);
-      if (currentFileOutputStream == null || !currentFileName.equals(filename)) {
-        if (currentFileOutputStream != null) {
-          try {
-            currentFileOutputStream.close();
-            log.info("close old file. [filename={}]", currentFileName);
-          } catch (IOException e) {
-            log.warn("fail to close output stream", e);
-          }
-        }
+      if (messageBuffer.length() < BUFFER_LIMITATION) {
         try {
-          currentFileOutputStream = new FileOutputStream(filename, true);
-          currentFileName = filename;
-          log.info("switch to new file. [filename={}]", filename);
-        } catch (FileNotFoundException e) {
-          log.warn("fail to open file.", e);
+          messageBuffer.append(jsonMapper.writeValueAsString(message));
+          messageBuffer.append("\n");
+        } catch (JsonProcessingException e) {
+          log.warn("fail to process json", e);
           return;
         }
+      } else {
+        log.error("logging buffer exceeded the allowed limitation.");
       }
 
-      String messageInString;
-      try {
-        messageInString = jsonMapper.writeValueAsString(message) + "\n";
-      } catch (JsonProcessingException e) {
-        log.warn("fail to process json", e);
-        return;
-      }
-
-      FileLock lock = null;
-      try {
-        final FileChannel channel = currentFileOutputStream.getChannel();
-        lock = channel.lock(0, Long.MAX_VALUE, false);
-        currentFileOutputStream.write(messageInString.getBytes());
-      } catch (Exception e) {
-        log.warn("fail to write file.", e);
-      } finally {
-        if (lock != null) {
-          try {
-            lock.release();
-          } catch (IOException e) {
-            log.warn("fail to release file lock.", e);
-          }
-        }
+      if (messageBuffer.length() >= bufferSize) {
+        flush();
       }
     }
 
@@ -461,19 +491,37 @@ public class SensorsAnalytics {
       return filenamePrefix + "." + simpleDateFormat.format(now);
     }
 
-    @Override public void flush() {
+    @Override public synchronized void flush() {
+      if (messageBuffer.length() == 0) {
+        return;
+      }
+
+      String filename = constructFileName(new Date());
+
+      if (fileWriter != null && !fileWriter.isValid(filename)) {
+        fileWriter.close();
+        fileWriter = null;
+      }
+
+      if (fileWriter == null) {
+        try {
+          fileWriter = new LoggingFileWriter(filename);
+          log.info("opened new file. [filename={}]", filename);
+        } catch (FileNotFoundException e) {
+          log.warn("failed to open file. [filename={}]", filename);
+        }
+      }
+
+      if (fileWriter.write(messageBuffer)) {
+        messageBuffer.setLength(0);
+      }
     }
 
     @Override public synchronized void close() {
-      if (currentFileOutputStream != null) {
-        try {
-          currentFileOutputStream.close();
-          currentFileOutputStream = null;
-          currentFileName = null;
-        } catch (IOException e) {
-          log.warn("fail to close file.", e);
-        }
-      }
+      flush();
+
+      fileWriter.close();
+      fileWriter = null;
     }
   }
 
@@ -1009,7 +1057,7 @@ public class SensorsAnalytics {
 
   private final static Logger log = LoggerFactory.getLogger(SensorsAnalytics.class);
 
-  private final static String SDK_VERSION = "2.0.9";
+  private final static String SDK_VERSION = "2.0.10";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
