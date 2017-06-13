@@ -41,7 +41,7 @@ public class HelloSensorsAnalytics {
     properties.put("$os_version", "8.1");               // 操作系统的具体版本
     properties.put("$ip", "123.123.123.123");           // 请求中能够拿到用户的IP，则把这个传递给SA，SA会自动根据这个解析省份、城市
     properties.put("Channel", "baidu");                 // 用户是通过baidu这个渠道过来的
-    sa.track(cookieId, "ViewHomePage", properties); // 记录访问首页这个event
+    sa.track(cookieId, false, "ViewHomePage", properties); // 记录访问首页这个event
 
     // 1.2 搜索商品
     properties.clear();
@@ -49,7 +49,7 @@ public class HelloSensorsAnalytics {
     properties.put("$os_version", "8.1");     // 操作系统的具体版本
     properties.put("$ip", "123.123.123.123");         // 请求中能够拿到用户的IP，则把这个传递给SA，SA会自动根据这个解析省份、城市
     properties.put("KeyWord", "XX手机");                // 搜索引擎引流过来时使用的关键词
-    sa.track(cookieId, "SearchProduct", properties);      // 记录搜索商品这个event
+    sa.track(cookieId, false, "SearchProduct", properties);      // 记录搜索商品这个event
 
     // 1.3 浏览商品
     properties.clear();
@@ -59,7 +59,7 @@ public class HelloSensorsAnalytics {
     properties.put("ProductName", "xx手机");           // 商品名称
     properties.put("ProductType", "智能手机");         //  商品类别
     properties.put("ShopName", "XX官方旗舰店");         // 店铺名称
-    sa.track(cookieId, "ViewProduct", properties);      // 记录浏览商品这个event
+    sa.track(cookieId, false, "ViewProduct", properties);      // 记录浏览商品这个event
 
     // 2. 用户决定注册了
     String registerId = "123456";       // 用户注册时，分配给用户的注册Id
@@ -79,7 +79,7 @@ public class HelloSensorsAnalytics {
     profiles.put("Birthday", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(
         "1984-11-03 " + "00:00:00"));                 // 用户的出生日期，特别注意，这个地方填入年龄是不合适的，因为年龄会随着时间而变化
     profiles.put("RegisterChannel", "baidu");  // 用户的注册渠道
-    sa.profileSet(registerId, profiles);    // 此时传入的是注册ID了
+    sa.profileSet(registerId, true, profiles);    // 此时传入的是注册ID了
 
     // 2.3 立刻刷新一下，让数据传到SA中
     sa.flush();
@@ -95,7 +95,7 @@ public class HelloSensorsAnalytics {
     properties.put("OrderId", "SN_123_AB_TEST");   // 订单ID
     properties.put("ShipPrice", 10.0);             // 运费
     properties.put("OrderTotalPrice", 1234.0);         // 订单的总价格，默认是元
-    sa.track(registerId, "SubmitOrder", properties); // 注意，此时使用的已经是注册ID了
+    sa.track(registerId, true, "SubmitOrder", properties); // 注意，此时使用的已经是注册ID了
     // 订单中手机这个商品的信息
     properties.clear();
     properties.put("$os", "Windows");         // 通过请求中的UA，可以解析出用户使用设备的操作系统是windows的
@@ -108,7 +108,7 @@ public class HelloSensorsAnalytics {
     properties.put("ProductUnitPrice", 1200.0);   // 商品单价
     properties.put("ProductAmount", 1.0);         // 商品数量，可以是个数，也可以是重量
     properties.put("ProductTotalPrice", 1200.0);  // 商品总价
-    sa.track(registerId, "SubmitOrderDetail", properties);
+    sa.track(registerId, true, "SubmitOrderDetail", properties);
     // 订单中手机膜这个商品的信息
     properties.clear();
     properties.put("$os", "Windows");         // 通过请求中的UA，可以解析出用户使用设备的操作系统是windows的
@@ -121,7 +121,7 @@ public class HelloSensorsAnalytics {
     properties.put("ProductUnitPrice", 12.0);   // 商品单价
     properties.put("ProductAmount", 2.0);         // 商品数量，可以是个数，也可以是重量
     properties.put("ProductTotalPrice", 24.0);  // 商品总价
-    sa.track(registerId, "SubmitOrderDetail", properties);
+    sa.track(registerId, true, "SubmitOrderDetail", properties);
 
     // 3.2 支付订单和支付订单详情
     // 整个订单的支付情况
@@ -136,7 +136,7 @@ public class HelloSensorsAnalytics {
     properties.put("AllowanceAmount", 30.0);                   // 补贴金额
     properties.put("AllowanceType", "首次下单红包");        // 补贴类型
     properties.put("PaymentAmount", 1204.0);      // 实际支付的订单金额
-    sa.track(registerId, "PayOrder", properties);
+    sa.track(registerId, true, "PayOrder", properties);
 
     // 手机这个商品的支付情况
     properties.clear();
@@ -154,7 +154,7 @@ public class HelloSensorsAnalytics {
     properties.put("ProductAllowanceType", "首次下单红包");        // 补贴类型
     properties.put("ProductPaymentAmount", 1170.0); // 手机实际支付了这么多
     properties.put("PaymentMethod", "AliPay");      // 与订单保持一致
-    sa.track(registerId, "PayOrderDetail", properties);
+    sa.track(registerId, true, "PayOrderDetail", properties);
 
     // 手机膜这个商品的支付情况
     properties.clear();
@@ -172,7 +172,7 @@ public class HelloSensorsAnalytics {
     properties.put("ProductAllowanceType", "无补贴");        // 补贴类型
     properties.put("ProductPaymentAmount", 24.0); // 手机膜实际支付了这么多
     properties.put("PaymentMethod", "AliPay");      // 与订单保持一致
-    sa.track(registerId, "PayOrderDetail", properties);
+    sa.track(registerId, true, "PayOrderDetail", properties);
 
     // 3.3 假设这个用户支付后反悔了，要取消订单
     // 整个订单的取消情况
@@ -185,7 +185,7 @@ public class HelloSensorsAnalytics {
     properties.put("OrderTotalPrice", 1234.0);         // 订单的总价格，默认是元
     properties.put("CancelReason", "地址填写错误"); // 取消订单的原因
     properties.put("CancelTiming", "AfterPay");   // 取消订单的时机
-    sa.track(registerId, "CancelOrder", properties);
+    sa.track(registerId, true, "CancelOrder", properties);
     // 手机这个商品的取消情况
     properties.clear();
     properties.put("$os", "Windows");         // 通过请求中的UA，可以解析出用户使用设备的操作系统是windows的
@@ -200,7 +200,7 @@ public class HelloSensorsAnalytics {
     properties.put("ProductTotalPrice", 1200.0);  // 商品总价
     properties.put("CancelReason", "地址填写错误"); // 取消订单的原因
     properties.put("CancelTiming", "AfterPay");   // 取消订单的时机
-    sa.track(registerId, "CancelOrderDetail", properties);
+    sa.track(registerId, true, "CancelOrderDetail", properties);
     // 手机膜这个商品的取消情况
     properties.clear();
     properties.put("$os", "Windows");         // 通过请求中的UA，可以解析出用户使用设备的操作系统是windows的
@@ -215,7 +215,7 @@ public class HelloSensorsAnalytics {
     properties.put("ProductTotalPrice", 24.0);  // 商品总价
     properties.put("CancelReason", "地址填写错误"); // 取消订单的原因
     properties.put("CancelTiming", "AfterPay");   // 取消订单的时机
-    sa.track(registerId, "CancelOrderDetail", properties);
+    sa.track(registerId, true, "CancelOrderDetail", properties);
 
     // 4. 假设用户并没有取消订单，然后成功完成了配送
     // 手机这个商品的配送情况
@@ -235,7 +235,7 @@ public class HelloSensorsAnalytics {
     properties.put("PaymentMethod", "AliPay");      // 与订单保持一致
     properties.put("SupplyTime", 49.0);       // 订单运送用了49小时
     properties.put("SupplyMethod", "顺丰");   // 通过顺丰运送的
-    sa.track(registerId, "ReceiveProduct", properties);
+    sa.track(registerId, true, "ReceiveProduct", properties);
     // 手机膜这个商品的配送情况
     properties.clear();
     properties.put("$os", "Windows");         // 通过请求中的UA，可以解析出用户使用设备的操作系统是windows的
@@ -253,7 +253,7 @@ public class HelloSensorsAnalytics {
     properties.put("PaymentMethod", "AliPay");      // 与订单保持一致
     properties.put("SupplyTime", 98.0);       // 订单运送用了98小时
     properties.put("SupplyMethod", "圆通");   // 通过顺丰运送的
-    sa.track(registerId, "ReceiveProduct", properties);
+    sa.track(registerId, true, "ReceiveProduct", properties);
 
 
     // 5. 假设产品有质量问题，用户申请了售后服务
@@ -275,13 +275,13 @@ public class HelloSensorsAnalytics {
     properties.put("PaymentMethod", "AliPay");    // 与订单保持一致
     properties.put("ServiceContent", "维修");     // 手机申请了维修
     properties.put("ServiceStatus", "新提交");     // 售后服务的状态
-    sa.track(registerId, "ServiceAfterSale", properties);
+    sa.track(registerId, true, "ServiceAfterSale", properties);
     // 产品被收到，开始维修了，记录一条新的数据
     properties.put("ServiceStatus", "维修中");     // 售后服务的状态
-    sa.track(registerId, "ServiceAfterSale", properties);
+    sa.track(registerId, true, "ServiceAfterSale", properties);
     // 维修完成了，再记录一条新的数据
     properties.put("ServiceStatus", "维修完成");   // 售后服务的状态
-    sa.track(registerId, "ServiceAfterSale", properties);
+    sa.track(registerId, true, "ServiceAfterSale", properties);
 
     sa.shutdown();   // 关闭API，关闭时会自动调用flush
   }
