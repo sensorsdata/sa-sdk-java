@@ -563,29 +563,31 @@ public class SensorsAnalytics {
   /**
    * 记录一个没有任何属性的事件
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param eventName  事件名称
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void track(String distinctId, String eventName)
+  public void track(String distinctId, boolean isLoginId, String eventName)
       throws InvalidArgumentException {
-    addEvent(distinctId, null, "track", eventName, null);
+    addEvent(distinctId, isLoginId, null, "track", eventName, null);
   }
 
   /**
    * 记录一个拥有一个或多个属性的事件。属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和
    * {@link List}，若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param eventName  事件名称
    * @param properties 事件的属性
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void track(String distinctId, String eventName, Map<String, Object> properties)
+  public void track(String distinctId, boolean isLoginId, String eventName, Map<String, Object> properties)
       throws InvalidArgumentException {
-    addEvent(distinctId, null, "track", eventName, properties);
+    addEvent(distinctId, isLoginId, null, "track", eventName, properties);
   }
 
   /**
@@ -595,14 +597,14 @@ public class SensorsAnalytics {
    * http://www.sensorsdata.cn/manual/track_signup.html
    * 并在必要时联系我们的技术支持人员。
    *
-   * @param distinctId       新的用户ID
-   * @param originDistinctId 旧的用户ID
+   * @param loginId       登录 ID
+   * @param anonymousId 匿名 ID
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void trackSignUp(String distinctId, String originDistinctId)
+  public void trackSignUp(String loginId, String anonymousId)
       throws InvalidArgumentException {
-    addEvent(distinctId, originDistinctId, "track_signup", "$SignUp", null);
+    addEvent(loginId, false, anonymousId, "track_signup", "$SignUp", null);
   }
 
   /**
@@ -615,15 +617,15 @@ public class SensorsAnalytics {
    * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}，若属性包
    * 含 $time 字段，它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
    *
-   * @param distinctId       新的用户ID
-   * @param originDistinctId 旧的用户ID
+   * @param loginId       登录 ID
+   * @param anonymousId 匿名 ID
    * @param properties       事件的属性
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void trackSignUp(String distinctId, String originDistinctId,
+  public void trackSignUp(String loginId, String anonymousId,
       Map<String, Object> properties) throws InvalidArgumentException {
-    addEvent(distinctId, originDistinctId, "track_signup", "$SignUp", properties);
+    addEvent(loginId, false, anonymousId, "track_signup", "$SignUp", properties);
   }
 
   /**
@@ -632,30 +634,32 @@ public class SensorsAnalytics {
    *
    * 如果要设置的properties的key，之前在这个用户的profile中已经存在，则覆盖，否则，新创建
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param properties 用户的属性
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileSet(String distinctId, Map<String, Object> properties)
+  public void profileSet(String distinctId, boolean isLoginId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    addEvent(distinctId, null, "profile_set", null, properties);
+    addEvent(distinctId, isLoginId, null, "profile_set", null, properties);
   }
 
   /**
    * 设置用户的属性。这个接口只能设置单个key对应的内容，同样，如果已经存在，则覆盖，否则，新创建
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param property   属性名称
    * @param value      属性的值
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileSet(String distinctId, String property, Object value)
+  public void profileSet(String distinctId, boolean isLoginId, String property, Object value)
       throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
-    addEvent(distinctId, null, "profile_set", null, properties);
+    addEvent(distinctId, isLoginId, null, "profile_set", null, properties);
   }
 
   /**
@@ -666,119 +670,127 @@ public class SensorsAnalytics {
    * 与profileSet接口不同的是：
    * 如果要设置的properties的key，在这个用户的profile中已经存在，则不处理，否则，新创建
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param properties 用户的属性
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileSetOnce(String distinctId, Map<String, Object> properties)
+  public void profileSetOnce(String distinctId, boolean isLoginId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    addEvent(distinctId, null, "profile_set_once", null, properties);
+    addEvent(distinctId, isLoginId, null, "profile_set_once", null, properties);
   }
 
   /**
    * 首次设置用户的属性。这个接口只能设置单个key对应的内容。
    * 与profileSet接口不同的是，如果key的内容之前已经存在，则不处理，否则，重新创建
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param property   属性名称
    * @param value      属性的值
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileSetOnce(String distinctId, String property, Object value)
+  public void profileSetOnce(String distinctId, boolean isLoginId, String property, Object value)
       throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
-    addEvent(distinctId, null, "profile_set_once", null, properties);
+    addEvent(distinctId, isLoginId, null, "profile_set_once", null, properties);
   }
 
   /**
    * 为用户的一个或多个数值类型的属性累加一个数值，若该属性不存在，则创建它并设置默认值为0。属性取值只接受
    * {@link Number}类型
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param properties 用户的属性
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileIncrement(String distinctId, Map<String, Object> properties)
+  public void profileIncrement(String distinctId, boolean isLoginId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    addEvent(distinctId, null, "profile_increment", null, properties);
+    addEvent(distinctId, isLoginId, null, "profile_increment", null, properties);
   }
 
   /**
    * 为用户的数值类型的属性累加一个数值，若该属性不存在，则创建它并设置默认值为0
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param property   属性名称
    * @param value      属性的值
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileIncrement(String distinctId, String property, long value)
+  public void profileIncrement(String distinctId, boolean isLoginId, String property, long value)
       throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, value);
-    addEvent(distinctId, null, "profile_increment", null, properties);
+    addEvent(distinctId, isLoginId, null, "profile_increment", null, properties);
   }
 
   /**
    * 为用户的一个或多个数组类型的属性追加字符串，属性取值类型必须为 {@link java.util.List}，且列表中元素的类型
    * 必须为 {@link java.lang.String}
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param properties 用户的属性
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileAppend(String distinctId, Map<String, Object> properties)
+  public void profileAppend(String distinctId, boolean isLoginId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    addEvent(distinctId, null, "profile_append", null, properties);
+    addEvent(distinctId, isLoginId, null, "profile_append", null, properties);
   }
 
   /**
    * 为用户的数组类型的属性追加一个字符串
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param property   属性名称
    * @param value      属性的值
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileAppend(String distinctId, String property, String value)
+  public void profileAppend(String distinctId, boolean isLoginId, String property, String value)
       throws InvalidArgumentException {
     List<String> values = new ArrayList<String>();
     values.add(value);
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, values);
-    addEvent(distinctId, null, "profile_append", null, properties);
+    addEvent(distinctId, isLoginId, null, "profile_append", null, properties);
   }
 
   /**
    * 删除用户某一个属性
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    * @param property   属性名称
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileUnset(String distinctId, String property)
+  public void profileUnset(String distinctId, boolean isLoginId, String property)
       throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, true);
-    addEvent(distinctId, null, "profile_unset", null, properties);
+    addEvent(distinctId, isLoginId, null, "profile_unset", null, properties);
   }
 
   /**
    * 删除用户所有属性
    *
-   * @param distinctId 用户ID
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
    *
    * @throws InvalidArgumentException distinctId 不符合命名规范时抛出该异常
    */
-  public void profileDelete(String distinctId) throws InvalidArgumentException {
-    addEvent(distinctId, null, "profile_delete", null, new HashMap<String, Object>());
+  public void profileDelete(String distinctId, boolean isLoginId) throws InvalidArgumentException {
+    addEvent(distinctId, isLoginId, null, "profile_delete", null, new HashMap<String, Object>());
   }
 
   /**
@@ -890,8 +902,9 @@ public class SensorsAnalytics {
     final Boolean compressData;
   }
 
-  private void addEvent(String distinctId, String originDistinceId, String actionType,
-      String eventName, Map<String, Object> properties) throws InvalidArgumentException {
+  private void addEvent(String distinctId, boolean isLoginId, String originDistinceId,
+      String actionType, String eventName, Map<String, Object> properties)
+      throws InvalidArgumentException {
     assertKey("Distinct Id", distinctId);
     assertProperties(actionType, properties);
     if (actionType.equals("track")) {
@@ -914,6 +927,10 @@ public class SensorsAnalytics {
     }
     if (properties != null) {
       eventProperties.putAll(properties);
+    }
+
+    if (isLoginId) {
+      eventProperties.put("$is_login_id", true);
     }
 
     Map<String, String> libProperties = getLibProperties();
@@ -1057,7 +1074,7 @@ public class SensorsAnalytics {
 
   private final static Logger log = LoggerFactory.getLogger(SensorsAnalytics.class);
 
-  private final static String SDK_VERSION = "2.0.10";
+  private final static String SDK_VERSION = "3.0.0";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
