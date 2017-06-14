@@ -55,6 +55,15 @@ import java.util.zip.GZIPOutputStream;
  */
 public class SensorsAnalytics {
 
+  private boolean enableTimeFree = false;
+
+  public boolean isEnableTimeFree() {
+    return enableTimeFree;
+  }
+
+  public void setEnableTimeFree(boolean enableTimeFree) {
+    this.enableTimeFree = enableTimeFree;
+  }
 
   private interface Consumer {
     void send(Map<String, Object> message);
@@ -942,6 +951,10 @@ public class SensorsAnalytics {
     event.put("distinct_id", distinctId);
     event.put("properties", eventProperties);
     event.put("lib", libProperties);
+
+    if (enableTimeFree) {
+      event.put("time_free", true);
+    }
 
     if (actionType.equals("track")) {
       event.put("event", eventName);

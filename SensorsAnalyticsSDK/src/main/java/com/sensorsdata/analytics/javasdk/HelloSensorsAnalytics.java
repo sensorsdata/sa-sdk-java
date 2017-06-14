@@ -9,12 +9,11 @@ public class HelloSensorsAnalytics {
 
   public static void main(String[] args) throws Exception {
     // Sensors Analytics 采集事件的 URL
-    final String SA_SERVER_URL = "http://${service_name}.cloud.sensorsdata.cn:8006/sa?token=${token}&project=${project_name}";
+    final String SA_SERVER_URL = "http://10.10.11.209:8006/sa?project=default&token=bbb";
 
     // DebugConsumer
     final SensorsAnalytics sa = new SensorsAnalytics(new SensorsAnalytics.DebugConsumer
         (SA_SERVER_URL, true));
-
     // BatchConsumer
 //    final SensorsAnalytics sa =
 //        new SensorsAnalytics(new SensorsAnalytics.BatchConsumer(SA_SERVER_URL, 10));
