@@ -13,4 +13,8 @@ public class DebugModeException extends RuntimeException {
     super(error);
   }
 
+  public DebugModeException(String message, Throwable error) {
+    super(message, error);
+  }
+
 }

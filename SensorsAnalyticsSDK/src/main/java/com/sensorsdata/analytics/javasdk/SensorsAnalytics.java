@@ -17,14 +17,9 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.DailyRollingFileAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.spi.LoggingEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -109,8 +104,7 @@ public class SensorsAnalytics {
       try {
         sendingData = jsonMapper.writeValueAsString(messageList);
       } catch (JsonProcessingException e) {
-        log.error("Failed to serialize data.", e);
-        return;
+        throw new RuntimeException("Failed to serialize data.", e);
       }
 
       System.out
@@ -123,8 +117,7 @@ public class SensorsAnalytics {
 
         System.out.println(String.format("valid message: %s", sendingData));
       } catch (IOException e) {
-        log.error("Failed to send message with DebugConsumer.", e);
-        throw new DebugModeException(e);
+        throw new DebugModeException("Failed to send message with DebugConsumer.", e);
       } catch (HttpConsumer.HttpConsumerException e) {
         System.out.println(String.format("invalid message: %s", e.getSendingData()));
         System.out.println(String.format("http status code: %d", e.getHttpStatusCode()));
@@ -169,7 +162,7 @@ public class SensorsAnalytics {
     @Override public void send(Map<String, Object> message) {
       synchronized (messageList) {
         messageList.add(message);
-        if (messageList.size() >= bulkSize && System.currentTimeMillis() > retryTime) {
+        if (messageList.size() >= bulkSize) {
           flush();
         }
       }
@@ -181,33 +174,22 @@ public class SensorsAnalytics {
         try {
           sendingData = jsonMapper.writeValueAsString(messageList);
         } catch (JsonProcessingException e) {
-          log.error("Failed to serialize data.", e);
           messageList.clear();
+          if (throwException) {
+            throw new RuntimeException("Failed to serialize data.", e);
+          }
         }
 
         try {
           this.httpConsumer.consume(sendingData);
           messageList.clear();
-          reties = 0;
         } catch (IOException e) {
-          log.error(String
-              .format("Failed to dump message with BatchConsumer, retied %d times.", reties), e);
           if (throwException) {
-            throw new RuntimeException(e);
-          } else {
-            // XXX: 发生错误时，默认0.1秒后才重试
-            retryTime = System.currentTimeMillis() + 100;
-            reties = reties + 1;
+            throw new RuntimeException("Failed to dump message with BatchConsumer.", e);
           }
         } catch (HttpConsumer.HttpConsumerException e) {
-          log.error(String
-              .format("Failed to dump message with BatchConsumer, retied %d times.", reties), e);
           if (throwException) {
-            throw new RuntimeException(e);
-          } else {
-            // XXX: 发生错误时，默认0.1秒后才重试
-            retryTime = System.currentTimeMillis() + 100;
-            reties = reties + 1;
+            throw new RuntimeException("Failed to dump message with BatchConsumer.", e);
           }
         }
       }
@@ -224,12 +206,6 @@ public class SensorsAnalytics {
     private final ObjectMapper jsonMapper;
     private final int bulkSize;
     private final boolean throwException;
-
-    // Batch 发送重试时间
-    private long retryTime = 0;
-
-    // Retries
-    private long reties = 0;
   }
 
 
@@ -277,9 +253,6 @@ public class SensorsAnalytics {
                   httpConsumer.consume(sendingData);
                   break;
                 } catch (IOException e) {
-                  log.error(String.format(
-                      "Failed to dump message with AsyncBatchConsumer, retied %d times:" + " "
-                          + "%s", reties, sendingData), e);
                   // XXX: 发生错误时，默认1秒后才重试
                   try {
                     Thread.sleep(1000);
@@ -287,9 +260,6 @@ public class SensorsAnalytics {
                   }
                   reties = reties + 1;
                 } catch (HttpConsumer.HttpConsumerException e) {
-                  log.error(String.format(
-                      "Failed to dump message with AsyncBatchConsumer, retied %d times:" + " "
-                          + "%s", reties, sendingData), e);
                   // XXX: 发生错误时，默认1秒后才重试
                   try {
                     Thread.sleep(1000);
@@ -309,7 +279,7 @@ public class SensorsAnalytics {
             callback.onFlushTask(task);
           }
         } catch (JsonProcessingException e) {
-          log.error("Failed to serialize data.", e);
+          throw new RuntimeException(e);
         } finally {
           messageList.clear();
         }
@@ -352,7 +322,7 @@ public class SensorsAnalytics {
           writer.write("\n");
         }
       } catch (IOException e) {
-        log.warn("Failed to dump message with ConsoleConsumer.", e);
+        throw new RuntimeException("Failed to dump message with ConsoleConsumer.", e);
       }
     }
 
@@ -369,93 +339,169 @@ public class SensorsAnalytics {
   }
 
 
-  public static class LoggingConsumer implements Consumer {
-    final DailyRollingFileAppender dailyRollingFileAppender;
-    private final ObjectMapper jsonMapper;
-    org.apache.log4j.Logger logger;
+  public static class LoggingConsumer extends InnerLoggingConsumer {
 
-    public LoggingConsumer(String filename) throws IOException {
-      dailyRollingFileAppender =
-          new DailyRollingFileAppender(new PatternLayout("%m"), filename, "'.'yyyy-MM-dd");
-      dailyRollingFileAppender.setThreshold(Level.INFO);
-      dailyRollingFileAppender.activateOptions();
-      logger = org.apache.log4j.Logger.getLogger("SensorsAnalyticsLogger");
-      this.jsonMapper = getJsonObjectMapper();
+    public LoggingConsumer(final String filenamePrefix) throws IOException {
+      this(filenamePrefix, 8192);
     }
 
-    @Override public void send(Map<String, Object> message) {
-      LoggingEvent loggingEvent = null;
-      try {
-        loggingEvent = new LoggingEvent(null, logger, System.currentTimeMillis(), Level.INFO,
-            jsonMapper.writeValueAsString(message) + "\n", null);
-      } catch (JsonProcessingException e) {
-        log.warn("fail to process json", e);
-        return;
-      }
-      synchronized (dailyRollingFileAppender) {
-        dailyRollingFileAppender.append(loggingEvent);
-      }
+    public LoggingConsumer(final String filenamePrefix, int bufferSize) throws IOException {
+      super(new LoggingFileWriterFactory() {
+        @Override public LoggingFileWriter getFileWriter(String fileName, String scheduleFileName)
+            throws FileNotFoundException {
+          return new LoggingConsumer.InnerLoggingFileWriter(fileName, scheduleFileName);
+        }
+      }, filenamePrefix, bufferSize);
     }
 
-    @Override public void flush() {
-    }
-
-    @Override public void close() {
-      dailyRollingFileAppender.close();
-    }
-  }
-
-
-  public static class ConcurrentLoggingConsumer implements Consumer {
-
-    static class LoggingFileWriter {
+    static class InnerLoggingFileWriter implements LoggingFileWriter {
 
       private final String fileName;
-      private final FileOutputStream outputStream;
+      private File outputFile;
+      private FileOutputStream outputStream;
+      private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-      LoggingFileWriter(final String fileName) throws FileNotFoundException {
-        this.outputStream = new FileOutputStream(fileName, true);
-        this.fileName = fileName;
+      InnerLoggingFileWriter(final String fileName, final String scheduleFileName) throws
+          FileNotFoundException {
+        this.outputFile = new File(fileName);
+        this.fileName = scheduleFileName;
+
+        if (this.outputFile.exists()) {
+          String realFileName = fileName + "."  + simpleDateFormat.format(this.outputFile
+              .lastModified());
+          if (!realFileName.equals(this.fileName)) {
+            File target = new File(realFileName);
+            int count = 0;
+            while (target.exists()) {
+              count += 1;
+              target = new File(realFileName + "." + count);
+            }
+
+            if (!this.outputFile.renameTo(target)) {
+              throw new RuntimeException(
+                  "Failed to rename [" + this.outputFile.getName() + "] to [" +
+                      target.getName() + "]");
+            }
+
+            this.outputFile = new File(fileName);
+          }
+        }
+
+        this.outputStream = new FileOutputStream(this.outputFile, true);
       }
 
-      void close() {
+      public void close() {
         try {
           outputStream.close();
-          log.info("closed old file. [filename={}]", fileName);
         } catch (Exception e) {
-          log.warn("fail to close output stream.", e);
+          throw new RuntimeException("fail to close output stream.", e);
         }
       }
 
-      boolean isValid(final String fileName) {
+      public boolean isValid(final String fileName) {
         return this.fileName.equals(fileName);
       }
 
-      boolean write(final StringBuilder sb) {
-        boolean result = true;
-
+      public boolean write(final StringBuilder sb) {
         FileLock lock = null;
         try {
           final FileChannel channel = outputStream.getChannel();
           lock = channel.lock(0, Long.MAX_VALUE, false);
           outputStream.write(sb.toString().getBytes("UTF-8"));
         } catch (Exception e) {
-          log.warn("fail to write file.", e);
-          result = false;
+          throw new RuntimeException(e);
         } finally {
           if (lock != null) {
             try {
               lock.release();
             } catch (IOException e) {
-              log.warn("fail to release file lock.", e);
+              throw new RuntimeException(e);
             }
           }
         }
 
-        return result;
+        return true;
+      }
+    }
+
+  }
+
+
+  public static class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
+
+    public ConcurrentLoggingConsumer(final String filenamePrefix) throws IOException {
+      this(filenamePrefix, 8192);
+    }
+
+    public ConcurrentLoggingConsumer(
+        String filenamePrefix,
+        int bufferSize) throws IOException {
+      super(new LoggingFileWriterFactory() {
+        @Override public LoggingFileWriter getFileWriter(String fileName, String scheduleFileName)
+            throws FileNotFoundException {
+          return new ConcurrentLoggingConsumer.InnerLoggingFileWriter(scheduleFileName);
+        }
+      }, filenamePrefix, bufferSize);
+    }
+
+    static class InnerLoggingFileWriter implements LoggingFileWriter {
+
+      private final String fileName;
+      private final FileOutputStream outputStream;
+
+      InnerLoggingFileWriter(final String fileName) throws FileNotFoundException {
+        this.outputStream = new FileOutputStream(fileName, true);
+        this.fileName = fileName;
       }
 
+      public void close() {
+        try {
+          outputStream.close();
+        } catch (Exception e) {
+          throw new RuntimeException("fail to close output stream.", e);
+        }
+      }
+
+      public boolean isValid(final String fileName) {
+        return this.fileName.equals(fileName);
+      }
+
+      public boolean write(final StringBuilder sb) {
+        FileLock lock = null;
+        try {
+          final FileChannel channel = outputStream.getChannel();
+          lock = channel.lock(0, Long.MAX_VALUE, false);
+          outputStream.write(sb.toString().getBytes("UTF-8"));
+        } catch (Exception e) {
+          throw new RuntimeException("fail to write file.", e);
+        } finally {
+          if (lock != null) {
+            try {
+              lock.release();
+            } catch (IOException e) {
+              throw new RuntimeException("fail to release file lock.", e);
+            }
+          }
+        }
+
+        return true;
+      }
     }
+
+  }
+
+  interface LoggingFileWriter {
+    boolean isValid(final String fileName);
+    boolean write(final StringBuilder sb);
+    void close();
+  }
+
+  interface LoggingFileWriterFactory {
+    LoggingFileWriter getFileWriter(final String fileName, final String scheduleFileName) throws
+        FileNotFoundException;
+  }
+
+  static class InnerLoggingConsumer implements Consumer {
 
     private final static int BUFFER_LIMITATION = 1 * 1024 * 1024 * 1024;    // 1G
 
@@ -465,13 +511,14 @@ public class SensorsAnalytics {
     private final int bufferSize;
     private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
+    private final LoggingFileWriterFactory fileWriterFactory;
     private LoggingFileWriter fileWriter;
 
-    public ConcurrentLoggingConsumer(String filenamePrefix) throws IOException {
-      this(filenamePrefix, 8192);
-    }
-
-    public ConcurrentLoggingConsumer(String filenamePrefix, int bufferSize) throws IOException {
+    public InnerLoggingConsumer(
+        LoggingFileWriterFactory fileWriterFactory,
+        String filenamePrefix,
+        int bufferSize) throws IOException {
+      this.fileWriterFactory = fileWriterFactory;
       this.filenamePrefix = filenamePrefix;
       this.jsonMapper = getJsonObjectMapper();
       this.messageBuffer = new StringBuilder(bufferSize);
@@ -484,11 +531,10 @@ public class SensorsAnalytics {
           messageBuffer.append(jsonMapper.writeValueAsString(message));
           messageBuffer.append("\n");
         } catch (JsonProcessingException e) {
-          log.warn("fail to process json", e);
-          return;
+          throw new RuntimeException("fail to process json", e);
         }
       } else {
-        log.error("logging buffer exceeded the allowed limitation.");
+        throw new RuntimeException("logging buffer exceeded the allowed limitation.");
       }
 
       if (messageBuffer.length() >= bufferSize) {
@@ -514,10 +560,9 @@ public class SensorsAnalytics {
 
       if (fileWriter == null) {
         try {
-          fileWriter = new LoggingFileWriter(filename);
-          log.info("opened new file. [filename={}]", filename);
+          fileWriter = this.fileWriterFactory.getFileWriter(filenamePrefix, filename);
         } catch (FileNotFoundException e) {
-          log.warn("failed to open file. [filename={}]", filename);
+          throw new RuntimeException(e);
         }
       }
 
@@ -1034,8 +1079,6 @@ public class SensorsAnalytics {
           }
           if (((String) element).length() > 8191) {
             it.set(((String) element).substring(0, 8191));
-            log.warn(String.format("Element in property '%s' with LIST type is cut off while it's "
-                + "too long", (String) element));
           }
         }
       }
@@ -1045,8 +1088,6 @@ public class SensorsAnalytics {
         String value = (String) property.getValue();
         if (value.length() > 8191) {
           property.setValue(value.substring(0, 8191));
-          log.warn(String.format("Property '%s' with STRING type is cut off while it's too long"
-              + "."), value);
         }
       }
 
@@ -1085,9 +1126,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private final static Logger log = LoggerFactory.getLogger(SensorsAnalytics.class);
-
-  private final static String SDK_VERSION = "3.0.1";
+  private final static String SDK_VERSION = "3.1";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
