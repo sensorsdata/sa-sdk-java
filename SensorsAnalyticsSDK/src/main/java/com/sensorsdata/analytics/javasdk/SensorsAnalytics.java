@@ -1054,6 +1054,14 @@ public class SensorsAnalytics {
       return;
     }
     for (Map.Entry<String, Object> property : properties.entrySet()) {
+      if (property.getKey().equals("$is_login_id")) {
+        if (!(property.getValue() instanceof  Boolean)) {
+          throw new InvalidArgumentException("The property value of '$is_login_id' should be "
+              + "Boolean.");
+        }
+        continue;
+      }
+
       assertKeyWithRegex("property", property.getKey());
 
       if (!(property.getValue() instanceof Number) && !(property.getValue() instanceof Date) && !
@@ -1126,7 +1134,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private final static String SDK_VERSION = "3.1";
+  private final static String SDK_VERSION = "3.1.1";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
