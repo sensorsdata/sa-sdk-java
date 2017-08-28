@@ -1067,13 +1067,13 @@ public class SensorsAnalytics {
       if (!(property.getValue() instanceof Number) && !(property.getValue() instanceof Date) && !
           (property.getValue() instanceof String) && !(property.getValue() instanceof Boolean) &&
           !(property.getValue() instanceof List<?>)) {
-        throw new InvalidArgumentException("The property value should be a basic type: "
+        throw new InvalidArgumentException("The property '" + property.getKey() + "' should be a basic type: "
             + "Number, String, Date, Boolean, List<String>.");
       }
 
       if (property.getKey().equals("$time") && !(property.getValue() instanceof Date)) {
         throw new InvalidArgumentException(
-            "The property value of key '$time' should be a java.util.Date type.");
+            "The property '$time' should be a java.util.Date.");
       }
 
       // List 类型的属性值，List 元素必须为 String 类型
@@ -1082,11 +1082,10 @@ public class SensorsAnalytics {
             (); it.hasNext();) {
           Object element = it.next();
           if (!(element instanceof String)) {
-            throw new InvalidArgumentException("The property value should be a basic type: "
-                + "Number, String, Date, Boolean, List<String>.");
+            throw new InvalidArgumentException("The property '" + property.getKey() + "' should be a list of String.");
           }
-          if (((String) element).length() > 8191) {
-            it.set(((String) element).substring(0, 8191));
+          if (((String) element).length() > 8192) {
+            it.set(((String) element).substring(0, 8192));
           }
         }
       }
@@ -1094,8 +1093,8 @@ public class SensorsAnalytics {
       // String 类型的属性值，长度不能超过 8192
       if (property.getValue() instanceof String) {
         String value = (String) property.getValue();
-        if (value.length() > 8191) {
-          property.setValue(value.substring(0, 8191));
+        if (value.length() > 8192) {
+          property.setValue(value.substring(0, 8192));
         }
       }
 
@@ -1134,7 +1133,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private final static String SDK_VERSION = "3.1.1";
+  private final static String SDK_VERSION = "3.1.2";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
