@@ -327,11 +327,17 @@ public class SensorsAnalytics {
     }
 
     @Override public void flush() {
-      // do NOTHING
+      synchronized (writer) {
+        try {
+          writer.flush();
+        } catch (IOException e) {
+          throw new RuntimeException("Failed to flush with ConsoleConsumer.", e);
+        }
+      }
     }
 
     @Override public void close() {
-      // do NOTHING;
+      flush();
     }
 
     private final ObjectMapper jsonMapper;
@@ -339,7 +345,7 @@ public class SensorsAnalytics {
   }
 
 
-  public static class LoggingConsumer extends InnerLoggingConsumer {
+  @Deprecated public static class LoggingConsumer extends InnerLoggingConsumer {
 
     public LoggingConsumer(final String filenamePrefix) throws IOException {
       this(filenamePrefix, 8192);
@@ -1133,7 +1139,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private final static String SDK_VERSION = "3.1.2";
+  private final static String SDK_VERSION = "3.1.3";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
