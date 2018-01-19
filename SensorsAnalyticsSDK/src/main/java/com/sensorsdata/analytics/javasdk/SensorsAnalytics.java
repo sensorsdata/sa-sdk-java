@@ -357,6 +357,9 @@ public class SensorsAnalytics {
             throws FileNotFoundException {
           return new LoggingConsumer.InnerLoggingFileWriter(fileName, scheduleFileName);
         }
+        @Override public void closeFileWriter(LoggingFileWriter writer) {
+          writer.close();
+        }
       }, filenamePrefix, bufferSize);
     }
 
@@ -445,7 +448,12 @@ public class SensorsAnalytics {
       super(new LoggingFileWriterFactory() {
         @Override public LoggingFileWriter getFileWriter(String fileName, String scheduleFileName)
             throws FileNotFoundException {
-          return new ConcurrentLoggingConsumer.InnerLoggingFileWriter(scheduleFileName);
+          return InnerLoggingFileWriter.getInstance(scheduleFileName);
+        }
+
+        @Override public void closeFileWriter(LoggingFileWriter writer) {
+          ConcurrentLoggingConsumer.InnerLoggingFileWriter.removeInstance(
+                  (ConcurrentLoggingConsumer.InnerLoggingFileWriter)writer);
         }
       }, filenamePrefix, bufferSize);
     }
@@ -454,10 +462,40 @@ public class SensorsAnalytics {
 
       private final String fileName;
       private final FileOutputStream outputStream;
+      private int refCount;
 
-      InnerLoggingFileWriter(final String fileName) throws FileNotFoundException {
+      private static final Map<String, InnerLoggingFileWriter> instances;
+
+      static {
+        instances = new HashMap<String, InnerLoggingFileWriter>();
+      }
+
+      static InnerLoggingFileWriter getInstance(final String fileName) throws FileNotFoundException {
+        synchronized (instances) {
+          if (!instances.containsKey(fileName)) {
+            instances.put(fileName, new InnerLoggingFileWriter(fileName));
+          }
+
+          InnerLoggingFileWriter writer = instances.get(fileName);
+          writer.refCount = writer.refCount + 1;
+          return writer;
+        }
+      }
+
+      static void removeInstance(final InnerLoggingFileWriter writer) {
+        synchronized (instances) {
+          writer.refCount = writer.refCount - 1;
+          if (writer.refCount == 0) {
+            writer.close();
+            instances.remove(writer.fileName);
+          }
+        }
+      }
+
+      private InnerLoggingFileWriter(final String fileName) throws FileNotFoundException {
         this.outputStream = new FileOutputStream(fileName, true);
         this.fileName = fileName;
+        this.refCount = 0;
       }
 
       public void close() {
@@ -473,19 +511,21 @@ public class SensorsAnalytics {
       }
 
       public boolean write(final StringBuilder sb) {
-        FileLock lock = null;
-        try {
-          final FileChannel channel = outputStream.getChannel();
-          lock = channel.lock(0, Long.MAX_VALUE, false);
-          outputStream.write(sb.toString().getBytes("UTF-8"));
-        } catch (Exception e) {
-          throw new RuntimeException("fail to write file.", e);
-        } finally {
-          if (lock != null) {
-            try {
-              lock.release();
-            } catch (IOException e) {
-              throw new RuntimeException("fail to release file lock.", e);
+        synchronized (this.outputStream) {
+          FileLock lock = null;
+          try {
+            final FileChannel channel = outputStream.getChannel();
+            lock = channel.lock(0, Long.MAX_VALUE, false);
+            outputStream.write(sb.toString().getBytes("UTF-8"));
+          } catch (Exception e) {
+            throw new RuntimeException("fail to write file.", e);
+          } finally {
+            if (lock != null) {
+              try {
+                lock.release();
+              } catch (IOException e) {
+                throw new RuntimeException("fail to release file lock.", e);
+              }
             }
           }
         }
@@ -503,8 +543,12 @@ public class SensorsAnalytics {
   }
 
   interface LoggingFileWriterFactory {
-    LoggingFileWriter getFileWriter(final String fileName, final String scheduleFileName) throws
-        FileNotFoundException;
+
+    LoggingFileWriter getFileWriter(final String fileName, final String scheduleFileName)
+        throws FileNotFoundException;
+
+    void closeFileWriter(LoggingFileWriter writer);
+
   }
 
   static class InnerLoggingConsumer implements Consumer {
@@ -560,7 +604,7 @@ public class SensorsAnalytics {
       String filename = constructFileName(new Date());
 
       if (fileWriter != null && !fileWriter.isValid(filename)) {
-        fileWriter.close();
+        this.fileWriterFactory.closeFileWriter(fileWriter);
         fileWriter = null;
       }
 
@@ -580,7 +624,7 @@ public class SensorsAnalytics {
     @Override public synchronized void close() {
       flush();
       if (fileWriter != null) {
-        fileWriter.close();
+        this.fileWriterFactory.closeFileWriter(fileWriter);
         fileWriter = null;
       }
     }
@@ -1140,7 +1184,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private final static String SDK_VERSION = "3.1.4";
+  private final static String SDK_VERSION = "3.1.5";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
