@@ -34,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -152,7 +153,7 @@ public class SensorsAnalytics {
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException) {
-      this.messageList = new ArrayList<Map<String, Object>>();
+      this.messageList = new LinkedList<Map<String, Object>>();
       this.httpConsumer = new HttpConsumer(serverUrl, null);
       this.jsonMapper = getJsonObjectMapper();
       this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
@@ -170,26 +171,28 @@ public class SensorsAnalytics {
 
     @Override public void flush() {
       synchronized (messageList) {
-        String sendingData = null;
-        try {
-          sendingData = jsonMapper.writeValueAsString(messageList);
-        } catch (JsonProcessingException e) {
-          messageList.clear();
-          if (throwException) {
-            throw new RuntimeException("Failed to serialize data.", e);
+        while (!messageList.isEmpty()) {
+          String sendingData = null;
+          List<Map<String, Object>> sendList =
+              messageList.subList(0, Math.min(bulkSize, messageList.size()));
+          try {
+            sendingData = jsonMapper.writeValueAsString(sendList);
+          } catch (JsonProcessingException e) {
+            sendList.clear();
+            if (throwException) {
+              throw new RuntimeException("Failed to serialize data.", e);
+            }
+            continue;
           }
-        }
 
-        try {
-          this.httpConsumer.consume(sendingData);
-          messageList.clear();
-        } catch (IOException e) {
-          if (throwException) {
-            throw new RuntimeException("Failed to dump message with BatchConsumer.", e);
-          }
-        } catch (HttpConsumer.HttpConsumerException e) {
-          if (throwException) {
-            throw new RuntimeException("Failed to dump message with BatchConsumer.", e);
+          try {
+            this.httpConsumer.consume(sendingData);
+            sendList.clear();
+          } catch (Exception e) {
+            if (throwException) {
+              throw new RuntimeException("Failed to dump message with BatchConsumer.", e);
+            }
+            return;
           }
         }
       }
