@@ -681,7 +681,9 @@ public class SensorsAnalytics {
 
   /**
    * 记录一个拥有一个或多个属性的事件。属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和
-   * {@link List}，若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
+   * {@link List}；
+   * 若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型；
+   * 若属性包含 $project 字段，则它会指定事件导入的项目；
    *
    * @param distinctId 用户 ID
    * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
@@ -719,8 +721,9 @@ public class SensorsAnalytics {
    * http://www.sensorsdata.cn/manual/track_signup.html
    * 并在必要时联系我们的技术支持人员。
    * <p>
-   * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}，若属性包
-   * 含 $time 字段，它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
+   * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}；
+   * 若属性包含 $time 字段，它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型；
+   * 若属性包含 $project 字段，则它会指定事件导入的项目；
    *
    * @param loginId       登录 ID
    * @param anonymousId 匿名 ID
@@ -734,8 +737,7 @@ public class SensorsAnalytics {
   }
 
   /**
-   * 设置用户的属性。属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}，
-   * 若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
+   * 设置用户的属性。属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}；
    *
    * 如果要设置的properties的key，之前在这个用户的profile中已经存在，则覆盖，否则，新创建
    *
@@ -769,8 +771,7 @@ public class SensorsAnalytics {
 
   /**
    * 首次设置用户的属性。
-   * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}，
-   * 若属性包含 $time 字段，则它会覆盖事件的默认时间属性，该字段只接受{@link Date}类型
+   * 属性取值可接受类型为{@link Number}, {@link String}, {@link Date}和{@link List}；
    *
    * 与profileSet接口不同的是：
    * 如果要设置的properties的key，在这个用户的profile中已经存在，则不处理，否则，新创建
@@ -1026,6 +1027,12 @@ public class SensorsAnalytics {
       time = eventTime.getTime();
     }
 
+    String eventProject = null;
+    if (properties != null && properties.containsKey("$project")) {
+      eventProject = (String) properties.get("$project");
+      properties.remove("$project");
+    }
+
     Map<String, Object> eventProperties = new HashMap<String, Object>();
     if (actionType.equals("track") || actionType.equals("track_signup")) {
       eventProperties.putAll(superProperties);
@@ -1047,6 +1054,10 @@ public class SensorsAnalytics {
     event.put("distinct_id", distinctId);
     event.put("properties", eventProperties);
     event.put("lib", libProperties);
+
+    if (eventProject != null) {
+      event.put("project", eventProject);
+    }
 
     if (enableTimeFree) {
       event.put("time_free", true);
@@ -1184,7 +1195,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private final static String SDK_VERSION = "3.1.5";
+  private final static String SDK_VERSION = "3.1.6";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
