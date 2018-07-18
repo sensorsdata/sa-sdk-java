@@ -903,6 +903,31 @@ public class SensorsAnalytics {
   }
 
   /**
+   * 设置 item
+   *
+   * @param itemType item 类型
+   * @param itemId item ID
+   * @param properties item 相关属性
+   * @throws InvalidArgumentException 取值不符合规范抛出该异常
+   */
+  public void itemSet(String itemType, String itemId, Map<String, Object> properties)
+      throws InvalidArgumentException {
+    addItem(itemType, itemId, "item_set", properties);
+  }
+
+  /**
+   * 删除 item
+   *
+   * @param itemType item 类型
+   * @param itemId item ID
+   * @throws InvalidArgumentException 取值不符合规范抛出该异常
+   */
+  public void itemDelete(String itemType, String itemId)
+      throws InvalidArgumentException {
+    addItem(itemType, itemId, "item_delete", null);
+  }
+
+  /**
    * 立即发送缓存中的所有日志
    */
   public void flush() {
@@ -1074,6 +1099,40 @@ public class SensorsAnalytics {
     }
 
     this.consumer.send(event);
+  }
+
+  private void addItem(String itemType, String itemId, String actionType,
+      Map<String, Object> properties) throws InvalidArgumentException {
+    assertKeyWithRegex("Item Type", itemType);
+    assertKey("Item Id", itemId);
+    assertProperties(actionType, properties);
+
+    String eventProject = null;
+    if (properties != null && properties.containsKey("$project")) {
+      eventProject = (String) properties.get("$project");
+      properties.remove("$project");
+    }
+
+    Map<String, Object> eventProperties = new HashMap<String, Object>();
+    if (properties != null) {
+      eventProperties.putAll(properties);
+    }
+
+    Map<String, String> libProperties = getLibProperties();
+
+    Map<String, Object> record = new HashMap<String, Object>();
+    record.put("type", actionType);
+    record.put("time", System.currentTimeMillis());
+    record.put("properties", eventProperties);
+    record.put("lib", libProperties);
+
+    if (eventProject != null) {
+      record.put("project", eventProject);
+    }
+
+    record.put("item_type", itemType);
+    record.put("item_id", itemId);
+    this.consumer.send(record);
   }
 
   private Map<String, String> getLibProperties() {
