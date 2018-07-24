@@ -971,7 +971,7 @@ public class SensorsAnalytics {
     }
 
     HttpConsumer(String serverUrl, Map<String, String> httpHeaders) {
-      this.serverUrl = serverUrl;
+      this.serverUrl = serverUrl.trim();
       this.httpHeaders = httpHeaders;
 
       this.compressData = true;
@@ -994,7 +994,7 @@ public class SensorsAnalytics {
       HttpPost httpPost = new HttpPost(this.serverUrl);
 
       httpPost.setEntity(getHttpEntry(data));
-      httpPost.addHeader("User-Agent", "SensorsAnalytics Java SDK");
+      httpPost.addHeader("User-Agent", "SensorsAnalytics Java SDK " + SDK_VERSION);
 
       if (this.httpHeaders != null) {
         for (Map.Entry<String, String> entry : this.httpHeaders.entrySet()) {
