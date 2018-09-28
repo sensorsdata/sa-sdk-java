@@ -61,7 +61,7 @@ public class SensorsAnalytics {
     this.enableTimeFree = enableTimeFree;
   }
 
-  private interface Consumer {
+  public interface Consumer {
     void send(Map<String, Object> message);
 
     void flush();
@@ -982,7 +982,7 @@ public class SensorsAnalytics {
 
       int httpStatusCode = response.getStatusLine().getStatusCode();
       if (httpStatusCode < 200 || httpStatusCode >= 300) {
-        String httpContent = EntityUtils.toString(response.getEntity(), "UTF-8");
+        String httpContent = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
         throw new HttpConsumerException(String.format("Unexpected response %d from Sensors "
             + "Analytics: %s", httpStatusCode, httpContent), data, httpStatusCode, httpContent);
       }
@@ -1257,7 +1257,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private final static String SDK_VERSION = "3.1.7";
+  private final static String SDK_VERSION = "3.1.8";
 
   private final static Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
