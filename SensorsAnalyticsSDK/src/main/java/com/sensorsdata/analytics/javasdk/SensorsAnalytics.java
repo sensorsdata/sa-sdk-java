@@ -202,7 +202,7 @@ public class SensorsAnalytics {
       flush();
     }
 
-    private final static int MAX_FLUSH_BULK_SIZE = 50;
+    private static final int MAX_FLUSH_BULK_SIZE = 50;
 
     private final List<Map<String, Object>> messageList;
     private final HttpConsumer httpConsumer;
@@ -260,6 +260,7 @@ public class SensorsAnalytics {
                   try {
                     Thread.sleep(1000);
                   } catch (InterruptedException e1) {
+                    Thread.currentThread().interrupt();
                   }
                   reties = reties + 1;
                 } catch (HttpConsumer.HttpConsumerException e) {
@@ -267,15 +268,13 @@ public class SensorsAnalytics {
                   try {
                     Thread.sleep(1000);
                   } catch (InterruptedException e1) {
+                    Thread.currentThread().interrupt();
                   }
                   reties = reties + 1;
                 }
               }
 
-              if (reties >= 5) {
-                return false;
-              }
-              return true;
+              return reties < 5;
             }
           });
           if (callback != null) {
@@ -296,11 +295,11 @@ public class SensorsAnalytics {
       try {
         executor.awaitTermination(10, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        Thread.currentThread().interrupt();
       }
     }
 
-    private final static int MAX_FLUSH_BULK_SIZE = 50;
+    private static final int MAX_FLUSH_BULK_SIZE = 50;
 
     private final List<Map<String, Object>> messageList;
     private final HttpConsumer httpConsumer;
@@ -360,6 +359,7 @@ public class SensorsAnalytics {
             throws FileNotFoundException {
           return new LoggingConsumer.InnerLoggingFileWriter(fileName, scheduleFileName);
         }
+
         @Override public void closeFileWriter(LoggingFileWriter writer) {
           writer.close();
         }
@@ -442,29 +442,44 @@ public class SensorsAnalytics {
   public static class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
 
     public ConcurrentLoggingConsumer(final String filenamePrefix) throws IOException {
-      this(filenamePrefix, 8192);
+      this(filenamePrefix, null);
+    }
+
+    public ConcurrentLoggingConsumer(final String filenamePrefix, final String lockFileName) throws IOException {
+      this(filenamePrefix, lockFileName, 8192);
     }
 
     public ConcurrentLoggingConsumer(
         String filenamePrefix,
+        String lockFileName,
         int bufferSize) throws IOException {
-      super(new LoggingFileWriterFactory() {
-        @Override public LoggingFileWriter getFileWriter(String fileName, String scheduleFileName)
-            throws FileNotFoundException {
-          return InnerLoggingFileWriter.getInstance(scheduleFileName);
-        }
+      super(new InnerLoggingFileWriterFactory(lockFileName), filenamePrefix, bufferSize);
+    }
 
-        @Override public void closeFileWriter(LoggingFileWriter writer) {
-          ConcurrentLoggingConsumer.InnerLoggingFileWriter.removeInstance(
-                  (ConcurrentLoggingConsumer.InnerLoggingFileWriter)writer);
-        }
-      }, filenamePrefix, bufferSize);
+    static class InnerLoggingFileWriterFactory implements LoggingFileWriterFactory {
+
+      private String lockFileName;
+
+      InnerLoggingFileWriterFactory(String lockFileName) {
+        this.lockFileName = lockFileName;
+      }
+
+      @Override public LoggingFileWriter getFileWriter(String fileName, String scheduleFileName)
+          throws FileNotFoundException {
+        return InnerLoggingFileWriter.getInstance(scheduleFileName, lockFileName);
+      }
+
+      @Override public void closeFileWriter(LoggingFileWriter writer) {
+        ConcurrentLoggingConsumer.InnerLoggingFileWriter
+            .removeInstance((ConcurrentLoggingConsumer.InnerLoggingFileWriter) writer);
+      }
     }
 
     static class InnerLoggingFileWriter implements LoggingFileWriter {
 
       private final String fileName;
       private final FileOutputStream outputStream;
+      private final FileOutputStream lockStream;
       private int refCount;
 
       private static final Map<String, InnerLoggingFileWriter> instances;
@@ -473,10 +488,10 @@ public class SensorsAnalytics {
         instances = new HashMap<String, InnerLoggingFileWriter>();
       }
 
-      static InnerLoggingFileWriter getInstance(final String fileName) throws FileNotFoundException {
+      static InnerLoggingFileWriter getInstance(final String fileName, final String lockFileName) throws FileNotFoundException {
         synchronized (instances) {
           if (!instances.containsKey(fileName)) {
-            instances.put(fileName, new InnerLoggingFileWriter(fileName));
+            instances.put(fileName, new InnerLoggingFileWriter(fileName, lockFileName));
           }
 
           InnerLoggingFileWriter writer = instances.get(fileName);
@@ -495,8 +510,13 @@ public class SensorsAnalytics {
         }
       }
 
-      private InnerLoggingFileWriter(final String fileName) throws FileNotFoundException {
+      private InnerLoggingFileWriter(final String fileName, final String lockFileName) throws FileNotFoundException {
         this.outputStream = new FileOutputStream(fileName, true);
+        if (lockFileName != null) {
+          this.lockStream = new FileOutputStream(lockFileName, true);
+        } else {
+          this.lockStream = this.outputStream;
+        }
         this.fileName = fileName;
         this.refCount = 0;
       }
@@ -514,10 +534,10 @@ public class SensorsAnalytics {
       }
 
       public boolean write(final StringBuilder sb) {
-        synchronized (this.outputStream) {
+        synchronized (this.lockStream) {
           FileLock lock = null;
           try {
-            final FileChannel channel = outputStream.getChannel();
+            final FileChannel channel = lockStream.getChannel();
             lock = channel.lock(0, Long.MAX_VALUE, false);
             outputStream.write(sb.toString().getBytes("UTF-8"));
           } catch (Exception e) {
@@ -556,7 +576,7 @@ public class SensorsAnalytics {
 
   static class InnerLoggingConsumer implements Consumer {
 
-    private final static int BUFFER_LIMITATION = 1 * 1024 * 1024 * 1024;    // 1G
+    private static final int BUFFER_LIMITATION = 1 * 1024 * 1024 * 1024;    // 1G
 
     private final ObjectMapper jsonMapper;
     private final String filenamePrefix;
@@ -1257,9 +1277,9 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private final static String SDK_VERSION = "3.1.8";
+  private static final String SDK_VERSION = "3.1.9";
 
-  private final static Pattern KEY_PATTERN = Pattern.compile(
+  private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
       Pattern.CASE_INSENSITIVE);
 
