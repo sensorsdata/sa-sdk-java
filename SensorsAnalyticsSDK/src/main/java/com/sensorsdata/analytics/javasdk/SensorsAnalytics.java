@@ -8,17 +8,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -132,7 +134,7 @@ public class SensorsAnalytics {
     }
 
     @Override public void close() {
-      // do NOTHING;
+      httpConsumer.close();
     }
 
     final HttpConsumer httpConsumer;
@@ -141,8 +143,6 @@ public class SensorsAnalytics {
 
 
   public static class BatchConsumer implements Consumer {
-
-    private int flushCount = 0;
 
     public BatchConsumer(final String serverUrl) {
       this(serverUrl, MAX_FLUSH_BULK_SIZE);
@@ -200,6 +200,7 @@ public class SensorsAnalytics {
 
     @Override public void close() {
       flush();
+      httpConsumer.close();
     }
 
     private static final int MAX_FLUSH_BULK_SIZE = 50;
@@ -290,7 +291,7 @@ public class SensorsAnalytics {
 
     @Override public void close() {
       flush();
-
+      httpConsumer.close();
       executor.shutdown();
       try {
         executor.awaitTermination(10, TimeUnit.SECONDS);
@@ -961,7 +962,7 @@ public class SensorsAnalytics {
     this.consumer.close();
   }
 
-  private static class HttpConsumer {
+  private static class HttpConsumer implements Closeable {
 
     static class HttpConsumerException extends Exception {
 
@@ -993,28 +994,32 @@ public class SensorsAnalytics {
     HttpConsumer(String serverUrl, Map<String, String> httpHeaders) {
       this.serverUrl = serverUrl.trim();
       this.httpHeaders = httpHeaders;
-
       this.compressData = true;
+      this.httpClient = HttpClients.custom().setUserAgent("SensorsAnalytics Java SDK " + SDK_VERSION).build();
     }
 
-    HttpResponse consume(final String data) throws IOException, HttpConsumerException {
-      HttpResponse response = new DefaultHttpClient().execute(getHttpRequest(data));
-
-      int httpStatusCode = response.getStatusLine().getStatusCode();
-      if (httpStatusCode < 200 || httpStatusCode >= 300) {
-        String httpContent = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
-        throw new HttpConsumerException(String.format("Unexpected response %d from Sensors "
-            + "Analytics: %s", httpStatusCode, httpContent), data, httpStatusCode, httpContent);
+    void consume(final String data) throws IOException, HttpConsumerException {
+      HttpUriRequest request = getHttpRequest(data);
+      CloseableHttpResponse response = null;
+      try {
+        response = httpClient.execute(request);
+        int httpStatusCode = response.getStatusLine().getStatusCode();
+        if (httpStatusCode < 200 || httpStatusCode >= 300) {
+          String httpContent = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
+          throw new HttpConsumerException(
+              String.format("Unexpected response %d from Sensors Analytics: %s", httpStatusCode, httpContent), data,
+              httpStatusCode, httpContent);
+        }
+      } finally {
+        if (response != null) {
+          response.close();
+        }
       }
-
-      return response;
     }
 
     HttpUriRequest getHttpRequest(final String data) throws IOException {
       HttpPost httpPost = new HttpPost(this.serverUrl);
-
       httpPost.setEntity(getHttpEntry(data));
-      httpPost.addHeader("User-Agent", "SensorsAnalytics Java SDK " + SDK_VERSION);
 
       if (this.httpHeaders != null) {
         for (Map.Entry<String, String> entry : this.httpHeaders.entrySet()) {
@@ -1050,10 +1055,18 @@ public class SensorsAnalytics {
       return new UrlEncodedFormEntity(nameValuePairs);
     }
 
+    @Override public void close() {
+      try {
+        httpClient.close();
+      } catch (IOException ignored) {
+        // do nothing
+      }
+    }
+
+    final CloseableHttpClient httpClient;
     final String serverUrl;
     final Map<String, String> httpHeaders;
-
-    final Boolean compressData;
+    final boolean compressData;
   }
 
   private void addEvent(String distinctId, boolean isLoginId, String originDistinceId,
@@ -1277,7 +1290,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private static final String SDK_VERSION = "3.1.9";
+  private static final String SDK_VERSION = "3.1.10";
 
   private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
