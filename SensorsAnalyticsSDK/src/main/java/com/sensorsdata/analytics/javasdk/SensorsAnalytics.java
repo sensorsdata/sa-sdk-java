@@ -446,6 +446,10 @@ public class SensorsAnalytics {
       this(filenamePrefix, null);
     }
 
+    public ConcurrentLoggingConsumer(final String filenamePrefix, int bufferSize) throws IOException {
+      this(filenamePrefix, null, bufferSize);
+    }
+
     public ConcurrentLoggingConsumer(final String filenamePrefix, final String lockFileName) throws IOException {
       this(filenamePrefix, lockFileName, 8192);
     }
@@ -995,12 +999,14 @@ public class SensorsAnalytics {
       this.serverUrl = serverUrl.trim();
       this.httpHeaders = httpHeaders;
       this.compressData = true;
-      this.httpClient = HttpClients.custom().setUserAgent("SensorsAnalytics Java SDK " + SDK_VERSION).build();
     }
 
-    void consume(final String data) throws IOException, HttpConsumerException {
+    synchronized void consume(final String data) throws IOException, HttpConsumerException {
       HttpUriRequest request = getHttpRequest(data);
       CloseableHttpResponse response = null;
+      if (httpClient == null) {
+        httpClient = HttpClients.custom().setUserAgent("SensorsAnalytics Java SDK " + SDK_VERSION).build();
+      }
       try {
         response = httpClient.execute(request);
         int httpStatusCode = response.getStatusLine().getStatusCode();
@@ -1055,15 +1061,18 @@ public class SensorsAnalytics {
       return new UrlEncodedFormEntity(nameValuePairs);
     }
 
-    @Override public void close() {
+    @Override public synchronized void close() {
       try {
-        httpClient.close();
+        if (httpClient != null) {
+          httpClient.close();
+          httpClient = null;
+        }
       } catch (IOException ignored) {
         // do nothing
       }
     }
 
-    final CloseableHttpClient httpClient;
+    CloseableHttpClient httpClient;
     final String serverUrl;
     final Map<String, String> httpHeaders;
     final boolean compressData;
