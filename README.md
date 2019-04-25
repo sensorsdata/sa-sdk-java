@@ -12,7 +12,7 @@ Add the following lines to your project's pom.xml:
     <dependency>
       <groupId>com.sensorsdata.analytics.javasdk</groupId>
       <artifactId>SensorsAnalyticsSDK</artifactId>
-      <version>3.1.10</version>
+      <version>3.1.11</version>
     </dependency>
   </dependencies>
 ```
