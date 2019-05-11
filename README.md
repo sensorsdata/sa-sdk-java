@@ -1,4 +1,4 @@
-# Sensors Analytics
+# sa-sdk-java
 
 This is the official Java SDK for Sensors Analytics.
 
