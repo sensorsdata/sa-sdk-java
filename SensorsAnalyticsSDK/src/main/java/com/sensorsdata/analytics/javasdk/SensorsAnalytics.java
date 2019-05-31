@@ -910,10 +910,29 @@ public class SensorsAnalytics {
    */
   public void profileUnset(String distinctId, boolean isLoginId, String property)
       throws InvalidArgumentException {
+    profileUnset(distinctId, isLoginId, property, null);
+  }
+
+  /**
+   * 删除用户某一个属性
+   *
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
+   * @param property   属性名称
+   * @param project 项目名
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
+   */
+  public void profileUnset(String distinctId, boolean isLoginId, String property, String project)
+          throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put(property, true);
+    if (project != null) {
+      properties.put("$project", project);
+    }
     addEvent(distinctId, isLoginId, null, "profile_unset", null, properties);
   }
+
 
   /**
    * 删除用户所有属性
