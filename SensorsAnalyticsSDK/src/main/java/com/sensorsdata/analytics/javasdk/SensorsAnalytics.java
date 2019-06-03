@@ -910,25 +910,36 @@ public class SensorsAnalytics {
    */
   public void profileUnset(String distinctId, boolean isLoginId, String property)
       throws InvalidArgumentException {
-    profileUnset(distinctId, isLoginId, property, null);
+    Map<String, Object> properties = new HashMap<String, Object>();
+    properties.put(property, true);
+    addEvent(distinctId, isLoginId, null, "profile_unset", null, properties);
   }
 
   /**
-   * 删除用户某一个属性
+   * 删除用户属性
    *
    * @param distinctId 用户 ID
    * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
-   * @param property   属性名称
-   * @param project 项目名
+   * @param properties   用户属性名称列表，要删除的属性值请设置为 Boolean 类型的 true，如果要删除指定项目的用户属性，需正确传 $project 字段
    *
    * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
    */
-  public void profileUnset(String distinctId, boolean isLoginId, String property, String project)
+  public void profileUnset(String distinctId, boolean isLoginId, Map<String, Object> properties)
           throws InvalidArgumentException {
-    Map<String, Object> properties = new HashMap<String, Object>();
-    properties.put(property, true);
-    if (project != null) {
-      properties.put("$project", project);
+    if (properties == null) {
+      return;
+    }
+    for (Map.Entry<String, Object> property : properties.entrySet()) {
+      if (!"$project".equals(property.getKey())) {
+        if (property.getValue() instanceof Boolean) {
+          boolean value = (Boolean) property.getValue();
+          if (value) {
+            continue;
+          }
+        }
+        throw new InvalidArgumentException("The property value of " + property.getKey() + " should be "
+                + "true.");
+      }
     }
     addEvent(distinctId, isLoginId, null, "profile_unset", null, properties);
   }
