@@ -916,6 +916,36 @@ public class SensorsAnalytics {
   }
 
   /**
+   * 删除用户属性
+   *
+   * @param distinctId 用户 ID
+   * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
+   * @param properties   用户属性名称列表，要删除的属性值请设置为 Boolean 类型的 true，如果要删除指定项目的用户属性，需正确传 $project 字段
+   *
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
+   */
+  public void profileUnset(String distinctId, boolean isLoginId, Map<String, Object> properties)
+          throws InvalidArgumentException {
+    if (properties == null) {
+      return;
+    }
+    for (Map.Entry<String, Object> property : properties.entrySet()) {
+      if (!"$project".equals(property.getKey())) {
+        if (property.getValue() instanceof Boolean) {
+          boolean value = (Boolean) property.getValue();
+          if (value) {
+            continue;
+          }
+        }
+        throw new InvalidArgumentException("The property value of " + property.getKey() + " should be "
+                + "true.");
+      }
+    }
+    addEvent(distinctId, isLoginId, null, "profile_unset", null, properties);
+  }
+
+
+  /**
    * 删除用户所有属性
    *
    * @param distinctId 用户 ID
@@ -1299,7 +1329,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private static final String SDK_VERSION = "3.1.11";
+  private static final String SDK_VERSION = "3.1.12";
 
   private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
