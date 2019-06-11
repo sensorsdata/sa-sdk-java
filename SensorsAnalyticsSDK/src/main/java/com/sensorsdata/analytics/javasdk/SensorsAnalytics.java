@@ -1,13 +1,14 @@
 package com.sensorsdata.analytics.javasdk;
 
-import com.sensorsdata.analytics.javasdk.exceptions.DebugModeException;
-import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-import com.sensorsdata.analytics.javasdk.util.Base64Coder;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+
+import com.sensorsdata.analytics.javasdk.exceptions.DebugModeException;
+import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+import com.sensorsdata.analytics.javasdk.util.Base64Coder;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -866,8 +867,8 @@ public class SensorsAnalytics {
   }
 
   /**
-   * 为用户的一个或多个数组类型的属性追加字符串，属性取值类型必须为 {@link java.util.List}，且列表中元素的类型
-   * 必须为 {@link java.lang.String}
+   * 为用户的一个或多个数组类型的属性追加字符串，属性取值类型必须为 {@link List}，且列表中元素的类型
+   * 必须为 {@link String}
    *
    * @param distinctId 用户 ID
    * @param isLoginId 用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
