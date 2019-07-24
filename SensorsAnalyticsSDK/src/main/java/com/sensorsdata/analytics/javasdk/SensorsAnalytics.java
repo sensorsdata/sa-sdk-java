@@ -365,7 +365,7 @@ public class SensorsAnalytics {
         @Override public void closeFileWriter(LoggingFileWriter writer) {
           writer.close();
         }
-      }, filenamePrefix, bufferSize);
+      }, filenamePrefix, bufferSize, LogSplitMode.DAY);
     }
 
     static class InnerLoggingFileWriter implements LoggingFileWriter {
@@ -459,7 +459,15 @@ public class SensorsAnalytics {
         String filenamePrefix,
         String lockFileName,
         int bufferSize) throws IOException {
-      super(new InnerLoggingFileWriterFactory(lockFileName), filenamePrefix, bufferSize);
+      this(filenamePrefix, lockFileName, bufferSize, LogSplitMode.DAY);
+    }
+
+    public ConcurrentLoggingConsumer(
+        String filenamePrefix,
+        String lockFileName,
+        int bufferSize,
+        LogSplitMode splitMode) throws IOException {
+      super(new InnerLoggingFileWriterFactory(lockFileName), filenamePrefix, bufferSize, splitMode);
     }
 
     static class InnerLoggingFileWriterFactory implements LoggingFileWriterFactory {
@@ -588,7 +596,7 @@ public class SensorsAnalytics {
     private final String filenamePrefix;
     private final StringBuilder messageBuffer;
     private final int bufferSize;
-    private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final SimpleDateFormat simpleDateFormat;
 
     private final LoggingFileWriterFactory fileWriterFactory;
     private LoggingFileWriter fileWriter;
@@ -596,12 +604,17 @@ public class SensorsAnalytics {
     public InnerLoggingConsumer(
         LoggingFileWriterFactory fileWriterFactory,
         String filenamePrefix,
-        int bufferSize) throws IOException {
+        int bufferSize, LogSplitMode splitMode) throws IOException {
       this.fileWriterFactory = fileWriterFactory;
       this.filenamePrefix = filenamePrefix;
       this.jsonMapper = getJsonObjectMapper();
       this.messageBuffer = new StringBuilder(bufferSize);
       this.bufferSize = bufferSize;
+      if (splitMode == LogSplitMode.HOUR) {
+        this.simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH");
+      } else {
+        this.simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+      }
     }
 
     @Override public synchronized void send(Map<String, Object> message) {
@@ -657,6 +670,11 @@ public class SensorsAnalytics {
         fileWriter = null;
       }
     }
+  }
+
+
+  public enum LogSplitMode {
+    DAY, HOUR
   }
 
   public SensorsAnalytics(final Consumer consumer) {
