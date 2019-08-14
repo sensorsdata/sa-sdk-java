@@ -154,17 +154,32 @@ public class SensorsAnalytics {
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException) {
+      this(serverUrl, bulkSize, 0, throwException);
+    }
+
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize, final boolean throwException) {
       this.messageList = new LinkedList<Map<String, Object>>();
       this.httpConsumer = new HttpConsumer(serverUrl, null);
       this.jsonMapper = getJsonObjectMapper();
       this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
+      if (maxCacheSize > MAX_CACHE_SIZE) {
+        this.maxCacheSize = MAX_CACHE_SIZE;
+      } else if (maxCacheSize > 0 && maxCacheSize < MIN_CACHE_SIZE) {
+        this.maxCacheSize = MIN_CACHE_SIZE;
+      } else {
+        this.maxCacheSize = maxCacheSize;
+      }
       this.throwException = throwException;
     }
 
     @Override public void send(Map<String, Object> message) {
       synchronized (messageList) {
-        messageList.add(message);
-        if (messageList.size() >= bulkSize) {
+        int size = messageList.size();
+        if (maxCacheSize <= 0 || size < maxCacheSize) {
+          messageList.add(message);
+          ++size;
+        }
+        if (size >= bulkSize) {
           flush();
         }
       }
@@ -205,12 +220,15 @@ public class SensorsAnalytics {
     }
 
     private static final int MAX_FLUSH_BULK_SIZE = 50;
+    private static final int MAX_CACHE_SIZE = 6000;
+    private static final int MIN_CACHE_SIZE = 3000;
 
     private final List<Map<String, Object>> messageList;
     private final HttpConsumer httpConsumer;
     private final ObjectMapper jsonMapper;
     private final int bulkSize;
     private final boolean throwException;
+    private final int maxCacheSize;
   }
 
 
@@ -365,7 +383,7 @@ public class SensorsAnalytics {
         @Override public void closeFileWriter(LoggingFileWriter writer) {
           writer.close();
         }
-      }, filenamePrefix, bufferSize);
+      }, filenamePrefix, bufferSize, LogSplitMode.DAY);
     }
 
     static class InnerLoggingFileWriter implements LoggingFileWriter {
@@ -459,7 +477,15 @@ public class SensorsAnalytics {
         String filenamePrefix,
         String lockFileName,
         int bufferSize) throws IOException {
-      super(new InnerLoggingFileWriterFactory(lockFileName), filenamePrefix, bufferSize);
+      this(filenamePrefix, lockFileName, bufferSize, LogSplitMode.DAY);
+    }
+
+    public ConcurrentLoggingConsumer(
+        String filenamePrefix,
+        String lockFileName,
+        int bufferSize,
+        LogSplitMode splitMode) throws IOException {
+      super(new InnerLoggingFileWriterFactory(lockFileName), filenamePrefix, bufferSize, splitMode);
     }
 
     static class InnerLoggingFileWriterFactory implements LoggingFileWriterFactory {
@@ -588,7 +614,7 @@ public class SensorsAnalytics {
     private final String filenamePrefix;
     private final StringBuilder messageBuffer;
     private final int bufferSize;
-    private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final SimpleDateFormat simpleDateFormat;
 
     private final LoggingFileWriterFactory fileWriterFactory;
     private LoggingFileWriter fileWriter;
@@ -596,12 +622,17 @@ public class SensorsAnalytics {
     public InnerLoggingConsumer(
         LoggingFileWriterFactory fileWriterFactory,
         String filenamePrefix,
-        int bufferSize) throws IOException {
+        int bufferSize, LogSplitMode splitMode) throws IOException {
       this.fileWriterFactory = fileWriterFactory;
       this.filenamePrefix = filenamePrefix;
       this.jsonMapper = getJsonObjectMapper();
       this.messageBuffer = new StringBuilder(bufferSize);
       this.bufferSize = bufferSize;
+      if (splitMode == LogSplitMode.HOUR) {
+        this.simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH");
+      } else {
+        this.simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+      }
     }
 
     @Override public synchronized void send(Map<String, Object> message) {
@@ -657,6 +688,11 @@ public class SensorsAnalytics {
         fileWriter = null;
       }
     }
+  }
+
+
+  public enum LogSplitMode {
+    DAY, HOUR
   }
 
   public SensorsAnalytics(final Consumer consumer) {
@@ -1330,7 +1366,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private static final String SDK_VERSION = "3.1.12";
+  private static final String SDK_VERSION = "3.1.13";
 
   private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
