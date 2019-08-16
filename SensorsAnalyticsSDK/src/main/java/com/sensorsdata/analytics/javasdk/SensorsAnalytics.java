@@ -41,6 +41,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -1191,6 +1192,7 @@ public class SensorsAnalytics {
     event.put("distinct_id", distinctId);
     event.put("properties", eventProperties);
     event.put("lib", libProperties);
+    event.put("_track_id", new Random().nextInt());
 
     if (eventProject != null) {
       event.put("project", eventProject);
