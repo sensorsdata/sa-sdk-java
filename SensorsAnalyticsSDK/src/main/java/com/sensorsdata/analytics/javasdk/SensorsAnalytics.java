@@ -147,7 +147,7 @@ public class SensorsAnalytics {
   public static class BatchConsumer implements Consumer {
 
     public BatchConsumer(final String serverUrl) {
-      this(serverUrl, MAX_FLUSH_BULK_SIZE);
+      this(serverUrl, 50);
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize) {
@@ -220,7 +220,7 @@ public class SensorsAnalytics {
       httpConsumer.close();
     }
 
-    private static final int MAX_FLUSH_BULK_SIZE = 50;
+    private static final int MAX_FLUSH_BULK_SIZE = 1000;
     private static final int MAX_CACHE_SIZE = 6000;
     private static final int MIN_CACHE_SIZE = 3000;
 
