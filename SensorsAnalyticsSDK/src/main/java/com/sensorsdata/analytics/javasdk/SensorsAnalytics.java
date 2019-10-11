@@ -1013,11 +1013,12 @@ public class SensorsAnalytics {
    *
    * @param itemType item 类型
    * @param itemId item ID
+   * @param properties item 相关属性
    * @throws InvalidArgumentException 取值不符合规范抛出该异常
    */
-  public void itemDelete(String itemType, String itemId)
+  public void itemDelete(String itemType, String itemId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    addItem(itemType, itemId, "item_delete", null);
+    addItem(itemType, itemId, "item_delete", properties);
   }
 
   /**
