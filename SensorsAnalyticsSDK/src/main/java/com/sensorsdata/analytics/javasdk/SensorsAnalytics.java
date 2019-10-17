@@ -41,6 +41,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -146,7 +147,7 @@ public class SensorsAnalytics {
   public static class BatchConsumer implements Consumer {
 
     public BatchConsumer(final String serverUrl) {
-      this(serverUrl, MAX_FLUSH_BULK_SIZE);
+      this(serverUrl, 50);
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize) {
@@ -219,7 +220,7 @@ public class SensorsAnalytics {
       httpConsumer.close();
     }
 
-    private static final int MAX_FLUSH_BULK_SIZE = 50;
+    private static final int MAX_FLUSH_BULK_SIZE = 1000;
     private static final int MAX_CACHE_SIZE = 6000;
     private static final int MIN_CACHE_SIZE = 3000;
 
@@ -1012,11 +1013,12 @@ public class SensorsAnalytics {
    *
    * @param itemType item 类型
    * @param itemId item ID
+   * @param properties item 相关属性
    * @throws InvalidArgumentException 取值不符合规范抛出该异常
    */
-  public void itemDelete(String itemType, String itemId)
+  public void itemDelete(String itemType, String itemId, Map<String, Object> properties)
       throws InvalidArgumentException {
-    addItem(itemType, itemId, "item_delete", null);
+    addItem(itemType, itemId, "item_delete", properties);
   }
 
   /**
@@ -1191,6 +1193,7 @@ public class SensorsAnalytics {
     event.put("distinct_id", distinctId);
     event.put("properties", eventProperties);
     event.put("lib", libProperties);
+    event.put("_track_id", new Random().nextInt());
 
     if (eventProject != null) {
       event.put("project", eventProject);
@@ -1366,7 +1369,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private static final String SDK_VERSION = "3.1.13";
+  private static final String SDK_VERSION = "3.1.15";
 
   private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
