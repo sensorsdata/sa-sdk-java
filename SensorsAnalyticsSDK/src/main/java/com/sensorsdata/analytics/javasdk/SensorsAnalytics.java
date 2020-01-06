@@ -732,6 +732,26 @@ public class SensorsAnalytics {
   }
 
   /**
+   * 记录事件
+   * @param eventMessage 事件消息对象
+   * 通过 {@link EventMessage.Builder} 来构造；
+   * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
+   */
+  public void track(EventMessage eventMessage) throws InvalidArgumentException {
+    if (eventMessage != null) {
+      boolean isLoginId = true;
+      String anonymousId = eventMessage.getAnonymousId();
+      String distinctId = eventMessage.getLoginId();
+      if (distinctId == null && anonymousId != null) {
+        isLoginId = false;
+        distinctId = anonymousId;
+      }
+      addEvent(distinctId, isLoginId, null, "track",
+          eventMessage.getEventName(), eventMessage.getPropertyMap());
+    }
+  }
+
+  /**
    * 记录一个没有任何属性的事件
    *
    * @param distinctId 用户 ID
