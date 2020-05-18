@@ -46,7 +46,7 @@ We also maintains a SDK for Android Apps at
 
 | 《数据驱动：从方法到实践》 | 《Android 全埋点解决方案》 | 《iOS 全埋点解决方案》
 | ------ | ------ | ------ |
-| [![《数据驱动：从方法到实践》](https://opensource.sensorsdata.cn/wp-content/uploads/data_driven_book_1.jpg)](https://union-click.jd.com/jdc?e=&p=AyIGZRprFQEQBFYZWBYyVlgNRQQlW1dCFFlQCxxKQgFHREkdSVJKSQVJHFRXFk9FUlpGQUpLCVBaTFhbXQtWVmpSWRtYFwERBVYYa2FKZx0XchgUYnYEA0wjXgtAREt6JFMOHjdUK1sUAxIDUBxdHQQiN1Uca0NsEgZUGloUBxICVitaJQIWDlYcWBUGFQNVH1slBRIOZUcFSVx8QR5QayUyETdlK1slASJFO0lbRwtCAVEYDhUBEQIGGl0cVUYDVEwMFQYaAVFIC0dRIgVUGl8c) | [![《Android 全埋点解决方案》](https://opensource.sensorsdata.cn/wp-content/uploads/Android-全埋点thumbnail_1.png)](https://item.jd.com/12574672.html) | ![《iOS 全埋点解决方案》](https://opensource.sensorsdata.cn/wp-content/uploads/iOS-全埋点thumbnail_1.png)
+| [![《数据驱动：从方法到实践》](https://opensource.sensorsdata.cn/wp-content/uploads/data_driven_book_1.jpg)](https://item.jd.com/12322322.html) | [![《Android 全埋点解决方案》](https://opensource.sensorsdata.cn/wp-content/uploads/Android-全埋点thumbnail_1.png)](https://item.jd.com/12574672.html) | [![《iOS 全埋点解决方案》](https://opensource.sensorsdata.cn/wp-content/uploads/iOS-全埋点thumbnail_1.png)](https://item.jd.com/12867068.html)
 
 ## License
 
