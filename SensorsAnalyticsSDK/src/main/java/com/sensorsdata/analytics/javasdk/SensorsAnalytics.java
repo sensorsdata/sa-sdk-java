@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -1365,11 +1366,12 @@ public class SensorsAnalytics {
     // 兼容java中的驼峰的字段名命名
     jsonObjectMapper.setPropertyNamingStrategy(
         PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
+    jsonObjectMapper.setTimeZone(TimeZone.getDefault());
     jsonObjectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
     return jsonObjectMapper;
   }
 
-  private static final String SDK_VERSION = "3.1.15";
+  private static final String SDK_VERSION = "3.1.16";
 
   private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
