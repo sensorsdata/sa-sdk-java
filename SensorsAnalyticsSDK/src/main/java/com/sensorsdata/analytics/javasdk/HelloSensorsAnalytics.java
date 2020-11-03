@@ -9,7 +9,7 @@ public class HelloSensorsAnalytics {
 
   public static void main(String[] args) throws Exception {
     // Sensors Analytics 采集事件的 URL
-    final String SA_SERVER_URL = "http://10.10.11.209:8006/sa?project=default&token=bbb";
+    final String SA_SERVER_URL = "http://sdk-test.datasink.sensorsdata.cn/sa?project=renqingyou&token=95c73ae661f85aa0";
 
     // DebugConsumer
     final SensorsAnalytics sa = new SensorsAnalytics(new SensorsAnalytics.DebugConsumer
@@ -40,6 +40,8 @@ public class HelloSensorsAnalytics {
     properties.put("$os_version", "8.1");               // 操作系统的具体版本
     properties.put("$ip", "123.123.123.123");           // 请求中能够拿到用户的IP，则把这个传递给SA，SA会自动根据这个解析省份、城市
     properties.put("Channel", "baidu");                 // 用户是通过baidu这个渠道过来的
+    properties.put("$project","abc");
+    properties.put("$token","123");
     sa.track(cookieId, false, "ViewHomePage", properties); // 记录访问首页这个event
 
     // 1.2 搜索商品
