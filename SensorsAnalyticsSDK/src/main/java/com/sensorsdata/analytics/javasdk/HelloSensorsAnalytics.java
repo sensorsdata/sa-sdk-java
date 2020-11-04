@@ -40,20 +40,9 @@ public class HelloSensorsAnalytics {
     properties.put("$os_version", "8.1");               // 操作系统的具体版本
     properties.put("$ip", "123.123.123.123");           // 请求中能够拿到用户的IP，则把这个传递给SA，SA会自动根据这个解析省份、城市
     properties.put("Channel", "baidu");                 // 用户是通过baidu这个渠道过来的
-    //sa.track(cookieId, false, "ViewHomePage", properties); // 记录访问首页这个event
-
-    EventMessage eventMessage =  EventMessage.newBuilder()
-        .anonymousId("ABCDEFG")                        //匿名 ID，如果同时传了登录 ID，优先取登录 ID (必填)
-        //.loginId("18788875369")                      //登录 ID（必填）
-        .eventName("ViewHomePage")                     //事件名（必填）
-        .addProperty("$time", new Date())         //事件属性（选填）
-        .addProperty("$os", "Windows")            //事件属性（选填）
-        .addProperty("$os_version", "8.1")        //事件属性（选填）
-        .addProperty("$ip", "123.123.123.123")    //事件属性（选填）
-        .addProperty("Channel", "baidu")          //事件属性（选填）
-        .build();
-    System.out.println(eventMessage);
-    sa.track(eventMessage);
+    properties.put("$project","abc");
+    properties.put("$token","123");
+    sa.track(cookieId, false, "ViewHomePage", properties); // 记录访问首页这个event
 
     // 1.2 搜索商品
     properties.clear();
