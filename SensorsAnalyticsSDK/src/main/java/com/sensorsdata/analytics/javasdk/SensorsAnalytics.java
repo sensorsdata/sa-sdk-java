@@ -1168,7 +1168,7 @@ public class SensorsAnalytics {
     final boolean compressData;
   }
 
-  private void addEvent(String distinctId, boolean isLoginId, String originDistinceId,
+  private void addEvent(String distinctId, boolean isLoginId, String originDistinctId,
       String actionType, String eventName, Map<String, Object> properties)
       throws InvalidArgumentException {
     assertKey("Distinct Id", distinctId);
@@ -1176,29 +1176,40 @@ public class SensorsAnalytics {
     if (actionType.equals("track")) {
       assertKeyWithRegex("Event Name", eventName);
     } else if (actionType.equals("track_signup")) {
-      assertKey("Original Distinct Id", originDistinceId);
+      assertKey("Original Distinct Id", originDistinctId);
     }
 
     // Event time
     long time = System.currentTimeMillis();
-    if (properties != null && properties.containsKey("$time")) {
-      Date eventTime = (Date) properties.get("$time");
-      properties.remove("$time");
+    Map<String, Object> newProperties = null;
+    if (properties != null) {
+      newProperties = new HashMap<String, Object>(properties);
+    }
+    if (newProperties != null && newProperties.containsKey("$time")) {
+      Date eventTime = (Date) newProperties.get("$time");
+      newProperties.remove("$time");
       time = eventTime.getTime();
     }
 
     String eventProject = null;
-    if (properties != null && properties.containsKey("$project")) {
-      eventProject = (String) properties.get("$project");
-      properties.remove("$project");
+    String eventToken = null;
+    if (newProperties != null) {
+      if (newProperties.containsKey("$project")) {
+        eventProject = (String) newProperties.get("$project");
+        newProperties.remove("$project");
+      }
+      if (newProperties.containsKey("$token")) {
+        eventToken = (String) newProperties.get("$token");
+        newProperties.remove("$token");
+      }
     }
 
     Map<String, Object> eventProperties = new HashMap<String, Object>();
     if (actionType.equals("track") || actionType.equals("track_signup")) {
       eventProperties.putAll(superProperties);
     }
-    if (properties != null) {
-      eventProperties.putAll(properties);
+    if (newProperties != null) {
+      eventProperties.putAll(newProperties);
     }
 
     if (isLoginId) {
@@ -1220,6 +1231,10 @@ public class SensorsAnalytics {
       event.put("project", eventProject);
     }
 
+    if (eventToken != null) {
+      event.put("token", eventToken);
+    }
+
     if (enableTimeFree) {
       event.put("time_free", true);
     }
@@ -1228,7 +1243,7 @@ public class SensorsAnalytics {
       event.put("event", eventName);
     } else if (actionType.equals("track_signup")) {
       event.put("event", eventName);
-      event.put("original_id", originDistinceId);
+      event.put("original_id", originDistinctId);
     }
 
     this.consumer.send(event);
@@ -1240,15 +1255,27 @@ public class SensorsAnalytics {
     assertKey("Item Id", itemId);
     assertProperties(actionType, properties);
 
+    Map<String, Object> newProperties = null;
+    if (properties != null) {
+      newProperties = new HashMap<String, Object>(properties);
+    }
+
     String eventProject = null;
-    if (properties != null && properties.containsKey("$project")) {
-      eventProject = (String) properties.get("$project");
-      properties.remove("$project");
+    String eventToken = null;
+    if (newProperties != null) {
+      if (newProperties.containsKey("$project")) {
+        eventProject = (String) newProperties.get("$project");
+        newProperties.remove("$project");
+      }
+      if (newProperties.containsKey("$token")) {
+        eventToken = (String) newProperties.get("$token");
+        newProperties.remove("$token");
+      }
     }
 
     Map<String, Object> eventProperties = new HashMap<String, Object>();
-    if (properties != null) {
-      eventProperties.putAll(properties);
+    if (newProperties != null) {
+      eventProperties.putAll(newProperties);
     }
 
     Map<String, String> libProperties = getLibProperties();
@@ -1261,6 +1288,10 @@ public class SensorsAnalytics {
 
     if (eventProject != null) {
       record.put("project", eventProject);
+    }
+
+    if (eventToken != null) {
+      record.put("token", eventToken);
     }
 
     record.put("item_type", itemType);
