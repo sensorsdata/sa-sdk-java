@@ -77,7 +77,7 @@ public class SensorsAnalytics {
 
   public static class DebugConsumer implements Consumer {
 
-    public DebugConsumer(final String serverUrl, final boolean writeData) {
+    public DebugConsumer(final String serverUrl, final boolean writeData, final CloseableHttpClient httpClient) {
       String debugUrl = null;
       try {
         // 将 URI Path 替换成 Debug 模式的 '/debug'
@@ -97,7 +97,7 @@ public class SensorsAnalytics {
         headers.put("Dry-Run", "true");
       }
 
-      this.httpConsumer = new HttpConsumer(debugUrl, headers);
+      this.httpConsumer = new HttpConsumer(debugUrl, headers, httpClient);
       this.jsonMapper = getJsonObjectMapper();
     }
 
@@ -156,12 +156,13 @@ public class SensorsAnalytics {
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException) {
-      this(serverUrl, bulkSize, 0, throwException);
+      this(serverUrl, bulkSize, 0, throwException, null);
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize, final boolean throwException) {
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize, final boolean throwException,
+                         final CloseableHttpClient httpClient) {
       this.messageList = new LinkedList<Map<String, Object>>();
-      this.httpConsumer = new HttpConsumer(serverUrl, null);
+      this.httpConsumer = new HttpConsumer(serverUrl, null, httpClient);
       this.jsonMapper = getJsonObjectMapper();
       this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
       if (maxCacheSize > MAX_CACHE_SIZE) {
@@ -248,9 +249,10 @@ public class SensorsAnalytics {
   public static class AsyncBatchConsumer implements Consumer {
 
     public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
-        final ThreadPoolExecutor executor, final AsyncBatchConsumerCallback callback) {
+        final ThreadPoolExecutor executor, final AsyncBatchConsumerCallback callback,
+        final CloseableHttpClient httpClient) {
       this.messageList = new ArrayList<Map<String, Object>>();
-      this.httpConsumer = new HttpConsumer(serverUrl, null);
+      this.httpConsumer = new HttpConsumer(serverUrl, null, httpClient);
       this.jsonMapper = getJsonObjectMapper();
       this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
       this.executor = executor;
@@ -1065,10 +1067,11 @@ public class SensorsAnalytics {
       final String httpContent;
     }
 
-    HttpConsumer(String serverUrl, Map<String, String> httpHeaders) {
+    HttpConsumer(String serverUrl, Map<String, String> httpHeaders, CloseableHttpClient httpClient) {
       this.serverUrl = serverUrl.trim();
       this.httpHeaders = httpHeaders;
       this.compressData = true;
+      this.httpClient = httpClient;
     }
 
     synchronized void consume(final String data) throws IOException, HttpConsumerException {
