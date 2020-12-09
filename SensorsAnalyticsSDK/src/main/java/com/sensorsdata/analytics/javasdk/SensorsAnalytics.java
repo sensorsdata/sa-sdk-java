@@ -77,6 +77,10 @@ public class SensorsAnalytics {
 
   public static class DebugConsumer implements Consumer {
 
+    public DebugConsumer(final String serverUrl, final boolean writeData) {
+      this(serverUrl, writeData, null);
+    }
+
     public DebugConsumer(final String serverUrl, final boolean writeData, final CloseableHttpClient httpClient) {
       String debugUrl = null;
       try {
@@ -159,8 +163,13 @@ public class SensorsAnalytics {
       this(serverUrl, bulkSize, 0, throwException, null);
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize, final boolean throwException,
-                         final CloseableHttpClient httpClient) {
+    public BatchConsumer(final String serverUrl, final int bulkSize,
+         final int maxCacheSize, final boolean throwException) {
+      this(serverUrl, bulkSize, maxCacheSize, throwException, null);
+    }
+
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
+         final boolean throwException, final CloseableHttpClient httpClient) {
       this.messageList = new LinkedList<Map<String, Object>>();
       this.httpConsumer = new HttpConsumer(serverUrl, null, httpClient);
       this.jsonMapper = getJsonObjectMapper();
@@ -247,6 +256,11 @@ public class SensorsAnalytics {
    */
   @Deprecated
   public static class AsyncBatchConsumer implements Consumer {
+
+    public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
+        final ThreadPoolExecutor executor, final AsyncBatchConsumerCallback callback) {
+        this(serverUrl, bulkSize, executor, callback, null);
+    }
 
     public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
         final ThreadPoolExecutor executor, final AsyncBatchConsumerCallback callback,
