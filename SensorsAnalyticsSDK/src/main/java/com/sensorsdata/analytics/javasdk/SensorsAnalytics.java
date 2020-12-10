@@ -78,7 +78,7 @@ public class SensorsAnalytics {
   public static class DebugConsumer implements Consumer {
 
     public DebugConsumer(final String serverUrl, final boolean writeData) {
-      this(serverUrl, writeData, null);
+      this(serverUrl, writeData, getCloseableHttpClient());
     }
 
     public DebugConsumer(final String serverUrl, final boolean writeData, final CloseableHttpClient httpClient) {
@@ -165,7 +165,7 @@ public class SensorsAnalytics {
 
     public BatchConsumer(final String serverUrl, final int bulkSize,
          final int maxCacheSize, final boolean throwException) {
-      this(serverUrl, bulkSize, maxCacheSize, throwException, null);
+      this(serverUrl, bulkSize, maxCacheSize, throwException, getCloseableHttpClient());
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
@@ -259,7 +259,7 @@ public class SensorsAnalytics {
 
     public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
         final ThreadPoolExecutor executor, final AsyncBatchConsumerCallback callback) {
-        this(serverUrl, bulkSize, executor, callback, null);
+        this(serverUrl, bulkSize, executor, callback, getCloseableHttpClient());
     }
 
     public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
@@ -1091,9 +1091,6 @@ public class SensorsAnalytics {
     synchronized void consume(final String data) throws IOException, HttpConsumerException {
       HttpUriRequest request = getHttpRequest(data);
       CloseableHttpResponse response = null;
-      if (httpClient == null) {
-        httpClient = HttpClients.custom().setUserAgent("SensorsAnalytics Java SDK " + SDK_VERSION).build();
-      }
       try {
         response = httpClient.execute(request);
         int httpStatusCode = response.getStatusLine().getStatusCode();
@@ -1152,7 +1149,6 @@ public class SensorsAnalytics {
       try {
         if (httpClient != null) {
           httpClient.close();
-          httpClient = null;
         }
       } catch (IOException ignored) {
         // do nothing
@@ -1419,7 +1415,11 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private static final String SDK_VERSION = "3.1.17";
+  private static CloseableHttpClient getCloseableHttpClient() {
+    return HttpClients.custom().setUserAgent("SensorsAnalytics Java SDK " + SDK_VERSION).build();
+  }
+
+  public static final String SDK_VERSION = "3.1.17";
 
   private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
