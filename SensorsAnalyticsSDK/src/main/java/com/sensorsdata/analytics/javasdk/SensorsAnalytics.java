@@ -78,7 +78,7 @@ public class SensorsAnalytics {
   public static class DebugConsumer implements Consumer {
 
     public DebugConsumer(final String serverUrl, final boolean writeData) {
-      this(serverUrl, writeData, getCloseableHttpClient());
+      this(serverUrl, writeData, createCloseableHttpClient());
     }
 
     public DebugConsumer(final String serverUrl, final boolean writeData, final CloseableHttpClient httpClient) {
@@ -160,12 +160,11 @@ public class SensorsAnalytics {
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException) {
-      this(serverUrl, bulkSize, 0, throwException, null);
+      this(serverUrl, bulkSize, 0, throwException, createCloseableHttpClient());
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize,
-         final int maxCacheSize, final boolean throwException) {
-      this(serverUrl, bulkSize, maxCacheSize, throwException, getCloseableHttpClient());
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize, final boolean throwException) {
+      this(serverUrl, bulkSize, maxCacheSize, throwException, createCloseableHttpClient());
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
@@ -259,7 +258,7 @@ public class SensorsAnalytics {
 
     public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
         final ThreadPoolExecutor executor, final AsyncBatchConsumerCallback callback) {
-        this(serverUrl, bulkSize, executor, callback, getCloseableHttpClient());
+        this(serverUrl, bulkSize, executor, callback, createCloseableHttpClient());
     }
 
     public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
@@ -1415,7 +1414,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private static CloseableHttpClient getCloseableHttpClient() {
+  private static CloseableHttpClient createCloseableHttpClient() {
     return HttpClients.custom().setUserAgent("SensorsAnalytics Java SDK " + SDK_VERSION).build();
   }
 

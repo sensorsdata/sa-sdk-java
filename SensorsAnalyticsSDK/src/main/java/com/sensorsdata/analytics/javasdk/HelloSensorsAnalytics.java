@@ -13,7 +13,7 @@ public class HelloSensorsAnalytics {
 
     // DebugConsumer
     final SensorsAnalytics sa = new SensorsAnalytics(new SensorsAnalytics.DebugConsumer
-        (SA_SERVER_URL, true, null));
+        (SA_SERVER_URL, true));
     // BatchConsumer
 //    final SensorsAnalytics sa =
 //        new SensorsAnalytics(new SensorsAnalytics.BatchConsumer(SA_SERVER_URL, 10));
