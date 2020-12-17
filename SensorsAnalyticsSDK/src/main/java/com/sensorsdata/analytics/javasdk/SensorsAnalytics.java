@@ -78,10 +78,6 @@ public class SensorsAnalytics {
   public static class DebugConsumer implements Consumer {
 
     public DebugConsumer(final String serverUrl, final boolean writeData) {
-      this(serverUrl, writeData, createCloseableHttpClient());
-    }
-
-    public DebugConsumer(final String serverUrl, final boolean writeData, final CloseableHttpClient httpClient) {
       String debugUrl = null;
       try {
         // 将 URI Path 替换成 Debug 模式的 '/debug'
@@ -101,7 +97,7 @@ public class SensorsAnalytics {
         headers.put("Dry-Run", "true");
       }
 
-      this.httpConsumer = new HttpConsumer(debugUrl, headers, httpClient);
+      this.httpConsumer = new HttpConsumer(debugUrl, headers);
       this.jsonMapper = getJsonObjectMapper();
     }
 
@@ -160,17 +156,12 @@ public class SensorsAnalytics {
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException) {
-      this(serverUrl, bulkSize, 0, throwException, createCloseableHttpClient());
+      this(serverUrl, bulkSize, 0, throwException);
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize, final boolean throwException) {
-      this(serverUrl, bulkSize, maxCacheSize, throwException, createCloseableHttpClient());
-    }
-
-    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
-         final boolean throwException, final CloseableHttpClient httpClient) {
       this.messageList = new LinkedList<Map<String, Object>>();
-      this.httpConsumer = new HttpConsumer(serverUrl, null, httpClient);
+      this.httpConsumer = new HttpConsumer(serverUrl, null);
       this.jsonMapper = getJsonObjectMapper();
       this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
       if (maxCacheSize > MAX_CACHE_SIZE) {
@@ -258,14 +249,8 @@ public class SensorsAnalytics {
 
     public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
         final ThreadPoolExecutor executor, final AsyncBatchConsumerCallback callback) {
-        this(serverUrl, bulkSize, executor, callback, createCloseableHttpClient());
-    }
-
-    public AsyncBatchConsumer(final String serverUrl, final int bulkSize,
-        final ThreadPoolExecutor executor, final AsyncBatchConsumerCallback callback,
-        final CloseableHttpClient httpClient) {
       this.messageList = new ArrayList<Map<String, Object>>();
-      this.httpConsumer = new HttpConsumer(serverUrl, null, httpClient);
+      this.httpConsumer = new HttpConsumer(serverUrl, null);
       this.jsonMapper = getJsonObjectMapper();
       this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
       this.executor = executor;
@@ -1080,16 +1065,18 @@ public class SensorsAnalytics {
       final String httpContent;
     }
 
-    HttpConsumer(String serverUrl, Map<String, String> httpHeaders, CloseableHttpClient httpClient) {
+    HttpConsumer(String serverUrl, Map<String, String> httpHeaders) {
       this.serverUrl = serverUrl.trim();
       this.httpHeaders = httpHeaders;
       this.compressData = true;
-      this.httpClient = httpClient;
     }
 
     synchronized void consume(final String data) throws IOException, HttpConsumerException {
       HttpUriRequest request = getHttpRequest(data);
       CloseableHttpResponse response = null;
+      if (httpClient == null) {
+        httpClient = HttpClients.custom().setUserAgent("SensorsAnalytics Java SDK " + SDK_VERSION).build();
+      }
       try {
         response = httpClient.execute(request);
         int httpStatusCode = response.getStatusLine().getStatusCode();
@@ -1148,6 +1135,7 @@ public class SensorsAnalytics {
       try {
         if (httpClient != null) {
           httpClient.close();
+          httpClient = null;
         }
       } catch (IOException ignored) {
         // do nothing
@@ -1414,11 +1402,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private static CloseableHttpClient createCloseableHttpClient() {
-    return HttpClients.custom().setUserAgent("SensorsAnalytics Java SDK " + SDK_VERSION).build();
-  }
-
-  public static final String SDK_VERSION = "3.1.17";
+  private static final String SDK_VERSION = "3.1.17";
 
   private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
