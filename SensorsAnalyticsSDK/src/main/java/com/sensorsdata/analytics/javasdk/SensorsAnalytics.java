@@ -1075,8 +1075,7 @@ public class SensorsAnalytics {
       HttpUriRequest request = getHttpRequest(data);
       CloseableHttpResponse response = null;
       if (httpClient == null) {
-        httpClient = HttpClients
-                .custom()
+        httpClient = HttpClients.custom()
                 .useSystemProperties()
                 .setUserAgent("SensorsAnalytics Java SDK " + SDK_VERSION)
                 .build();
