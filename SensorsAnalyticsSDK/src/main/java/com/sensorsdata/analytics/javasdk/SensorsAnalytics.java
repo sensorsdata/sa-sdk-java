@@ -1366,13 +1366,15 @@ public class SensorsAnalytics {
         }
       }
 
+      boolean isFilterKey = property.getKey().equals("$project") || property.getKey().equals("$token");
+
       if (eventType.equals("profile_increment")) {
-        if (!(property.getValue() instanceof Number)) {
+        if (!isFilterKey && !(property.getValue() instanceof Number)) {
           throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be a "
               + "Number.");
         }
       } else if (eventType.equals("profile_append")) {
-        if (!(property.getValue() instanceof List<?>)) {
+        if (!isFilterKey && !(property.getValue() instanceof List<?>)) {
           throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be a "
               + "List<String>.");
         }
