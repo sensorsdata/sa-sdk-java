@@ -12,14 +12,14 @@ public class HelloSensorsAnalytics {
     final String SA_SERVER_URL = "http://sdk-test.datasink.sensorsdata.cn/sa?project=renqingyou&token=95c73ae661f85aa0";
 
     // DebugConsumer
-    final SensorsAnalytics sa = new SensorsAnalytics(new SensorsAnalytics.DebugConsumer
-        (SA_SERVER_URL, true));
+    /*final SensorsAnalytics sa = new SensorsAnalytics(new SensorsAnalytics.DebugConsumer
+        (SA_SERVER_URL, true));*/
     // BatchConsumer
 //    final SensorsAnalytics sa =
 //        new SensorsAnalytics(new SensorsAnalytics.BatchConsumer(SA_SERVER_URL, 10));
 
     // LoggingConsumer
-//    final SensorsAnalytics sa = new SensorsAnalytics(new SensorsAnalytics.LoggingConsumer("/data/file.log"));
+    final SensorsAnalytics sa = new SensorsAnalytics(new SensorsAnalytics.ConcurrentLoggingConsumer("file.log"));
 
     // 在这个 Demo 中，我们以一个典型的电商产品为例，描述一个用户从匿名访问网站，到下单购买商品，再到申请售后服务，
     // 这样一个整个环节，使用 Sensors Analytics（以下简称 SA）的产品，应该如何记录日志。

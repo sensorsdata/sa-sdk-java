@@ -1366,13 +1366,15 @@ public class SensorsAnalytics {
         }
       }
 
+      boolean isFilterKey = property.getKey().equals("$project") || property.getKey().equals("$token");
+
       if (eventType.equals("profile_increment")) {
-        if (!(property.getValue() instanceof Number)) {
+        if (!isFilterKey && !(property.getValue() instanceof Number)) {
           throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be a "
               + "Number.");
         }
       } else if (eventType.equals("profile_append")) {
-        if (!(property.getValue() instanceof List<?>)) {
+        if (!isFilterKey && !(property.getValue() instanceof List<?>)) {
           throw new InvalidArgumentException("The property value of PROFILE_INCREMENT should be a "
               + "List<String>.");
         }
@@ -1402,7 +1404,7 @@ public class SensorsAnalytics {
     return jsonObjectMapper;
   }
 
-  private static final String SDK_VERSION = "3.1.17";
+  private static final String SDK_VERSION = "3.1.18";
 
   private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
