@@ -1420,7 +1420,7 @@ public class SensorsAnalytics {
         return jsonObjectMapper;
     }
 
-    private static final String SDK_VERSION = "3.1.18";
+    private static final String SDK_VERSION = "3.1.19";
 
     private static final Pattern KEY_PATTERN = Pattern.compile(
             "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
