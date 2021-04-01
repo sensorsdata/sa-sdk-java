@@ -528,10 +528,11 @@ public class SensorsAnalytics {
         }
 
         static class InnerLoggingFileWriter implements LoggingFileWriter {
-
+            private final Object fileLock = new Object();
             private final String fileName;
-            private final FileOutputStream outputStream;
-            private final FileOutputStream lockStream;
+            private final String lockFileName;
+            private FileOutputStream outputStream;
+            private FileOutputStream lockStream;
             private int refCount;
 
             private static final Map<String, InnerLoggingFileWriter> instances;
@@ -563,14 +564,10 @@ public class SensorsAnalytics {
             }
 
             private InnerLoggingFileWriter(final String fileName, final String lockFileName) throws FileNotFoundException {
-                this.outputStream = new FileOutputStream(fileName, true);
-                if (lockFileName != null) {
-                    this.lockStream = new FileOutputStream(lockFileName, true);
-                } else {
-                    this.lockStream = this.outputStream;
-                }
                 this.fileName = fileName;
+                this.lockFileName = lockFileName;
                 this.refCount = 0;
+                initLock();
             }
 
             public void close() {
@@ -586,10 +583,15 @@ public class SensorsAnalytics {
             }
 
             public boolean write(final StringBuilder sb) {
-                synchronized (this.lockStream) {
+                synchronized (fileLock) {
                     FileLock lock = null;
                     try {
                         final FileChannel channel = lockStream.getChannel();
+                        if (!channel.isOpen()) {
+                            lockStream.close();
+                            outputStream.close();
+                            initLock();
+                        }
                         lock = channel.lock(0, Long.MAX_VALUE, false);
                         outputStream.write(sb.toString().getBytes("UTF-8"));
                     } catch (Exception e) {
@@ -606,6 +608,15 @@ public class SensorsAnalytics {
                 }
 
                 return true;
+            }
+
+            private void initLock() throws FileNotFoundException{
+                this.outputStream = new FileOutputStream(fileName, true);
+                if (lockFileName != null) {
+                    this.lockStream = new FileOutputStream(lockFileName, true);
+                } else {
+                    this.lockStream = this.outputStream;
+                }
             }
         }
 
@@ -1420,7 +1431,7 @@ public class SensorsAnalytics {
         return jsonObjectMapper;
     }
 
-    private static final String SDK_VERSION = "3.1.19";
+    private static final String SDK_VERSION = "3.1.20";
 
     private static final Pattern KEY_PATTERN = Pattern.compile(
             "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
