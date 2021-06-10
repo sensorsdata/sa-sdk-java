@@ -15,7 +15,7 @@ public class SensorsConst {
     /**
      * 当前JDK版本号，注意要和pom文件里面的version保持一致
      */
-    public static final String SDK_VERSION = "3.1.20";
+    public static final String SDK_VERSION = "3.2.0";
     /**
      * 当前语言类型
      */
