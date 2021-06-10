@@ -15,7 +15,7 @@
     <groupId>com.sensorsdata.analytics.javasdk</groupId>
     <name>SensorsAnalyticsSDK</name>
     <artifactId>SensorsAnalyticsSDK</artifactId>
-    <version>3.1.17-standalone</version>
+    <version>3.2.0-standalone</version>
     <description>The official Java SDK of Sensors Analytics</description>
     <url>http://sensorsdata.cn</url>
 
@@ -28,8 +28,8 @@
 
     <developers>
         <developer>
-            <name>renqingyou</name>
-            <email>renqingyou@sensorsdata.cn</email>
+            <name>dengshiwei</name>
+            <email>dengshiwei@sensorsdata.cn</email>
             <url>http://sensorsdata.cn</url>
         </developer>
     </developers>

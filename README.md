@@ -10,9 +10,9 @@ SensorsAnalytics SDK 是国内第一家开源商用版用户行为采集 SDK，�
 
 # 使用说明
 
-使用方法请参考文档 http://www.sensorsdata.cn/manual/java_sdk.html
-如有疑问请联系邮箱 renqingyou@sensorsdata.cn
- 
+1. 使用方法请参考文档 http://www.sensorsdata.cn/manual/java_sdk.html
+2. 如有疑问请联系邮箱 dengshiwei@sensorsdata.cn
+
 ## 讨论
 
 | 扫码加入神策数据开源社区 QQ 群<br>群号：785122381 | 扫码加入神策数据开源社区微信群 |
