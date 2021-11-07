@@ -2,7 +2,9 @@ package com.sensorsdata.analytics.javasdk.consumer;
 
 import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.util.Base64Coder;
+
 import org.apache.http.NameValuePair;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -26,18 +28,37 @@ class HttpConsumer implements Closeable {
     final String serverUrl;
     final Map<String, String> httpHeaders;
     final boolean compressData;
+    final RequestConfig requestConfig;
 
-    HttpConsumer(String serverUrl, Map<String, String> httpHeaders) {
+    public HttpConsumer(String serverUrl, int timeoutSec) {
+        this(serverUrl, null, timeoutSec);
+    }
+
+    public HttpConsumer(String serverUrl, Map<String, String> httpHeaders) {
+        this(serverUrl, httpHeaders, 3);
+    }
+
+    HttpConsumer(String serverUrl, Map<String, String> httpHeaders, int timeoutSec) {
         this.serverUrl = serverUrl.trim();
         this.httpHeaders = httpHeaders;
         this.compressData = true;
+        int timeout = timeoutSec * 1000;
+        this.requestConfig = RequestConfig.custom().setConnectionRequestTimeout(timeout)
+            .setConnectTimeout(timeout).setSocketTimeout(timeout).build();
+        this.httpClient = HttpClients.custom()
+            .setUserAgent(String.format("SensorsAnalytics Java SDK %s", SensorsConst.SDK_VERSION))
+            .setDefaultRequestConfig(requestConfig)
+            .build();
     }
 
-    synchronized void consume(final String data) throws IOException, HttpConsumerException {
+    void consume(final String data) throws IOException, HttpConsumerException {
         HttpUriRequest request = getHttpRequest(data);
         CloseableHttpResponse response = null;
         if (httpClient == null) {
-            httpClient = HttpClients.custom().setUserAgent("SensorsAnalytics Java SDK " + SensorsConst.SDK_VERSION).build();
+            httpClient = HttpClients.custom()
+                .setUserAgent(String.format("SensorsAnalytics Java SDK %s", SensorsConst.SDK_VERSION))
+                .setDefaultRequestConfig(requestConfig)
+                .build();
         }
         try {
             response = httpClient.execute(request);
