@@ -105,8 +105,8 @@ public class FastBatchConsumer implements Consumer {
         this.httpConsumer.consume(sendingData);
       } catch (Exception e) {
         callback.onFailed(new FailedData("failed to send data.", sendingData));
-        sendList.clear();
       }
+      sendList.clear();
     }
   }
 
