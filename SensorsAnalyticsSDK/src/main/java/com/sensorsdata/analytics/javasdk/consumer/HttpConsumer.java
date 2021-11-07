@@ -51,7 +51,7 @@ class HttpConsumer implements Closeable {
             .build();
     }
 
-    void consume(final String data) throws IOException, HttpConsumerException {
+   synchronized void consume(final String data) throws IOException, HttpConsumerException {
         HttpUriRequest request = getHttpRequest(data);
         CloseableHttpResponse response = null;
         if (httpClient == null) {

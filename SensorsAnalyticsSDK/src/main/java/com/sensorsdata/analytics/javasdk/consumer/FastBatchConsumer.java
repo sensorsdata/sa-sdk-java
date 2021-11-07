@@ -71,7 +71,7 @@ public class FastBatchConsumer implements Consumer {
           flush();
         }
       }
-    }, 200, 20, TimeUnit.MILLISECONDS);
+    }, 5, 2, TimeUnit.SECONDS);
   }
 
   @Override
@@ -99,7 +99,7 @@ public class FastBatchConsumer implements Consumer {
       } catch (JsonProcessingException e) {
         callback.onFailed(new FailedData("can't process json.", sendList));
         sendList.clear();
-        return;
+        continue;
       }
       try {
         this.httpConsumer.consume(sendingData);
