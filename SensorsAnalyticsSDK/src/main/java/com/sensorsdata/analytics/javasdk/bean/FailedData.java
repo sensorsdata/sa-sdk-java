@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 发送异常数据包装类
  *
@@ -26,5 +29,5 @@ public class FailedData {
   /**
    * 失败数据
    */
-  private Object failedData;
+  private List<Map<String,Object>> failedData;
 }

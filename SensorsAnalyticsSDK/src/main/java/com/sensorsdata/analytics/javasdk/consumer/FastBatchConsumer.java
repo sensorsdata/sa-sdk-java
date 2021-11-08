@@ -38,6 +38,10 @@ public class FastBatchConsumer implements Consumer {
     this(serverUrl, true, callback);
   }
 
+  public FastBatchConsumer(@NonNull String serverUrl, int flushSec, @NonNull Callback callback) {
+    this(serverUrl, true, 50, 6000, 1, 3, callback);
+  }
+
   public FastBatchConsumer(@NonNull String serverUrl, final boolean timing, @NonNull Callback callback) {
     this(serverUrl, timing, 50, callback);
   }
@@ -48,11 +52,11 @@ public class FastBatchConsumer implements Consumer {
 
   public FastBatchConsumer(@NonNull String serverUrl, final boolean timing, int bulkSize, int maxCacheSize,
       @NonNull Callback callback) {
-    this(serverUrl, timing, bulkSize, maxCacheSize, 3, callback);
+    this(serverUrl, timing, bulkSize, maxCacheSize, 1, 3, callback);
   }
 
   public FastBatchConsumer(@NonNull String serverUrl, final boolean timing, final int bulkSize, int maxCacheSize,
-      int timeoutSec, @NonNull Callback callback) {
+      int flushSec, int timeoutSec, @NonNull Callback callback) {
     this.buffer =
         new LinkedBlockingQueue<Map<String, Object>>(Math.min(Math.max(MIN_CACHE_SIZE, maxCacheSize), MAX_CACHE_SIZE));
     this.httpConsumer = new HttpConsumer(serverUrl, timeoutSec);
@@ -71,13 +75,15 @@ public class FastBatchConsumer implements Consumer {
           flush();
         }
       }
-    }, 5, 2, TimeUnit.SECONDS);
+    }, 1, flushSec, TimeUnit.SECONDS);
   }
 
   @Override
   public void send(Map<String, Object> message) {
     if (!buffer.offer(message)) {
-      callback.onFailed(new FailedData("can't offer to buffer.", message));
+      List<Map<String, Object>> res = new ArrayList<Map<String, Object>>(1);
+      res.add(message);
+      callback.onFailed(new FailedData("can't offer to buffer.", res));
     }
   }
 
@@ -104,7 +110,7 @@ public class FastBatchConsumer implements Consumer {
       try {
         this.httpConsumer.consume(sendingData);
       } catch (Exception e) {
-        callback.onFailed(new FailedData("failed to send data.", sendingData));
+        callback.onFailed(new FailedData("failed to send data.", sendList));
       }
       sendList.clear();
     }
