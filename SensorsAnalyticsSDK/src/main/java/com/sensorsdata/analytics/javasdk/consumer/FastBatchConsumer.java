@@ -39,7 +39,7 @@ public class FastBatchConsumer implements Consumer {
   }
 
   public FastBatchConsumer(@NonNull String serverUrl, int flushSec, @NonNull Callback callback) {
-    this(serverUrl, true, 50, 6000, 1, 3, callback);
+    this(serverUrl, false, 50, 6000, 1, 3, callback);
   }
 
   public FastBatchConsumer(@NonNull String serverUrl, final boolean timing, @NonNull Callback callback) {
@@ -62,17 +62,17 @@ public class FastBatchConsumer implements Consumer {
     this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec, 1));
     this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
     this.callback = callback;
-    this.bulkSize = bulkSize;
+    this.bulkSize = Math.min(MIN_CACHE_SIZE, bulkSize);
     executorService = new ScheduledThreadPoolExecutor(1);
     executorService.scheduleWithFixedDelay(new Runnable() {
       @Override
       public void run() {
         if (timing) {
+          flush();
+        } else {
           if (buffer.size() >= bulkSize) {
             flush();
           }
-        } else {
-          flush();
         }
       }
     }, 1, Math.max(flushSec, 1), TimeUnit.SECONDS);
