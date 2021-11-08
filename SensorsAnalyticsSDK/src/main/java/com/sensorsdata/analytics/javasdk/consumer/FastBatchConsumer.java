@@ -75,7 +75,7 @@ public class FastBatchConsumer implements Consumer {
           flush();
         }
       }
-    }, 1, flushSec, TimeUnit.SECONDS);
+    }, 1, Math.max(flushSec, 1), TimeUnit.SECONDS);
   }
 
   @Override
