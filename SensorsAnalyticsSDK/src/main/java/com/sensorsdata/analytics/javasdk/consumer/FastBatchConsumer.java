@@ -59,7 +59,7 @@ public class FastBatchConsumer implements Consumer {
       int flushSec, int timeoutSec, @NonNull Callback callback) {
     this.buffer =
         new LinkedBlockingQueue<Map<String, Object>>(Math.min(Math.max(MIN_CACHE_SIZE, maxCacheSize), MAX_CACHE_SIZE));
-    this.httpConsumer = new HttpConsumer(serverUrl, timeoutSec);
+    this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec, 1));
     this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
     this.callback = callback;
     this.bulkSize = bulkSize;
