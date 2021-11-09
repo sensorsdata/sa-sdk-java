@@ -26,6 +26,8 @@ public class FastBatchConsumer implements Consumer {
 
   private static final int MAX_CACHE_SIZE = 10000;
   private static final int MIN_CACHE_SIZE = 1000;
+  private static final int MIN_BULK_SIZE = 1;
+
 
   private final LinkedBlockingQueue<Map<String, Object>> buffer;
   private final HttpConsumer httpConsumer;
@@ -35,11 +37,11 @@ public class FastBatchConsumer implements Consumer {
   private final ScheduledExecutorService executorService;
 
   public FastBatchConsumer(@NonNull String serverUrl, @NonNull Callback callback) {
-    this(serverUrl, true, callback);
+    this(serverUrl, false, callback);
   }
 
-  public FastBatchConsumer(@NonNull String serverUrl, int flushSec, @NonNull Callback callback) {
-    this(serverUrl, false, 50, 6000, 1, 3, callback);
+  public FastBatchConsumer(@NonNull String serverUrl, int flushSec, final boolean timing, @NonNull Callback callback) {
+    this(serverUrl, timing, 50, 6000, flushSec, 3, callback);
   }
 
   public FastBatchConsumer(@NonNull String serverUrl, final boolean timing, @NonNull Callback callback) {
@@ -62,7 +64,7 @@ public class FastBatchConsumer implements Consumer {
     this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec, 1));
     this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
     this.callback = callback;
-    this.bulkSize = Math.min(MIN_CACHE_SIZE, bulkSize);
+    this.bulkSize = Math.min(MIN_CACHE_SIZE, Math.max(bulkSize, MIN_BULK_SIZE));
     executorService = new ScheduledThreadPoolExecutor(1);
     executorService.scheduleWithFixedDelay(new Runnable() {
       @Override
