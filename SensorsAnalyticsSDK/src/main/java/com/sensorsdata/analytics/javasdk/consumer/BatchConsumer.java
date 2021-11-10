@@ -1,8 +1,9 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -25,16 +26,22 @@ public class BatchConsumer implements Consumer {
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize) {
-        this(serverUrl, bulkSize, false);
+        this(serverUrl, 3, bulkSize);
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException) {
-        this(serverUrl, bulkSize, 0, throwException);
+    public BatchConsumer(final String serverUrl, final int timeoutSec, final int bulkSize) {
+        this(serverUrl, bulkSize, timeoutSec, false);
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize, final boolean throwException) {
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int timeoutSec,
+        final boolean throwException) {
+        this(serverUrl, bulkSize, timeoutSec, 0, throwException);
+    }
+
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int timeoutSec, final int maxCacheSize,
+        final boolean throwException) {
         this.messageList = new LinkedList<Map<String, Object>>();
-        this.httpConsumer = new HttpConsumer(serverUrl, null);
+        this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec,1));
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
         this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
         if (maxCacheSize > MAX_CACHE_SIZE) {
