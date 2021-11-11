@@ -49,7 +49,7 @@
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>utf-8</project.reporting.outputEncoding>
         <jdk.version>1.6</jdk.version>
-        <httpclient.version>4.5.2</httpclient.version>
+        <httpclient.version>4.5.13</httpclient.version>
         <jackson-databind.version>2.5.5</jackson-databind.version>
         <lombok.version>1.18.20</lombok.version>
     </properties>
