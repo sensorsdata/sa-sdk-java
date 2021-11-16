@@ -1,10 +1,13 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
+import com.sensorsdata.analytics.javasdk.bean.FailedData;
+import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sensorsdata.analytics.javasdk.bean.FailedData;
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +24,7 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0.0
  * @since 2021/11/05 23:48
  */
+@Slf4j
 public class FastBatchConsumer implements Consumer {
 
   private static final int MAX_CACHE_SIZE = 10000;
@@ -59,7 +63,7 @@ public class FastBatchConsumer implements Consumer {
   public FastBatchConsumer(@NonNull String serverUrl, final boolean timing, final int bulkSize, int maxCacheSize,
       int flushSec, int timeoutSec, @NonNull Callback callback) {
     this.buffer =
-        new LinkedBlockingQueue<Map<String, Object>>(Math.min(Math.max(MIN_CACHE_SIZE, maxCacheSize), MAX_CACHE_SIZE));
+        new LinkedBlockingQueue<>(Math.min(Math.max(MIN_CACHE_SIZE, maxCacheSize), MAX_CACHE_SIZE));
     this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec, 1));
     this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
     this.callback = callback;
@@ -77,15 +81,20 @@ public class FastBatchConsumer implements Consumer {
         }
       }
     }, 1, Math.max(flushSec, 1), TimeUnit.SECONDS);
+    log.info(
+        "Initialize FastBatchConsumer with params:[serverUrl:{};timing:{};bulkSize:{};maxCacheSize:{};flushSec:{};timeoutSec:{}].",
+        serverUrl, timing, bulkSize, maxCacheSize, flushSec, timeoutSec);
   }
 
   @Override
   public void send(Map<String, Object> message) {
     if (!buffer.offer(message)) {
-      List<Map<String, Object>> res = new ArrayList<Map<String, Object>>(1);
+      List<Map<String, Object>> res = new ArrayList<>(1);
       res.add(message);
       callback.onFailed(new FailedData("can't offer to buffer.", res));
+      log.error("Failed to load data into the cache.The cache current size is {}.", buffer.size());
     }
+    log.info("Successfully save data to cache.The cache current size is {}.", buffer.size());
   }
 
   /**
@@ -93,11 +102,13 @@ public class FastBatchConsumer implements Consumer {
    */
   @Override
   public void flush() {
-    List<Map<String, Object>> results = new ArrayList<Map<String, Object>>();
+    List<Map<String, Object>> results = new ArrayList<>();
     buffer.drainTo(results);
     if (results.isEmpty()) {
+      log.info("The Data of cache is empty when flush.");
       return;
     }
+    log.info("Successfully get [{}] messages from the cache.", results.size());
     while (!results.isEmpty()) {
       String sendingData;
       List<Map<String, Object>> sendList = results.subList(0, Math.min(bulkSize, results.size()));
@@ -106,20 +117,46 @@ public class FastBatchConsumer implements Consumer {
       } catch (JsonProcessingException e) {
         callback.onFailed(new FailedData("can't process json.", sendList));
         sendList.clear();
+        log.error("Failed to process json.", e);
         continue;
       }
+      log.debug("Data will be sent.{}", sendingData);
       try {
         this.httpConsumer.consume(sendingData);
       } catch (Exception e) {
+        log.error("Failed to send data:{}.", sendingData, e);
         callback.onFailed(new FailedData("failed to send data.", sendList));
       }
       sendList.clear();
     }
+    log.info("Finish flush.");
   }
 
   @Override
   public void close() {
+    log.info("Call close method.");
     this.httpConsumer.close();
     this.executorService.shutdown();
+  }
+
+  /**
+   * 重发送 FastBatchConsumer 模式发送失败返回的数据
+   *
+   * @param failedData 失败的数据集合
+   * @return true:发送成功；false:发送失败
+   */
+  public boolean resendFailedData(@NonNull FailedData failedData)
+      throws InvalidArgumentException, JsonProcessingException {
+    SensorsAnalyticsUtil.assertFailedData(failedData);
+    final String sendData = jsonMapper.writeValueAsString(failedData.getFailedData());
+    log.debug("Will be resent data.{}", sendData);
+    try {
+      this.httpConsumer.consume(sendData);
+    } catch (Exception e) {
+      log.error("failed to send data.data:{}.", sendData, e);
+      return false;
+    }
+    log.info("Successfully resend failed data.");
+    return true;
   }
 }

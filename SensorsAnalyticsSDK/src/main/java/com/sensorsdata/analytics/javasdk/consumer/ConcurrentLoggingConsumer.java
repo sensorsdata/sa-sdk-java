@@ -1,13 +1,17 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
 
     public ConcurrentLoggingConsumer(final String filenamePrefix) {
@@ -69,7 +73,7 @@ public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
         private static final Map<String, InnerLoggingFileWriter> instances;
 
         static {
-            instances = new HashMap<String, InnerLoggingFileWriter>();
+            instances = new HashMap<>();
         }
 
         static InnerLoggingFileWriter getInstance(final String fileName, final String lockFileName) throws FileNotFoundException {
@@ -105,6 +109,7 @@ public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
             try {
                 outputStream.close();
             } catch (Exception e) {
+                log.error("Failed to close output stream.", e);
                 throw new RuntimeException("fail to close output stream.", e);
             }
         }
@@ -124,14 +129,16 @@ public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
                         initLock();
                     }
                     lock = channel.lock(0, Long.MAX_VALUE, false);
-                    outputStream.write(sb.toString().getBytes("UTF-8"));
+                    outputStream.write(sb.toString().getBytes(StandardCharsets.UTF_8));
                 } catch (Exception e) {
+                    log.error("Failed to write file.", e);
                     throw new RuntimeException("fail to write file.", e);
                 } finally {
                     if (lock != null) {
                         try {
                             lock.release();
                         } catch (IOException e) {
+                            log.error("Failed to release file lock.", e);
                             throw new RuntimeException("fail to release file lock.", e);
                         }
                     }

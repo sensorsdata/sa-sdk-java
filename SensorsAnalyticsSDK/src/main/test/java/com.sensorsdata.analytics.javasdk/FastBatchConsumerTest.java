@@ -1,18 +1,25 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import com.sensorsdata.analytics.javasdk.bean.FailedData;
 import com.sensorsdata.analytics.javasdk.consumer.Callback;
 import com.sensorsdata.analytics.javasdk.consumer.FastBatchConsumer;
+import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * FastBatchConsumer 单测
@@ -71,5 +78,43 @@ public class FastBatchConsumerTest {
     consumer.flush();
     assertEquals(0, buffer.size());
   }
+
+  /**
+   * 重发送接口，设置错误的 URL，返回发送失败标志
+   */
+  @Test
+  public void checkResendFailedDataWithErrorUrl() throws InvalidArgumentException, JsonProcessingException {
+    Map<String, Object> event = new HashMap<>();
+    event.put("distinct_id", "12345");
+    event.put("event", "test");
+    event.put("type", "track");
+    ArrayList<Map<String, Object>> list = new ArrayList<>();
+    list.add(event);
+    FailedData failedData = new FailedData("", list);
+    boolean sendFlag = consumer.resendFailedData(failedData);
+    assertFalse(sendFlag);
+  }
+
+  @Test
+  public void checkResendFailedDataWithRightUrl() throws InvalidArgumentException, JsonProcessingException {
+    final FastBatchConsumer fastBatchConsumer =
+        new FastBatchConsumer("http://10.129.138.189:8106/sa?project=production", new Callback() {
+          @Override
+          public void onFailed(FailedData failedData) {
+            System.out.println(failedData);
+          }
+        });
+    Map<String, Object> event = new HashMap<>();
+    event.put("_track_id", new Random().nextInt());
+    event.put("distinct_id", "123456");
+    event.put("event", "test");
+    event.put("type", "track");
+    ArrayList<Map<String, Object>> list = new ArrayList<>();
+    list.add(event);
+    boolean sendFlag = fastBatchConsumer.resendFailedData(new FailedData("", list));
+    assertTrue(sendFlag);
+  }
+
+
 
 }

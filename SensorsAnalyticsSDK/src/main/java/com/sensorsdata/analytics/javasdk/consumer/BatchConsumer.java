@@ -3,11 +3,13 @@ package com.sensorsdata.analytics.javasdk.consumer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class BatchConsumer implements Consumer {
     private static final int MAX_FLUSH_BULK_SIZE = 1000;
     private static final int MAX_CACHE_SIZE = 6000;
@@ -39,8 +41,8 @@ public class BatchConsumer implements Consumer {
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final int timeoutSec, final int maxCacheSize,
         final boolean throwException) {
-        this.messageList = new LinkedList<Map<String, Object>>();
-        this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec,1));
+        this.messageList = new LinkedList<>();
+        this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec, 1));
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
         this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
         if (maxCacheSize > MAX_CACHE_SIZE) {
@@ -51,6 +53,9 @@ public class BatchConsumer implements Consumer {
             this.maxCacheSize = maxCacheSize;
         }
         this.throwException = throwException;
+        log.info(
+            "Initialize BatchConsumer with params:[serverUrl:{},bulkSize:{},timeoutSec:{},maxCacheSize:{},throwException:{}]",
+            serverUrl, bulkSize, timeoutSec, maxCacheSize, throwException);
     }
 
     @Override
@@ -60,8 +65,11 @@ public class BatchConsumer implements Consumer {
             if (maxCacheSize <= 0 || size < maxCacheSize) {
                 messageList.add(message);
                 ++size;
+                log.info("Successfully save data to cache,The cache current size is {}.", size);
             }
             if (size >= bulkSize) {
+                log.info("Flush was triggered because the cache size reached the threshold,cache size:{},bulkSize:{}.",
+                    size, bulkSize);
                 flush();
             }
         }
@@ -71,29 +79,32 @@ public class BatchConsumer implements Consumer {
     public void flush() {
         synchronized (messageList) {
             while (!messageList.isEmpty()) {
-                String sendingData = null;
-                List<Map<String, Object>> sendList =
-                        messageList.subList(0, Math.min(bulkSize, messageList.size()));
+                String sendingData;
+                List<Map<String, Object>> sendList = messageList.subList(0, Math.min(bulkSize, messageList.size()));
                 try {
                     sendingData = jsonMapper.writeValueAsString(sendList);
                 } catch (JsonProcessingException e) {
                     sendList.clear();
+                    log.error("Failed to process json.", e);
                     if (throwException) {
                         throw new RuntimeException("Failed to serialize data.", e);
                     }
                     continue;
                 }
-
+                log.debug("Will be send data:{}.", sendingData);
                 try {
                     this.httpConsumer.consume(sendingData);
                     sendList.clear();
                 } catch (Exception e) {
+                    log.error("Failed to send data:{}.", sendingData, e);
                     if (throwException) {
                         throw new RuntimeException("Failed to dump message with BatchConsumer.", e);
                     }
                     return;
                 }
+                log.debug("Successfully send data:{}.", sendingData);
             }
+            log.info("Finish flush.");
         }
     }
 
@@ -101,5 +112,6 @@ public class BatchConsumer implements Consumer {
     public void close() {
         flush();
         httpConsumer.close();
+        log.info("Call close method.");
     }
 }

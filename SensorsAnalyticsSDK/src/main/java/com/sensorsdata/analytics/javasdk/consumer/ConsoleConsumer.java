@@ -1,12 +1,15 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
 
+@Slf4j
 public class ConsoleConsumer implements Consumer {
     private final ObjectMapper jsonMapper;
     private final Writer writer;
@@ -14,6 +17,7 @@ public class ConsoleConsumer implements Consumer {
     public ConsoleConsumer(final Writer writer) {
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
         this.writer = writer;
+        log.info("Initialize ConsoleConsumer.");
     }
 
     @Override
@@ -24,6 +28,7 @@ public class ConsoleConsumer implements Consumer {
                 writer.write("\n");
             }
         } catch (IOException e) {
+            log.error("Failed to dump message with ConsoleConsumer.", e);
             throw new RuntimeException("Failed to dump message with ConsoleConsumer.", e);
         }
     }
@@ -34,6 +39,7 @@ public class ConsoleConsumer implements Consumer {
             try {
                 writer.flush();
             } catch (IOException e) {
+                log.error("Failed to flush with ConsoleConsumer.", e);
                 throw new RuntimeException("Failed to flush with ConsoleConsumer.", e);
             }
         }
