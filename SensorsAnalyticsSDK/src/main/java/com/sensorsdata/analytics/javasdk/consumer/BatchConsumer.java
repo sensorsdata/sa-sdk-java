@@ -1,9 +1,8 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import java.util.LinkedList;
 import java.util.List;

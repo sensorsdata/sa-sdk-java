@@ -1,37 +1,17 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_DELETE_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_SET_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_APPEND_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_DELETE_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_INCREMENT_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ONCE_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_UNSET_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.PROJECT_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.SIGN_UP_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TYPE;
-
-import com.sensorsdata.analytics.javasdk.bean.EventRecord;
-import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
-import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
-import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
-import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.*;
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.sensorsdata.analytics.javasdk.SensorsConst.*;
 
 /**
  * Sensors Analytics SDK

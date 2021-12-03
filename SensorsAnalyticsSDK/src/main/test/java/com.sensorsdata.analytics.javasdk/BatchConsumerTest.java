@@ -1,11 +1,6 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,6 +8,8 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * BatchConsumer 单测

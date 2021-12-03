@@ -1,21 +1,5 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static com.sensorsdata.analytics.javasdk.SensorsConst.APP_VERSION_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_DETAIL_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_METHOD_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_VERSION_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LOGIN_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.PROJECT_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.SDK_VERSION;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.TINE_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.TOKEN_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TYPE;
-
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
 
@@ -24,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.sensorsdata.analytics.javasdk.SensorsConst.*;
 
 
 class SensorsAnalyticsWorker {

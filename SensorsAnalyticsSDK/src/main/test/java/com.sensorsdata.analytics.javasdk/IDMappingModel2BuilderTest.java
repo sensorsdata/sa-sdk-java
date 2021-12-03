@@ -1,7 +1,6 @@
 package com.sensorsdata.analytics.javasdk;
 
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
-import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
@@ -10,7 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-import java.util.*;
 
 import static org.junit.Assert.*;
 

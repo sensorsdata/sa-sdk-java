@@ -1,18 +1,13 @@
 package com.sensorsdata.analytics.javasdk.util;
 
-import com.sensorsdata.analytics.javasdk.SensorsConst;
-import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.sensorsdata.analytics.javasdk.SensorsConst;
+import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class SensorsAnalyticsUtil {

@@ -1,12 +1,7 @@
 package com.sensorsdata.analytics.javasdk;
 
-import com.sensorsdata.analytics.javasdk.bean.EventRecord;
-import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
-import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
-import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
-import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.*;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import lombok.NonNull;
 
 import java.util.Map;
