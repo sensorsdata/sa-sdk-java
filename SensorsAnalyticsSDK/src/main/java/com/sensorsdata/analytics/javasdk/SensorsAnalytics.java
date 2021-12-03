@@ -1,229 +1,221 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_DELETE_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_SET_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_APPEND_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_DELETE_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_INCREMENT_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ONCE_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_UNSET_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROJECT_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.SIGN_UP_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TYPE;
+
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
 import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
+import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
+import lombok.NonNull;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Sensors Analytics SDK
  */
 public class SensorsAnalytics implements ISensorsAnalytics {
 
-    private final Consumer consumer;
-    private final Map<String, Object> superProperties;
-    private boolean enableTimeFree = false;
+    private final SensorsAnalyticsWorker worker;
+
+    private static final String DISTINCT_ID = "distinct_id";
+    private static final String EVENT_NAME = "event name";
+    private static final String ORIGINAL_DISTINCT_ID = "Original Distinct Id";
+    private static final String ITEM_TYPE = "Item Type";
+    private static final String ITEM_ID = "Item Id";
 
     public SensorsAnalytics(final Consumer consumer) {
-        this.consumer = consumer;
-        this.superProperties = new ConcurrentHashMap<String, Object>();
-        clearSuperProperties();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                flush();
-            }
-        }));
-    }
-
-    public boolean isEnableTimeFree() {
-        return enableTimeFree;
+        worker = new SensorsAnalyticsWorker(consumer);
     }
 
     @Override
-    public void setEnableTimeFree(boolean enableTimeFree) {
-        this.enableTimeFree = enableTimeFree;
-    }
-
-    /**
-     * 设置公共属性
-     *
-     * @param propertiesRecord 公共属性实体
-     */
-    @Override
-    public void registerSuperProperties(SuperPropertiesRecord propertiesRecord) {
-        for (String key : propertiesRecord.getPropertyMap().keySet()) {
-            this.superProperties.put(key, propertiesRecord.getPropertyMap().get(key));
-        }
+    public void setEnableTimeFree(@NonNull boolean enableTimeFree) {
+        worker.setEnableTimeFree(enableTimeFree);
     }
 
     @Override
-    public void registerSuperProperties(Map<String, Object> superPropertiesMap) {
-        for (Map.Entry<String, Object> item : superPropertiesMap.entrySet()) {
-            this.superProperties.put(item.getKey(), item.getValue());
-        }
+    public void registerSuperProperties(@NonNull SuperPropertiesRecord propertiesRecord) {
+        worker.setSuperProperties(propertiesRecord.getPropertyMap());
+    }
+
+    @Override
+    public void registerSuperProperties(@NonNull Map<String, Object> superPropertiesMap) {
+        worker.setSuperProperties(superPropertiesMap);
     }
 
     @Override
     public void clearSuperProperties() {
-        this.superProperties.clear();
-        this.superProperties.put(SensorsConst.LIB_SYSTEM_ATTR, SensorsConst.LIB);
-        this.superProperties.put(SensorsConst.LIB_VERSION_SYSTEM_ATTR, SensorsConst.SDK_VERSION);
+        worker.clearSuperProperties();
     }
 
     @Override
-    public void track(EventRecord eventRecord) throws InvalidArgumentException {
-        addEvent(eventRecord.getDistinctId(), eventRecord.getIsLoginId(), null, SensorsConst.TRACK_ACTION_TYPE,
-            eventRecord.getEventName(),
-            eventRecord.getPropertyMap());
+    public void track(@NonNull EventRecord eventRecord) throws InvalidArgumentException {
+        addEvent(eventRecord.getDistinctId(), eventRecord.getIsLoginId(), null, TRACK_ACTION_TYPE,
+            eventRecord.getEventName(), eventRecord.getPropertyMap());
     }
 
     @Override
-    public void profileSet(UserRecord userRecord) throws InvalidArgumentException {
-        dealProfile(userRecord, SensorsConst.PROFILE_SET_ACTION_TYPE);
+    public void profileSet(@NonNull UserRecord userRecord) throws InvalidArgumentException {
+        dealProfile(userRecord, PROFILE_SET_ACTION_TYPE);
     }
 
     @Override
-    public void profileSetOnce(UserRecord userRecord) throws InvalidArgumentException {
-        dealProfile(userRecord, SensorsConst.PROFILE_SET_ONCE_ACTION_TYPE);
+    public void profileSetOnce(@NonNull UserRecord userRecord) throws InvalidArgumentException {
+        dealProfile(userRecord, PROFILE_SET_ONCE_ACTION_TYPE);
     }
 
     @Override
-    public void profileAppend(UserRecord userRecord) throws InvalidArgumentException {
-        dealProfile(userRecord, SensorsConst.PROFILE_APPEND_ACTION_TYPE);
+    public void profileAppend(@NonNull UserRecord userRecord) throws InvalidArgumentException {
+        dealProfile(userRecord, PROFILE_APPEND_ACTION_TYPE);
     }
 
     @Override
-    public void profileIncrement(UserRecord userRecord) throws InvalidArgumentException {
-        dealProfile(userRecord, SensorsConst.PROFILE_INCREMENT_ACTION_TYPE);
+    public void profileIncrement(@NonNull UserRecord userRecord) throws InvalidArgumentException {
+        dealProfile(userRecord, PROFILE_INCREMENT_ACTION_TYPE);
     }
 
     @Override
-    public void profileUnset(UserRecord userRecord) throws InvalidArgumentException {
-        dealProfile(userRecord, SensorsConst.PROFILE_UNSET_ACTION_TYPE);
+    public void profileUnset(@NonNull UserRecord userRecord) throws InvalidArgumentException {
+        dealProfile(userRecord, PROFILE_UNSET_ACTION_TYPE);
     }
 
     @Override
-    public void profileDelete(UserRecord userRecord) throws InvalidArgumentException {
-        dealProfile(userRecord, SensorsConst.PROFILE_DELETE_ACTION_TYPE);
+    public void profileDelete(@NonNull UserRecord userRecord) throws InvalidArgumentException {
+        dealProfile(userRecord, PROFILE_DELETE_ACTION_TYPE);
     }
 
     @Override
-    public void itemSet(ItemRecord itemRecord) throws InvalidArgumentException {
-        addItem(itemRecord.getItemType(), itemRecord.getItemId(), SensorsConst.ITEM_SET_ACTION_TYPE,
+    public void itemSet(@NonNull ItemRecord itemRecord) throws InvalidArgumentException {
+        addItem(itemRecord.getItemType(), itemRecord.getItemId(), ITEM_SET_ACTION_TYPE,
             itemRecord.getPropertyMap());
     }
 
     @Override
-    public void itemDelete(ItemRecord itemRecord) throws InvalidArgumentException {
-        addItem(itemRecord.getItemType(), itemRecord.getItemId(), SensorsConst.ITEM_DELETE_ACTION_TYPE,
+    public void itemDelete(@NonNull ItemRecord itemRecord) throws InvalidArgumentException {
+        addItem(itemRecord.getItemType(), itemRecord.getItemId(), ITEM_DELETE_ACTION_TYPE,
             itemRecord.getPropertyMap());
     }
 
-    private void dealProfile(UserRecord userRecord, String actionType) throws InvalidArgumentException {
-        addEvent(userRecord.getDistinctId(), userRecord.getIsLoginId(), null, actionType, null,
-            userRecord.getPropertyMap());
-    }
-
     @Override
-    public void track(String distinctId, boolean isLoginId, String eventName) throws InvalidArgumentException {
-        addEvent(distinctId, isLoginId, null, SensorsConst.TRACK_ACTION_TYPE, eventName, null);
-    }
-
-    @Override
-    public void track(String distinctId, boolean isLoginId, String eventName, Map<String, Object> properties)
+    public void track(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String eventName)
         throws InvalidArgumentException {
-        addEvent(distinctId, isLoginId, null, SensorsConst.TRACK_ACTION_TYPE, eventName, properties);
+        addEvent(distinctId, isLoginId, null, TRACK_ACTION_TYPE, eventName, null);
     }
 
     @Override
-    public void trackSignUp(String loginId, String anonymousId) throws InvalidArgumentException {
-        addEvent(loginId, false, anonymousId, SensorsConst.TRACK_SIGN_UP_ACTION_TYPE,
-            SensorsConst.SIGN_UP_SYSTEM_ATTR, null);
-    }
-
-    @Override
-    public void trackSignUp(String loginId, String anonymousId, Map<String, Object> properties)
+    public void track(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String eventName,
+        Map<String, Object> properties)
         throws InvalidArgumentException {
-        addEvent(loginId, false, anonymousId, SensorsConst.TRACK_SIGN_UP_ACTION_TYPE,
-            SensorsConst.SIGN_UP_SYSTEM_ATTR, properties);
+        addEvent(distinctId, isLoginId, null, TRACK_ACTION_TYPE, eventName, properties);
     }
 
     @Override
-    public void profileSet(String distinctId, boolean isLoginId, Map<String, Object> properties)
-        throws InvalidArgumentException {
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_SET_ACTION_TYPE, null, properties);
+    public void trackSignUp(@NonNull String loginId, @NonNull String anonymousId) throws InvalidArgumentException {
+        addEvent(loginId, false, anonymousId, TRACK_SIGN_UP_ACTION_TYPE, SIGN_UP_SYSTEM_ATTR, null);
     }
 
     @Override
-    public void profileSet(String distinctId, boolean isLoginId, String property, Object value)
+    public void trackSignUp(@NonNull String loginId, @NonNull String anonymousId, Map<String, Object> properties)
         throws InvalidArgumentException {
-        Map<String, Object> properties = new HashMap<String, Object>();
+        addEvent(loginId, false, anonymousId, TRACK_SIGN_UP_ACTION_TYPE, SIGN_UP_SYSTEM_ATTR, properties);
+    }
+
+    @Override
+    public void profileSet(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
+        throws InvalidArgumentException {
+        addEvent(distinctId, isLoginId, null, PROFILE_SET_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileSet(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property,
+        @NonNull Object value) throws InvalidArgumentException {
+        Map<String, Object> properties = new HashMap<>();
         properties.put(property, value);
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_SET_ACTION_TYPE, null, properties);
+        addEvent(distinctId, isLoginId, null, PROFILE_SET_ACTION_TYPE, null, properties);
     }
 
     @Override
-    public void profileSetOnce(String distinctId, boolean isLoginId, Map<String, Object> properties)
+    public void profileSetOnce(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
         throws InvalidArgumentException {
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_SET_ONCE_ACTION_TYPE, null, properties);
+        addEvent(distinctId, isLoginId, null, PROFILE_SET_ONCE_ACTION_TYPE, null, properties);
     }
 
     @Override
-    public void profileSetOnce(String distinctId, boolean isLoginId, String property, Object value)
-        throws InvalidArgumentException {
-        Map<String, Object> properties = new HashMap<String, Object>();
+    public void profileSetOnce(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property,
+        @NonNull Object value) throws InvalidArgumentException {
+        Map<String, Object> properties = new HashMap<>();
         properties.put(property, value);
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_SET_ONCE_ACTION_TYPE, null, properties);
+        addEvent(distinctId, isLoginId, null, PROFILE_SET_ONCE_ACTION_TYPE, null, properties);
     }
 
     @Override
-    public void profileIncrement(String distinctId, boolean isLoginId, Map<String, Object> properties)
+    public void profileIncrement(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
         throws InvalidArgumentException {
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_INCREMENT_ACTION_TYPE, null, properties);
+        addEvent(distinctId, isLoginId, null, PROFILE_INCREMENT_ACTION_TYPE, null, properties);
     }
 
     @Override
-    public void profileIncrement(String distinctId, boolean isLoginId, String property, long value)
-        throws InvalidArgumentException {
-        Map<String, Object> properties = new HashMap<String, Object>();
+    public void profileIncrement(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property,
+        @NonNull long value) throws InvalidArgumentException {
+        Map<String, Object> properties = new HashMap<>();
         properties.put(property, value);
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_INCREMENT_ACTION_TYPE, null, properties);
+        addEvent(distinctId, isLoginId, null, PROFILE_INCREMENT_ACTION_TYPE, null, properties);
     }
 
     @Override
-    public void profileAppend(String distinctId, boolean isLoginId, Map<String, Object> properties)
+    public void profileAppend(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
         throws InvalidArgumentException {
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_APPEND_ACTION_TYPE, null, properties);
+        addEvent(distinctId, isLoginId, null, PROFILE_APPEND_ACTION_TYPE, null, properties);
     }
 
     @Override
-    public void profileAppend(String distinctId, boolean isLoginId, String property, String value)
-        throws InvalidArgumentException {
-        List<String> values = new ArrayList<String>();
+    public void profileAppend(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property,
+        @NonNull String value) throws InvalidArgumentException {
+        List<String> values = new ArrayList<>();
         values.add(value);
-        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put(property, values);
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_APPEND_ACTION_TYPE, null, properties);
+        addEvent(distinctId, isLoginId, null, PROFILE_APPEND_ACTION_TYPE, null, properties);
     }
 
     @Override
-    public void profileUnset(String distinctId, boolean isLoginId, String property) throws InvalidArgumentException {
-        Map<String, Object> properties = new HashMap<String, Object>();
+    public void profileUnset(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property)
+        throws InvalidArgumentException {
+        Map<String, Object> properties = new HashMap<>();
         properties.put(property, true);
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_UNSET_ACTION_TYPE, null, properties);
+        addEvent(distinctId, isLoginId, null, PROFILE_UNSET_ACTION_TYPE, null, properties);
     }
 
     @Override
-    public void profileUnset(String distinctId, boolean isLoginId, Map<String, Object> properties)
+    public void profileUnset(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
         throws InvalidArgumentException {
         if (properties == null) {
             return;
         }
         for (Map.Entry<String, Object> property : properties.entrySet()) {
-            if (!SensorsConst.PROJECT_SYSTEM_ATTR.equals(property.getKey())) {
+            if (!PROJECT_SYSTEM_ATTR.equals(property.getKey())) {
                 if (property.getValue() instanceof Boolean) {
                     boolean value = (Boolean) property.getValue();
                     if (value) {
@@ -233,190 +225,195 @@ public class SensorsAnalytics implements ISensorsAnalytics {
                 throw new InvalidArgumentException("The property value of " + property.getKey() + " should be true.");
             }
         }
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_UNSET_ACTION_TYPE, null, properties);
+        addEvent(distinctId, isLoginId, null, PROFILE_UNSET_ACTION_TYPE, null, properties);
     }
 
     @Override
-    public void profileDelete(String distinctId, boolean isLoginId) throws InvalidArgumentException {
-        addEvent(distinctId, isLoginId, null, SensorsConst.PROFILE_DELETE_ACTION_TYPE, null,
-            new HashMap<String, Object>());
+    public void profileDelete(@NonNull String distinctId, @NonNull boolean isLoginId) throws InvalidArgumentException {
+        addEvent(distinctId, isLoginId, null, PROFILE_DELETE_ACTION_TYPE, null, null);
     }
 
     @Override
-    public void itemSet(String itemType, String itemId, Map<String, Object> properties)
+    public void itemSet(@NonNull String itemType, @NonNull String itemId, Map<String, Object> properties)
         throws InvalidArgumentException {
-        addItem(itemType, itemId, SensorsConst.ITEM_SET_ACTION_TYPE, properties);
+        addItem(itemType, itemId, ITEM_SET_ACTION_TYPE, properties);
     }
 
     @Override
-    public void itemDelete(String itemType, String itemId, Map<String, Object> properties)
+    public void itemDelete(@NonNull String itemType, @NonNull String itemId, Map<String, Object> properties)
         throws InvalidArgumentException {
-        addItem(itemType, itemId, SensorsConst.ITEM_DELETE_ACTION_TYPE, properties);
+        addItem(itemType, itemId, ITEM_DELETE_ACTION_TYPE, properties);
+    }
+
+    @Override
+    public void bind(@NonNull SensorsAnalyticsIdentity... identities) throws InvalidArgumentException {
+        Map<String, String> identityMap = new HashMap<>();
+        for (SensorsAnalyticsIdentity identity : identities) {
+            identityMap.putAll(identity.getIdentityMap());
+        }
+        if (identityMap.size() < 2) {
+            throw new InvalidArgumentException("The identities is invalid，you should have at least two identities.");
+        }
+        assertIdentityMap(BIND_ID_ACTION_TYPE, identityMap);
+        worker.doAddEventIdentity(identityMap, BIND_ID_ACTION_TYPE, BIND_ID, null);
+    }
+
+    @Override
+    public void unbind(@NonNull SensorsAnalyticsIdentity analyticsIdentity) throws InvalidArgumentException {
+        addEventIdentity(analyticsIdentity, UNBIND_ID_ACTION_TYPE, UNBIND_ID, null);
+    }
+
+    @Override
+    public void trackById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String eventName,
+        Map<String, Object> properties) throws InvalidArgumentException {
+        addEventIdentity(analyticsIdentity, TRACK_ACTION_TYPE, eventName, properties);
+    }
+
+    @Override
+    public void profileSetById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, Map<String, Object> properties)
+        throws InvalidArgumentException {
+        addEventIdentity(analyticsIdentity, PROFILE_SET_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileSetById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String property,
+        @NonNull Object value) throws InvalidArgumentException {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(property, value);
+        addEventIdentity(analyticsIdentity, PROFILE_SET_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileSetOnceById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, Map<String, Object> properties)
+        throws InvalidArgumentException {
+        addEventIdentity(analyticsIdentity, PROFILE_SET_ONCE_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileSetOnceById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String property,
+        @NonNull Object value) throws InvalidArgumentException {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(property, value);
+        addEventIdentity(analyticsIdentity, PROFILE_SET_ONCE_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileIncrementById(@NonNull SensorsAnalyticsIdentity analyticsIdentity,
+        Map<String, Object> properties) throws InvalidArgumentException {
+        addEventIdentity(analyticsIdentity, PROFILE_INCREMENT_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileIncrementById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, String property, long value)
+        throws InvalidArgumentException {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(property, value);
+        addEventIdentity(analyticsIdentity, PROFILE_INCREMENT_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileAppendById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, Map<String, Object> properties)
+        throws InvalidArgumentException {
+        addEventIdentity(analyticsIdentity, PROFILE_APPEND_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileAppendById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String property,
+        @NonNull String value) throws InvalidArgumentException {
+        List<String> values = new ArrayList<String>();
+        values.add(value);
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(property, values);
+        addEventIdentity(analyticsIdentity, PROFILE_APPEND_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileUnsetById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, Map<String, Object> properties)
+        throws InvalidArgumentException {
+        if (properties == null) {
+            return;
+        }
+        for (Map.Entry<String, Object> property : properties.entrySet()) {
+            if (!PROJECT_SYSTEM_ATTR.equals(property.getKey())) {
+                if (property.getValue() instanceof Boolean) {
+                    boolean value = (Boolean) property.getValue();
+                    if (value) {
+                        continue;
+                    }
+                }
+                throw new InvalidArgumentException("The property value of [" + property.getKey() + "] should be true.");
+            }
+        }
+        addEventIdentity(analyticsIdentity, PROFILE_UNSET_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileUnsetById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String property)
+        throws InvalidArgumentException {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(property, true);
+        addEventIdentity(analyticsIdentity, PROFILE_UNSET_ACTION_TYPE, null, properties);
+    }
+
+    @Override
+    public void profileDeleteById(@NonNull SensorsAnalyticsIdentity analyticsIdentity) throws InvalidArgumentException {
+        addEventIdentity(analyticsIdentity, PROFILE_DELETE_ACTION_TYPE, null, null);
     }
 
     @Override
     public void flush() {
-        this.consumer.flush();
+        worker.flush();
     }
 
     @Override
     public void shutdown() {
-        this.consumer.close();
+        worker.shutdown();
     }
 
-    private void addEvent(String distinctId, boolean isLoginId, String originDistinctId,
-        String actionType, String eventName, Map<String, Object> properties)
+    private void dealProfile(UserRecord userRecord, String actionType) throws InvalidArgumentException {
+        addEvent(userRecord.getDistinctId(), userRecord.getIsLoginId(), null, actionType, null,
+            userRecord.getPropertyMap());
+    }
+
+    private void addItem(String itemType, String itemId, String actionType, Map<String, Object> properties)
         throws InvalidArgumentException {
-        SensorsAnalyticsUtil.assertValue("Distinct Id", distinctId);
+        SensorsAnalyticsUtil.assertKey(ITEM_TYPE, itemType);
+        SensorsAnalyticsUtil.assertValue(ITEM_ID, itemId);
         SensorsAnalyticsUtil.assertProperties(actionType, properties);
-        if (actionType.equals(SensorsConst.TRACK_ACTION_TYPE)) {
-            SensorsAnalyticsUtil.assertKey("Event Name", eventName);
-        } else if (actionType.equals(SensorsConst.TRACK_SIGN_UP_ACTION_TYPE)) {
-            SensorsAnalyticsUtil.assertValue("Original Distinct Id", originDistinctId);
-        }
-
-        // Event time
-        long time = System.currentTimeMillis();
-        Map<String, Object> newProperties = null;
-        if (properties != null) {
-            newProperties = new HashMap<String, Object>(properties);
-        }
-        if (newProperties != null && newProperties.containsKey(SensorsConst.TINE_SYSTEM_ATTR)) {
-            Date eventTime = (Date) newProperties.get(SensorsConst.TINE_SYSTEM_ATTR);
-            newProperties.remove(SensorsConst.TINE_SYSTEM_ATTR);
-            time = eventTime.getTime();
-        }
-
-        String eventProject = null;
-        String eventToken = null;
-        if (newProperties != null) {
-            if (newProperties.containsKey(SensorsConst.PROJECT_SYSTEM_ATTR)) {
-                eventProject = (String) newProperties.get(SensorsConst.PROJECT_SYSTEM_ATTR);
-                newProperties.remove(SensorsConst.PROJECT_SYSTEM_ATTR);
-            }
-            if (newProperties.containsKey(SensorsConst.TOKEN_SYSTEM_ATTR)) {
-                eventToken = (String) newProperties.get(SensorsConst.TOKEN_SYSTEM_ATTR);
-                newProperties.remove(SensorsConst.TOKEN_SYSTEM_ATTR);
-            }
-        }
-
-        Map<String, Object> eventProperties = new HashMap<String, Object>();
-        if (actionType.equals(SensorsConst.TRACK_ACTION_TYPE) ||
-                actionType.equals(SensorsConst.TRACK_SIGN_UP_ACTION_TYPE)) {
-            eventProperties.putAll(superProperties);
-        }
-        if (newProperties != null) {
-            eventProperties.putAll(newProperties);
-        }
-
-        if (isLoginId) {
-            eventProperties.put(SensorsConst.LOGIN_SYSTEM_ATTR, true);
-        }
-
-        Map<String, String> libProperties = getLibProperties();
-
-        Map<String, Object> event = new HashMap<String, Object>();
-
-        event.put("type", actionType);
-        event.put("time", time);
-        event.put("distinct_id", distinctId);
-        event.put("properties", eventProperties);
-        event.put("lib", libProperties);
-        event.put("_track_id", new Random().nextInt());
-
-        if (eventProject != null) {
-            event.put("project", eventProject);
-        }
-
-        if (eventToken != null) {
-            event.put("token", eventToken);
-        }
-
-        if (enableTimeFree) {
-            event.put("time_free", true);
-        }
-
-        if (actionType.equals(SensorsConst.TRACK_ACTION_TYPE)) {
-            event.put("event", eventName);
-        } else if (actionType.equals(SensorsConst.TRACK_SIGN_UP_ACTION_TYPE)) {
-            event.put("event", eventName);
-            event.put("original_id", originDistinctId);
-        }
-
-        this.consumer.send(event);
+        worker.doAddItem(itemType, itemId, actionType, properties);
     }
 
-    private void addItem(String itemType, String itemId, String actionType,
+    private void addEvent(String distinctId, boolean isLoginId, String originDistinctId, String actionType,
+        String eventName, Map<String, Object> properties) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertValue(DISTINCT_ID, distinctId);
+        SensorsAnalyticsUtil.assertProperties(actionType, properties);
+        if (actionType.equals(TRACK_ACTION_TYPE)) {
+            SensorsAnalyticsUtil.assertKey(EVENT_NAME, eventName);
+        } else if (actionType.equals(TRACK_SIGN_UP_ACTION_TYPE)) {
+            SensorsAnalyticsUtil.assertValue(ORIGINAL_DISTINCT_ID, originDistinctId);
+        }
+        worker.doAddEvent(distinctId, isLoginId, originDistinctId, actionType, eventName, properties);
+    }
+
+    private void addEventIdentity(SensorsAnalyticsIdentity analyticsIdentity, String actionType, String eventName,
         Map<String, Object> properties) throws InvalidArgumentException {
-        SensorsAnalyticsUtil.assertKey("Item Type", itemType);
-        SensorsAnalyticsUtil.assertValue("Item Id", itemId);
+        Map<String, String> identityMap = analyticsIdentity.getIdentityMap();
+        if (identityMap.isEmpty()) {
+            throw new InvalidArgumentException("The identity is empty.");
+        }
+        assertIdentityMap(actionType, identityMap);
         SensorsAnalyticsUtil.assertProperties(actionType, properties);
-
-        Map<String, Object> newProperties = null;
-        if (properties != null) {
-            newProperties = new HashMap<String, Object>(properties);
+        if (actionType.equals(TRACK_ACTION_TYPE)) {
+            SensorsAnalyticsUtil.assertKey(EVENT_NAME, eventName);
         }
-
-        String eventProject = null;
-        String eventToken = null;
-        if (newProperties != null) {
-            if (newProperties.containsKey(SensorsConst.PROJECT_SYSTEM_ATTR)) {
-                eventProject = (String) newProperties.get(SensorsConst.PROJECT_SYSTEM_ATTR);
-                newProperties.remove(SensorsConst.PROJECT_SYSTEM_ATTR);
-            }
-            if (newProperties.containsKey(SensorsConst.TOKEN_SYSTEM_ATTR)) {
-                eventToken = (String) newProperties.get(SensorsConst.TOKEN_SYSTEM_ATTR);
-                newProperties.remove(SensorsConst.TOKEN_SYSTEM_ATTR);
-            }
-        }
-
-        Map<String, Object> eventProperties = new HashMap<String, Object>();
-        if (newProperties != null) {
-            eventProperties.putAll(newProperties);
-        }
-
-        Map<String, String> libProperties = getLibProperties();
-
-        Map<String, Object> record = new HashMap<String, Object>();
-        record.put("type", actionType);
-        record.put("time", System.currentTimeMillis());
-        record.put("properties", eventProperties);
-        record.put("lib", libProperties);
-
-        if (eventProject != null) {
-            record.put("project", eventProject);
-        }
-
-        if (eventToken != null) {
-            record.put("token", eventToken);
-        }
-
-        record.put("item_type", itemType);
-        record.put("item_id", itemId);
-        this.consumer.send(record);
+        worker.doAddEventIdentity(identityMap, actionType, eventName, properties);
     }
 
-
-    private Map<String, String> getLibProperties() {
-        Map<String, String> libProperties = new HashMap<String, String>();
-        libProperties.put(SensorsConst.LIB_SYSTEM_ATTR, SensorsConst.LIB);
-        libProperties.put(SensorsConst.LIB_VERSION_SYSTEM_ATTR, SensorsConst.SDK_VERSION);
-        libProperties.put(SensorsConst.LIB_METHOD_SYSTEM_ATTR, "code");
-
-        if (this.superProperties.containsKey(SensorsConst.APP_VERSION_SYSTEM_ATTR)) {
-            libProperties.put(SensorsConst.APP_VERSION_SYSTEM_ATTR,
-                (String) this.superProperties.get(SensorsConst.APP_VERSION_SYSTEM_ATTR));
+    private void assertIdentityMap(String actionType, Map<String, String> identityMap) throws InvalidArgumentException {
+        for (Map.Entry<String, String> entry : identityMap.entrySet()) {
+            SensorsAnalyticsUtil.assertKey(actionType, entry.getKey());
+            SensorsAnalyticsUtil.assertValue(actionType, entry.getValue());
         }
-
-        StackTraceElement[] trace = (new Exception()).getStackTrace();
-
-        if (trace.length > 3) {
-            StackTraceElement traceElement = trace[3];
-            libProperties.put(SensorsConst.LIB_DETAIL_SYSTEM_ATTR,
-                String.format("%s##%s##%s##%s", traceElement.getClassName(),
-                    traceElement.getMethodName(), traceElement.getFileName(), traceElement.getLineNumber()));
-        }
-
-        return libProperties;
     }
+
 }
