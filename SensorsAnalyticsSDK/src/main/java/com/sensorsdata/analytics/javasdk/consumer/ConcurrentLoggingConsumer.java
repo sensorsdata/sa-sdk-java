@@ -10,30 +10,30 @@ import java.util.Map;
 
 public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
 
-    public ConcurrentLoggingConsumer(final String filenamePrefix) throws IOException {
+    public ConcurrentLoggingConsumer(final String filenamePrefix) {
         this(filenamePrefix, null);
     }
 
-    public ConcurrentLoggingConsumer(final String filenamePrefix, int bufferSize) throws IOException {
+    public ConcurrentLoggingConsumer(final String filenamePrefix, int bufferSize) {
         this(filenamePrefix, null, bufferSize);
     }
 
-    public ConcurrentLoggingConsumer(final String filenamePrefix, final String lockFileName) throws IOException {
+    public ConcurrentLoggingConsumer(final String filenamePrefix, final String lockFileName) {
         this(filenamePrefix, lockFileName, 8192);
     }
 
     public ConcurrentLoggingConsumer(
-            String filenamePrefix,
-            String lockFileName,
-            int bufferSize) throws IOException {
+        String filenamePrefix,
+        String lockFileName,
+        int bufferSize) {
         this(filenamePrefix, lockFileName, bufferSize, LogSplitMode.DAY);
     }
 
     public ConcurrentLoggingConsumer(
-            String filenamePrefix,
-            String lockFileName,
-            int bufferSize,
-            LogSplitMode splitMode) throws IOException {
+        String filenamePrefix,
+        String lockFileName,
+        int bufferSize,
+        LogSplitMode splitMode) {
         super(new InnerLoggingFileWriterFactory(lockFileName), filenamePrefix, bufferSize, splitMode);
     }
 

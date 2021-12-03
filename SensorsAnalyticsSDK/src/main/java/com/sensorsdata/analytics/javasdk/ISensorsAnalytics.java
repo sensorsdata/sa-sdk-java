@@ -1,10 +1,8 @@
 package com.sensorsdata.analytics.javasdk;
 
-import com.sensorsdata.analytics.javasdk.bean.EventRecord;
-import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
-import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
-import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.*;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+import lombok.NonNull;
 
 import java.util.Map;
 
@@ -22,14 +20,14 @@ public interface ISensorsAnalytics {
      *
      * @param enableTimeFree true:表示开启；false:表示关闭；默认关闭
      */
-    void setEnableTimeFree(boolean enableTimeFree);
+    void setEnableTimeFree(@NonNull boolean enableTimeFree);
 
     /**
      * 设置公共属性
      *
      * @param propertiesRecord 公共属性实体
      */
-    void registerSuperProperties(SuperPropertiesRecord propertiesRecord);
+    void registerSuperProperties(@NonNull SuperPropertiesRecord propertiesRecord);
 
     /**
      * 设置每个事件都带有的一些公共属性
@@ -44,7 +42,7 @@ public interface ISensorsAnalytics {
      *
      * @param superPropertiesMap 一个或多个公共属性
      */
-    void registerSuperProperties(Map<String, Object> superPropertiesMap);
+    void registerSuperProperties(@NonNull Map<String, Object> superPropertiesMap);
 
     /**
      * 清除公共属性
@@ -58,7 +56,7 @@ public interface ISensorsAnalytics {
      *                    通过 {@link EventRecord.Builder} 来构造；
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void track(EventRecord eventRecord) throws InvalidArgumentException;
+    void track(@NonNull EventRecord eventRecord) throws InvalidArgumentException;
 
     /**
      * 记录一个没有任何属性的事件
@@ -68,7 +66,8 @@ public interface ISensorsAnalytics {
      * @param eventName  事件名称
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void track(String distinctId, boolean isLoginId, String eventName) throws InvalidArgumentException;
+    void track(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String eventName)
+        throws InvalidArgumentException;
 
     /**
      * 记录一个拥有一个或多个属性的事件。属性取值可接受类型为{@link Number}, {@link String}, {@link java.util.Date}和
@@ -82,7 +81,8 @@ public interface ISensorsAnalytics {
      * @param properties 事件的属性
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void track(String distinctId, boolean isLoginId, String eventName, Map<String, Object> properties)
+    void track(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String eventName,
+        Map<String, Object> properties)
         throws InvalidArgumentException;
 
     /**
@@ -96,7 +96,7 @@ public interface ISensorsAnalytics {
      * @param anonymousId 匿名 ID
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void trackSignUp(String loginId, String anonymousId) throws InvalidArgumentException;
+    void trackSignUp(@NonNull String loginId, @NonNull String anonymousId) throws InvalidArgumentException;
 
     /**
      * 记录用户注册事件
@@ -114,7 +114,7 @@ public interface ISensorsAnalytics {
      * @param properties  事件的属性
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void trackSignUp(String loginId, String anonymousId, Map<String, Object> properties)
+    void trackSignUp(@NonNull String loginId, @NonNull String anonymousId, Map<String, Object> properties)
         throws InvalidArgumentException;
 
     /**
@@ -125,7 +125,7 @@ public interface ISensorsAnalytics {
      * @param userRecord 用户属性实体
      * @throws InvalidArgumentException 用户属性类型或者用户ID不合法则抛出该异常
      */
-    void profileSet(UserRecord userRecord) throws InvalidArgumentException;
+    void profileSet(@NonNull UserRecord userRecord) throws InvalidArgumentException;
 
     /**
      * 设置用户的属性。属性取值可接受类型为{@link Number}, {@link String}, {@link java.util.Date}和{@link java.util.List}；
@@ -137,7 +137,7 @@ public interface ISensorsAnalytics {
      * @param properties 用户的属性
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void profileSet(String distinctId, boolean isLoginId, Map<String, Object> properties)
+    void profileSet(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
         throws InvalidArgumentException;
 
     /**
@@ -149,8 +149,8 @@ public interface ISensorsAnalytics {
      * @param value      属性的值
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void profileSet(String distinctId, boolean isLoginId, String property, Object value)
-        throws InvalidArgumentException;
+    void profileSet(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property,
+        @NonNull Object value) throws InvalidArgumentException;
 
     /**
      * 首次设置用户的属性。
@@ -162,7 +162,7 @@ public interface ISensorsAnalytics {
      * @param userRecord 用户属性实体
      * @throws InvalidArgumentException 用户属性类型或者用户ID不合法则抛出该异常
      */
-    void profileSetOnce(UserRecord userRecord) throws InvalidArgumentException;
+    void profileSetOnce(@NonNull UserRecord userRecord) throws InvalidArgumentException;
 
     /**
      * 首次设置用户的属性。
@@ -176,7 +176,7 @@ public interface ISensorsAnalytics {
      * @param properties 用户的属性
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void profileSetOnce(String distinctId, boolean isLoginId, Map<String, Object> properties)
+    void profileSetOnce(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
         throws InvalidArgumentException;
 
     /**
@@ -189,8 +189,8 @@ public interface ISensorsAnalytics {
      * @param value      属性的值
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void profileSetOnce(String distinctId, boolean isLoginId, String property, Object value)
-        throws InvalidArgumentException;
+    void profileSetOnce(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property,
+        @NonNull Object value) throws InvalidArgumentException;
 
     /**
      * 为用户的数值类型的属性累加一个数值，若该属性不存在，则创建它并设置默认值为0
@@ -198,7 +198,7 @@ public interface ISensorsAnalytics {
      * @param userRecord 用户属性实体
      * @throws InvalidArgumentException 用户属性类型或者用户ID不合法则抛出该异常
      */
-    void profileIncrement(UserRecord userRecord) throws InvalidArgumentException;
+    void profileIncrement(@NonNull UserRecord userRecord) throws InvalidArgumentException;
 
     /**
      * 为用户的一个或多个数值类型的属性累加一个数值，若该属性不存在，则创建它并设置默认值为0。属性取值只接受
@@ -209,7 +209,7 @@ public interface ISensorsAnalytics {
      * @param properties 用户的属性
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void profileIncrement(String distinctId, boolean isLoginId, Map<String, Object> properties)
+    void profileIncrement(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
         throws InvalidArgumentException;
 
     /**
@@ -221,8 +221,8 @@ public interface ISensorsAnalytics {
      * @param value      属性的值
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void profileIncrement(String distinctId, boolean isLoginId, String property, long value)
-        throws InvalidArgumentException;
+    void profileIncrement(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property,
+        @NonNull long value) throws InvalidArgumentException;
 
     /**
      * 为用户的一个或多个数组类型的属性追加字符串，属性取值类型必须为 {@link java.util.List}，且列表中元素的类型
@@ -231,7 +231,7 @@ public interface ISensorsAnalytics {
      * @param userRecord 用户属性实体
      * @throws InvalidArgumentException 用户属性类型或者用户ID不合法则抛出该异常
      */
-    void profileAppend(UserRecord userRecord) throws InvalidArgumentException;
+    void profileAppend(@NonNull UserRecord userRecord) throws InvalidArgumentException;
 
     /**
      * 为用户的一个或多个数组类型的属性追加字符串，属性取值类型必须为 {@link java.util.List}，且列表中元素的类型
@@ -242,7 +242,7 @@ public interface ISensorsAnalytics {
      * @param properties 用户的属性
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void profileAppend(String distinctId, boolean isLoginId, Map<String, Object> properties)
+    void profileAppend(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
         throws InvalidArgumentException;
 
     /**
@@ -254,8 +254,8 @@ public interface ISensorsAnalytics {
      * @param value      属性的值
      * @throws InvalidArgumentException eventName 或 properties 不符合命名规范和类型规范时抛出该异常
      */
-    void profileAppend(String distinctId, boolean isLoginId, String property, String value)
-        throws InvalidArgumentException;
+    void profileAppend(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property,
+        @NonNull String value) throws InvalidArgumentException;
 
     /**
      * 删除用户已存在的一条或者多条属性
@@ -263,7 +263,7 @@ public interface ISensorsAnalytics {
      * @param userRecord 用户属性实体
      * @throws InvalidArgumentException 用户属性类型或者用户ID不合法则抛出该异常
      */
-    void profileUnset(UserRecord userRecord) throws InvalidArgumentException;
+    void profileUnset(@NonNull UserRecord userRecord) throws InvalidArgumentException;
 
     /**
      * 删除用户某一个属性
@@ -273,7 +273,8 @@ public interface ISensorsAnalytics {
      * @param property   属性名称
      * @throws InvalidArgumentException 用户属性类型或者用户ID不合法则抛出该异常
      */
-    void profileUnset(String distinctId, boolean isLoginId, String property) throws InvalidArgumentException;
+    void profileUnset(@NonNull String distinctId, @NonNull boolean isLoginId, @NonNull String property)
+        throws InvalidArgumentException;
 
     /**
      * 删除用户属性
@@ -283,7 +284,7 @@ public interface ISensorsAnalytics {
      * @param properties 用户属性名称列表，要删除的属性值请设置为 Boolean 类型的 true，如果要删除指定项目的用户属性，需正确传 $project 字段
      * @throws InvalidArgumentException 用户属性类型或者用户ID不合法则抛出该异常
      */
-    void profileUnset(String distinctId, boolean isLoginId, Map<String, Object> properties)
+    void profileUnset(@NonNull String distinctId, @NonNull boolean isLoginId, Map<String, Object> properties)
         throws InvalidArgumentException;
 
     /**
@@ -292,7 +293,7 @@ public interface ISensorsAnalytics {
      * @param userRecord 用户属性实体
      * @throws InvalidArgumentException 用户属性类型或者用户ID不合法则抛出该异常
      */
-    void profileDelete(UserRecord userRecord) throws InvalidArgumentException;
+    void profileDelete(@NonNull UserRecord userRecord) throws InvalidArgumentException;
 
     /**
      * 删除用户所有属性
@@ -301,7 +302,7 @@ public interface ISensorsAnalytics {
      * @param isLoginId  用户 ID 是否是登录 ID，false 表示该 ID 是一个匿名 ID
      * @throws InvalidArgumentException distinctId 不符合命名规范时抛出该异常
      */
-    void profileDelete(String distinctId, boolean isLoginId) throws InvalidArgumentException;
+    void profileDelete(@NonNull String distinctId, @NonNull boolean isLoginId) throws InvalidArgumentException;
 
     /**
      * 增加item 记录
@@ -309,7 +310,7 @@ public interface ISensorsAnalytics {
      * @param itemRecord 维度表属性实体
      * @throws InvalidArgumentException itemId或itemType字段不合法则抛出该异常
      */
-    void itemSet(ItemRecord itemRecord) throws InvalidArgumentException;
+    void itemSet(@NonNull ItemRecord itemRecord) throws InvalidArgumentException;
 
     /**
      * 设置 item
@@ -319,7 +320,8 @@ public interface ISensorsAnalytics {
      * @param properties item 相关属性
      * @throws InvalidArgumentException 取值不符合规范抛出该异常
      */
-    void itemSet(String itemType, String itemId, Map<String, Object> properties) throws InvalidArgumentException;
+    void itemSet(@NonNull String itemType, @NonNull String itemId, @NonNull Map<String, Object> properties)
+        throws InvalidArgumentException;
 
     /**
      * 删除维度表记录
@@ -327,7 +329,7 @@ public interface ISensorsAnalytics {
      * @param itemRecord 维度表属性实体
      * @throws InvalidArgumentException itemId或itemType字段不合法则抛出该异常
      */
-    void itemDelete(ItemRecord itemRecord) throws InvalidArgumentException;
+    void itemDelete(@NonNull ItemRecord itemRecord) throws InvalidArgumentException;
 
     /**
      * 删除 item
@@ -337,7 +339,159 @@ public interface ISensorsAnalytics {
      * @param properties item 相关属性
      * @throws InvalidArgumentException 取值不符合规范抛出该异常
      */
-    void itemDelete(String itemType, String itemId, Map<String, Object> properties) throws InvalidArgumentException;
+    void itemDelete(@NonNull String itemType, @NonNull String itemId, Map<String, Object> properties)
+        throws InvalidArgumentException;
+
+    /**
+     * 用户标识绑定
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void bind(@NonNull SensorsAnalyticsIdentity... analyticsIdentity) throws InvalidArgumentException;
+
+    /**
+     * 用户标识解绑
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void unbind(@NonNull SensorsAnalyticsIdentity analyticsIdentity) throws InvalidArgumentException;
+
+    /**
+     * 使用用户标识 3.0 系统埋点事件
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param eventName         事件名
+     * @param properties        事件属性
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void trackById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String eventName,
+        Map<String, Object> properties) throws InvalidArgumentException;
+
+    /**
+     * 设置用户的属性。属性取值可接受类型为{@link Number}, {@link String}, {@link java.util.Date}和{@link java.util.List}；
+     * <p>
+     * 如果要设置的 properties 的 key，之前在这个用户的 profile 中已经存在，则覆盖，否则，新创建
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param properties        用户属性
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileSetById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, Map<String, Object> properties)
+        throws InvalidArgumentException;
+
+    /**
+     * 设置用户的属性。属性取值可接受类型为{@link Number}, {@link String}, {@link java.util.Date}和{@link java.util.List}；
+     * <p>
+     * 如果要设置的properties的key，之前在这个用户的profile中已经存在，则覆盖，否则，新创建
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param property          属性名
+     * @param value             用于属性
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileSetById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String property,
+        @NonNull Object value) throws InvalidArgumentException;
+
+    /**
+     * 首次设置用户的属性。
+     * 属性取值可接受类型为{@link Number}, {@link String}, {@link java.util.Date}和{@link java.util.List}；
+     * <p>
+     * 与 profileSetById 接口不同的是：
+     * 如果要设置的 properties 的 key，在这个用户的 profile 中已经存在，则不处理，否则，新创建
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param properties        用户属性
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileSetOnceById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, Map<String, Object> properties)
+        throws InvalidArgumentException;
+
+    /**
+     * 首次设置用户的属性。
+     * 属性取值可接受类型为{@link Number}, {@link String}, {@link java.util.Date}和{@link java.util.List}；
+     * <p>
+     * 与 profileSetById 接口不同的是：
+     * 如果要设置的 properties 的 key，在这个用户的 profile 中已经存在，则不处理，否则，新创建
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param property          属性名
+     * @param value             属性值
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileSetOnceById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String property,
+        @NonNull Object value) throws InvalidArgumentException;
+
+    /**
+     * 为用户的一个或多个数值类型的属性累加一个数值，若该属性不存在，则创建它并设置默认值为 0。属性取值只接受{@link Number}类型
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param properties        用户属性
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileIncrementById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, Map<String, Object> properties)
+        throws InvalidArgumentException;
+
+    /**
+     * 为用户的一个或多个数值类型的属性累加一个数值，若该属性不存在，则创建它并设置默认值为 0。属性取值只接受{@link Number}类型
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param property          属性名
+     * @param value             属性值
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileIncrementById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, String property, long value)
+        throws InvalidArgumentException;
+
+    /**
+     * 为用户的一个或多个数组类型的属性追加字符串，属性取值类型必须为 {@link java.util.List}，且列表中元素的类型必须为 {@link String}
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param properties        用户属性
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileAppendById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, Map<String, Object> properties)
+        throws InvalidArgumentException;
+
+    /**
+     * 为用户的一个或多个数组类型的属性追加字符串，属性取值类型必须为 {@link java.util.List}，且列表中元素的类型必须为 {@link String}
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param property          属性名
+     * @param value             属性值
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileAppendById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String property,
+        @NonNull String value) throws InvalidArgumentException;
+
+    /**
+     * 删除用户某一个属性
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param properties        用户属性
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileUnsetById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, Map<String, Object> properties)
+        throws InvalidArgumentException;
+
+    /**
+     * 删除用户某一个属性
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @param property          用户属性
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileUnsetById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String property)
+        throws InvalidArgumentException;
+
+    /**
+     * 删除用户所有属性
+     *
+     * @param analyticsIdentity 用户标识 ID
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileDeleteById(@NonNull SensorsAnalyticsIdentity analyticsIdentity) throws InvalidArgumentException;
 
     /**
      * 立即发送缓存中的所有日志

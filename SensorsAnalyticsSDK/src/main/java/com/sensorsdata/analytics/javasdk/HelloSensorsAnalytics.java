@@ -1,14 +1,9 @@
 package com.sensorsdata.analytics.javasdk;
 
-import com.sensorsdata.analytics.javasdk.bean.EventRecord;
-import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
-import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
-import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.*;
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author fz
@@ -32,7 +27,6 @@ public class HelloSensorsAnalytics {
 
         // 1. 用户匿名访问网站，cookieId 默认神策生成分配
         String cookieId = "ABCDEF123456789";
-
         // 1.1 访问首页
         // 前面有$开头的property字段，是SA提供给用户的预置字段
         // 对于预置字段，已经确定好了字段类型和字段的显示名
@@ -126,13 +120,36 @@ public class HelloSensorsAnalytics {
         //物品纬度表上报
         String itemId = "product001", itemType = "mobile";
         ItemRecord addRecord = ItemRecord.builder().setItemId(itemId).setItemType(itemType)
-                                   .addProperty("color", "white")
-                                   .build();
+            .addProperty("color", "white")
+            .build();
         sa.itemSet(addRecord);
 
         //删除物品纬度信息
         ItemRecord deleteRecord = ItemRecord.builder().setItemId(itemId).setItemType(itemType)
-                                      .build();
+            .build();
         sa.itemDelete(deleteRecord);
+
+        //Id-mapping
+        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+            .addIdentityProperty("email", "fz@163.com")
+            .build();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put("Channel", "baidu");
+        sa.trackById(identity, "test", properties);
+        SensorsAnalyticsIdentity identity1 = SensorsAnalyticsIdentity.builder()
+            .addIdentityProperty("login_id", "fz123")
+            .build();
+        sa.bind(identity, identity1);
+        sa.profileSetById(identity, "age", 15);
+        List<String> sports = new ArrayList<String>();
+        sports.add("swim");
+        sports.add("run");
+        Map<String, Object> hh = new HashMap<String, Object>();
+        hh.put("sport", sports);
+        sa.profileSetById(identity, hh);
+        sa.profileIncrementById(identity, "age", 1);
+        sa.profileAppendById(identity, "sport", "ball");
+        sa.profileUnsetById(identity,"sport");
+        sa.profileDeleteById(identity);
     }
 }

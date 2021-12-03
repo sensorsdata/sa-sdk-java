@@ -2,7 +2,6 @@ package com.sensorsdata.analytics.javasdk.consumer;
 
 import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.util.Base64Coder;
-
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;

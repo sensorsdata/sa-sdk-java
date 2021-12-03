@@ -5,14 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
 class InnerLoggingConsumer implements Consumer {
 
-    private static final int BUFFER_LIMITATION = 1 * 1024 * 1024 * 1024;    // 1G
+    // 默认缓存限制为 1G
+    private static final int BUFFER_LIMITATION = 1024 * 1024 * 1024;
     private final ObjectMapper jsonMapper;
     private final String filenamePrefix;
     private final StringBuilder messageBuffer;
@@ -23,9 +23,9 @@ class InnerLoggingConsumer implements Consumer {
     private LoggingFileWriter fileWriter;
 
     InnerLoggingConsumer(
-            LoggingFileWriterFactory fileWriterFactory,
-            String filenamePrefix,
-            int bufferSize, LogSplitMode splitMode) throws IOException {
+        LoggingFileWriterFactory fileWriterFactory,
+        String filenamePrefix,
+        int bufferSize, LogSplitMode splitMode) {
         this.fileWriterFactory = fileWriterFactory;
         this.filenamePrefix = filenamePrefix;
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
