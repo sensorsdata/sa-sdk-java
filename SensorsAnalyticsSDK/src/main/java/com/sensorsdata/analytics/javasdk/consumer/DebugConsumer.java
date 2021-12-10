@@ -43,8 +43,7 @@ public class DebugConsumer implements Consumer {
 
         this.httpConsumer = new HttpConsumer(debugUrl, headers);
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
-        log.info("Initialize DebugConsumer with params:[serverUrl:{},debugUrl:{},writeData:{}].",
-            serverUrl, debugUrl, writeData);
+        log.info("Initialize DebugConsumer with params:[writeData:{}].", writeData);
     }
 
     @Override

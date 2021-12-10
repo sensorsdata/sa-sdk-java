@@ -1,8 +1,9 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
@@ -54,8 +55,8 @@ public class BatchConsumer implements Consumer {
         }
         this.throwException = throwException;
         log.info(
-            "Initialize BatchConsumer with params:[serverUrl:{},bulkSize:{},timeoutSec:{},maxCacheSize:{},throwException:{}]",
-            serverUrl, bulkSize, timeoutSec, maxCacheSize, throwException);
+            "Initialize BatchConsumer with params:[bulkSize:{},timeoutSec:{},maxCacheSize:{},throwException:{}]",
+            bulkSize, timeoutSec, maxCacheSize, throwException);
     }
 
     @Override

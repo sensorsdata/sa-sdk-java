@@ -82,8 +82,8 @@ public class FastBatchConsumer implements Consumer {
       }
     }, 1, Math.max(flushSec, 1), TimeUnit.SECONDS);
     log.info(
-        "Initialize FastBatchConsumer with params:[serverUrl:{};timing:{};bulkSize:{};maxCacheSize:{};flushSec:{};timeoutSec:{}].",
-        serverUrl, timing, bulkSize, maxCacheSize, flushSec, timeoutSec);
+        "Initialize FastBatchConsumer with params:[timing:{};bulkSize:{};maxCacheSize:{};flushSec:{};timeoutSec:{}].",
+        timing, bulkSize, maxCacheSize, flushSec, timeoutSec);
   }
 
   @Override
