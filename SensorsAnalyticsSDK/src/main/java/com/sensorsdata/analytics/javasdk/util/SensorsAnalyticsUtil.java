@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -239,5 +240,18 @@ public class SensorsAnalyticsUtil {
               traceElement.getFileName(), traceElement.getLineNumber()));
     }
     return libProperties;
+  }
+
+  public static List<Map<String, Object>> deepCopy(List<Map<String, Object>> source) {
+    if (source == null) {
+      return null;
+    }
+    List<Map<String, Object>> newList = new ArrayList<>(source.size());
+    for (Map<String, Object> objectMap : source) {
+      Map<String, Object> newMap = new HashMap<>(objectMap.size());
+      newMap.putAll(objectMap);
+      newList.add(newMap);
+    }
+    return newList;
   }
 }
