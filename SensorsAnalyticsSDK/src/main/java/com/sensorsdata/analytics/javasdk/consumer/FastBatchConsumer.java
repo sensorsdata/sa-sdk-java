@@ -115,7 +115,7 @@ public class FastBatchConsumer implements Consumer {
       try {
         sendingData = jsonMapper.writeValueAsString(sendList);
       } catch (JsonProcessingException e) {
-        callback.onFailed(new FailedData("can't process json.", sendList));
+        callback.onFailed(new FailedData(String.format("can't process json,message:%s.", e.getMessage()), sendList));
         sendList.clear();
         log.error("Failed to process json.", e);
         continue;
@@ -125,7 +125,7 @@ public class FastBatchConsumer implements Consumer {
         this.httpConsumer.consume(sendingData);
       } catch (Exception e) {
         log.error("Failed to send data:{}.", sendingData, e);
-        callback.onFailed(new FailedData("failed to send data.", sendList));
+        callback.onFailed(new FailedData(String.format("failed to send data,message:%s.", e.getMessage()), sendList));
       }
       sendList.clear();
     }
