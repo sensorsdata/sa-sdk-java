@@ -1,14 +1,17 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
+@Slf4j
 class InnerLoggingConsumer implements Consumer {
 
     // 默认缓存限制为 1G
@@ -36,6 +39,9 @@ class InnerLoggingConsumer implements Consumer {
         } else {
             this.simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         }
+        log.info(
+            "Initialize LoggingConsumer with params:[filenamePrefix:{},bufferSize:{},splitMode:{}].",
+            filenamePrefix, bufferSize, splitMode);
     }
 
     @Override
@@ -45,13 +51,18 @@ class InnerLoggingConsumer implements Consumer {
                 messageBuffer.append(jsonMapper.writeValueAsString(message));
                 messageBuffer.append("\n");
             } catch (JsonProcessingException e) {
+                log.error("Failed to process json.", e);
                 throw new RuntimeException("fail to process json", e);
             }
         } else {
+            log.error("Logging cache exceeded the allowed limitation,current cache size is {}.",
+                messageBuffer.length());
             throw new RuntimeException("logging buffer exceeded the allowed limitation.");
         }
-
+        log.info("Successfully save data to cache,The cache current size is {}.", messageBuffer.length());
         if (messageBuffer.length() >= bufferSize) {
+            log.info("Flush triggered because logging cache size reached the threshold,cache size:{},bulkSize:{}.",
+                messageBuffer.length(), bufferSize);
             flush();
         }
     }
@@ -63,6 +74,7 @@ class InnerLoggingConsumer implements Consumer {
     @Override
     public synchronized void flush() {
         if (messageBuffer.length() == 0) {
+            log.info("The cache is empty when flush.");
             return;
         }
 
@@ -70,6 +82,7 @@ class InnerLoggingConsumer implements Consumer {
 
         if (fileWriter != null && !fileWriter.isValid(filename)) {
             this.fileWriterFactory.closeFileWriter(fileWriter);
+            log.info("The new file name [{}] is different from current file name,so update file writer.", filename);
             fileWriter = null;
         }
 
@@ -77,12 +90,15 @@ class InnerLoggingConsumer implements Consumer {
             try {
                 fileWriter = this.fileWriterFactory.getFileWriter(filenamePrefix, filename);
             } catch (FileNotFoundException e) {
+                log.error("Failed to create file Writer.", e);
                 throw new RuntimeException(e);
             }
+            log.info("Initialize LoggingConsumer file writer,fileName:{}.", filename);
         }
-
+        log.debug("Will be write data from cache to file.[{}]", messageBuffer);
         if (fileWriter.write(messageBuffer)) {
             messageBuffer.setLength(0);
+            log.info("Successfully write data from cache to file.");
         }
     }
 
@@ -93,6 +109,7 @@ class InnerLoggingConsumer implements Consumer {
             this.fileWriterFactory.closeFileWriter(fileWriter);
             fileWriter = null;
         }
+        log.info("Call close method.");
     }
 
     public enum LogSplitMode {

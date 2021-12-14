@@ -1,9 +1,11 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sensorsdata.analytics.javasdk.exceptions.DebugModeException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.io.IOException;
@@ -15,12 +17,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class DebugConsumer implements Consumer {
     final HttpConsumer httpConsumer;
     final ObjectMapper jsonMapper;
 
     public DebugConsumer(final String serverUrl, final boolean writeData) {
-        String debugUrl = null;
+        String debugUrl;
         try {
             // 将 URI Path 替换成 Debug 模式的 '/debug'
             URIBuilder builder = new URIBuilder(new URI(serverUrl));
@@ -28,49 +31,42 @@ public class DebugConsumer implements Consumer {
             urlPathes[urlPathes.length - 1] = "debug";
             builder.setPath(SensorsAnalyticsUtil.strJoin(urlPathes, "/"));
             debugUrl = builder.build().toURL().toString();
-        } catch (URISyntaxException e) {
-            throw new DebugModeException(e);
-        } catch (MalformedURLException e) {
+        } catch (URISyntaxException | MalformedURLException e) {
+            log.error("Failed build debug url:[{}].", serverUrl, e);
             throw new DebugModeException(e);
         }
 
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, String> headers = new HashMap<>();
         if (!writeData) {
             headers.put("Dry-Run", "true");
         }
 
         this.httpConsumer = new HttpConsumer(debugUrl, headers);
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
+        log.info("Initialize DebugConsumer with params:[writeData:{}].", writeData);
     }
 
     @Override
     public void send(Map<String, Object> message) {
-        // XXX: HttpConsumer 只处理了 Message List 的发送？
-        List<Map<String, Object>> messageList = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> messageList = new ArrayList<>();
         messageList.add(message);
-
-        String sendingData = null;
+        String sendingData;
         try {
             sendingData = jsonMapper.writeValueAsString(messageList);
         } catch (JsonProcessingException e) {
+            log.error("Failed to process json.", e);
             throw new RuntimeException("Failed to serialize data.", e);
         }
-
-        System.out
-                .println("==========================================================================");
-
         try {
             synchronized (httpConsumer) {
                 httpConsumer.consume(sendingData);
             }
-
-            System.out.println(String.format("valid message: %s", sendingData));
+            log.info("Successfully send data:[{}].", sendingData);
         } catch (IOException e) {
+            log.error("Failed to send message with DebugConsumer,message:[{}].", sendingData, e);
             throw new DebugModeException("Failed to send message with DebugConsumer.", e);
         } catch (HttpConsumer.HttpConsumerException e) {
-            System.out.println(String.format("invalid message: %s", e.getSendingData()));
-            System.out.println(String.format("http status code: %d", e.getHttpStatusCode()));
-            System.out.println(String.format("http content: %s", e.getHttpContent()));
+            log.error("Failed send message with server occur error,message:[{}].", sendingData, e);
             throw new DebugModeException(e);
         }
     }

@@ -2,6 +2,7 @@ package com.sensorsdata.analytics.javasdk;
 
 
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
+
 import org.junit.Before;
 
 import java.util.ArrayList;

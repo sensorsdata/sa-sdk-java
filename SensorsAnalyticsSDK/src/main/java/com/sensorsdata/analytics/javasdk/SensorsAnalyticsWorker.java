@@ -1,7 +1,24 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static com.sensorsdata.analytics.javasdk.SensorsConst.APP_VERSION_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_VERSION_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LOGIN_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROJECT_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.SDK_VERSION;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TINE_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TOKEN_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TYPE;
+
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -9,9 +26,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.sensorsdata.analytics.javasdk.SensorsConst.*;
-
-
+@Slf4j
 class SensorsAnalyticsWorker {
 
   private final Consumer consumer;
@@ -27,12 +42,14 @@ class SensorsAnalyticsWorker {
     Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
       @Override
       public void run() {
+        log.info("Triggered flush when the program is closed.");
         flush();
       }
     }));
   }
 
   void setEnableTimeFree(boolean enableTimeFree) {
+    log.info("Call setEnableTimeFree method with param:{}", enableTimeFree);
     this.enableTimeFree = enableTimeFree;
   }
 
@@ -44,6 +61,7 @@ class SensorsAnalyticsWorker {
     this.superProperties.clear();
     this.superProperties.put(LIB_SYSTEM_ATTR, LIB);
     this.superProperties.put(LIB_VERSION_SYSTEM_ATTR, SDK_VERSION);
+    log.info("Call clearSuperProperties method.");
   }
 
   void doAddEvent(String distinctId, boolean isLoginId, String originDistinctId, String actionType, String eventName,
@@ -172,23 +190,10 @@ class SensorsAnalyticsWorker {
   }
 
   private Map<String, String> getLibProperties() {
-    Map<String, String> libProperties = new HashMap<>();
-    libProperties.put(LIB_SYSTEM_ATTR, LIB);
-    libProperties.put(LIB_VERSION_SYSTEM_ATTR, SDK_VERSION);
-    libProperties.put(LIB_METHOD_SYSTEM_ATTR, "code");
-
+    Map<String, String> libInfo = SensorsAnalyticsUtil.generateLibInfo();
     if (this.superProperties.containsKey(APP_VERSION_SYSTEM_ATTR)) {
-      libProperties.put(APP_VERSION_SYSTEM_ATTR, (String) this.superProperties.get(APP_VERSION_SYSTEM_ATTR));
+      libInfo.put(APP_VERSION_SYSTEM_ATTR, (String) this.superProperties.get(APP_VERSION_SYSTEM_ATTR));
     }
-
-    StackTraceElement[] trace = (new Exception()).getStackTrace();
-
-    if (trace.length > 3) {
-      StackTraceElement traceElement = trace[3];
-      libProperties.put(LIB_DETAIL_SYSTEM_ATTR,
-          String.format("%s##%s##%s##%s", traceElement.getClassName(), traceElement.getMethodName(),
-              traceElement.getFileName(), traceElement.getLineNumber()));
-    }
-    return libProperties;
+    return libInfo;
   }
 }
