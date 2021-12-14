@@ -1,13 +1,40 @@
 package com.sensorsdata.analytics.javasdk.util;
 
+import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_DELETE_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_SET_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_DETAIL_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_METHOD_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_VERSION_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_APPEND_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_DELETE_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_INCREMENT_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ONCE_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_UNSET_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.SDK_VERSION;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TYPE;
+
+import com.sensorsdata.analytics.javasdk.SensorsConst;
+import com.sensorsdata.analytics.javasdk.bean.FailedData;
+import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.sensorsdata.analytics.javasdk.SensorsConst;
-import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 public class SensorsAnalyticsUtil {
@@ -30,7 +57,7 @@ public class SensorsAnalyticsUtil {
     // 容忍json中出现未知的列
     jsonObjectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     // 兼容java中的驼峰的字段名命名
-    jsonObjectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
+    jsonObjectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
     jsonObjectMapper.setTimeZone(TimeZone.getDefault());
     jsonObjectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
     return jsonObjectMapper;
@@ -124,5 +151,107 @@ public class SensorsAnalyticsUtil {
     if (!(KEY_PATTERN.matcher(key).matches())) {
       throw new InvalidArgumentException(String.format("The %s key '%s' is invalid.", type, key));
     }
+  }
+
+
+  public static void assertFailedData(FailedData failedData) throws InvalidArgumentException {
+    if (failedData.getFailedData() == null || failedData.getFailedData().isEmpty()) {
+      throw new InvalidArgumentException("Failed Data is null or empty.");
+    }
+    for (int i = 0; i < failedData.getFailedData().size(); i++) {
+      final Map<String, Object> dataMap = failedData.getFailedData().get(i);
+      if (!dataMap.containsKey("type") || dataMap.get("type") == null) {
+        throw new InvalidArgumentException(
+            String.format("The index [%d] of failed data list have not [type].", i));
+      }
+      final String type = String.valueOf(dataMap.get("type"));
+      switch (type) {
+        case ITEM_SET_ACTION_TYPE:
+        case ITEM_DELETE_ACTION_TYPE:
+          if (!dataMap.containsKey("item_id") || dataMap.get("item_id") == null) {
+            throw new InvalidArgumentException(
+                String.format("The index [%d] of failed data list have not [item_id].", i));
+          }
+          assertValue("item id", dataMap.get("item_id").toString());
+          if (!dataMap.containsKey("item_type") || dataMap.get("item_type") == null) {
+            throw new InvalidArgumentException(
+                String.format("The index [%d] of failed data list have not [item_type].", i));
+          }
+          assertValue("item type", dataMap.get("item_type").toString());
+          break;
+        case TRACK_SIGN_UP_ACTION_TYPE:
+          if (!dataMap.containsKey("original_id") || dataMap.get("original_id") == null) {
+            throw new InvalidArgumentException(
+                String.format("The index [%d] of failed data list have not [original_id].", i));
+          }
+          assertValue("Original Distinct Id", dataMap.get("original_id").toString());
+        case BIND_ID_ACTION_TYPE:
+        case UNBIND_ID_ACTION_TYPE:
+          if (!dataMap.containsKey("identities") || dataMap.get("identities") == null) {
+            throw new InvalidArgumentException(
+                String.format("The index [%d] of failed data list have not [identities].", i));
+          }
+        case TRACK_ACTION_TYPE:
+        case PROFILE_SET_ACTION_TYPE:
+        case PROFILE_SET_ONCE_ACTION_TYPE:
+        case PROFILE_APPEND_ACTION_TYPE:
+        case PROFILE_INCREMENT_ACTION_TYPE:
+        case PROFILE_UNSET_ACTION_TYPE:
+        case PROFILE_DELETE_ACTION_TYPE:
+          if (!dataMap.containsKey("distinct_id") || dataMap.get("distinct_id") == null) {
+            throw new InvalidArgumentException(
+                String.format("The index [%d] of failed data list have not [distinct_id].", i));
+          }
+          if (!dataMap.containsKey("_track_id") || dataMap.get("_track_id") == null ||
+              !(dataMap.get("_track_id") instanceof Integer)) {
+            throw new InvalidArgumentException(String.format("The index [%d] of of failed data list is invalid.", i));
+          }
+          assertValue("Distinct Id", dataMap.get("distinct_id").toString());
+          break;
+        default:
+          throw new InvalidArgumentException(
+              String.format("The index [%d] of failed data list can not identify [action_type:%s].", i, type));
+      }
+      if (dataMap.containsKey("properties")) {
+        if (!(dataMap.get("properties") instanceof Map)) {
+          throw new InvalidArgumentException(
+              String.format("The index [%d] of failed data list can not identify [properties:%s].", i, type));
+        }
+        assertProperties(type, (Map<String, Object>) dataMap.get("properties"));
+      }
+      if (!dataMap.containsKey("time")) {
+        dataMap.put("time", System.currentTimeMillis());
+      }
+      //重置 lib,后台获取该数据时能根据 $lib_method 区分通过重发送接口上报到服务端
+      dataMap.put("lib", generateLibInfo());
+    }
+  }
+
+  public static Map<String, String> generateLibInfo() {
+    Map<String, String> libProperties = new HashMap<>();
+    libProperties.put(LIB_SYSTEM_ATTR, LIB);
+    libProperties.put(LIB_VERSION_SYSTEM_ATTR, SDK_VERSION);
+    libProperties.put(LIB_METHOD_SYSTEM_ATTR, "code");
+    StackTraceElement[] trace = (new Exception()).getStackTrace();
+    if (trace.length > 3) {
+      StackTraceElement traceElement = trace[3];
+      libProperties.put(LIB_DETAIL_SYSTEM_ATTR,
+          String.format("%s##%s##%s##%s", traceElement.getClassName(), traceElement.getMethodName(),
+              traceElement.getFileName(), traceElement.getLineNumber()));
+    }
+    return libProperties;
+  }
+
+  public static List<Map<String, Object>> deepCopy(List<Map<String, Object>> source) {
+    if (source == null) {
+      return null;
+    }
+    List<Map<String, Object>> newList = new ArrayList<>(source.size());
+    for (Map<String, Object> objectMap : source) {
+      Map<String, Object> newMap = new HashMap<>(objectMap.size());
+      newMap.putAll(objectMap);
+      newList.add(newMap);
+    }
+    return newList;
   }
 }

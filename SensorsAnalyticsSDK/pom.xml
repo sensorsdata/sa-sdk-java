@@ -15,7 +15,7 @@
     <groupId>com.sensorsdata.analytics.javasdk</groupId>
     <name>SensorsAnalyticsSDK</name>
     <artifactId>SensorsAnalyticsSDK</artifactId>
-    <version>3.3.0</version>
+    <version>3.3.1</version>
     <description>The official Java SDK of Sensors Analytics</description>
     <url>http://sensorsdata.cn</url>
 
@@ -53,6 +53,8 @@
         <jackson-databind.version>2.9.10.7</jackson-databind.version>
         <lombok.version>1.18.20</lombok.version>
         <junit.version>4.11</junit.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <slf4j-simple.version>1.6.6</slf4j-simple.version>
     </properties>
 
     <dependencies>
@@ -71,6 +73,17 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j-simple.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

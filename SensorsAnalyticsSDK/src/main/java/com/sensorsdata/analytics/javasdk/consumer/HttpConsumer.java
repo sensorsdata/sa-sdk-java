@@ -17,6 +17,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,7 @@ class HttpConsumer implements Closeable {
             .build();
     }
 
-   synchronized void consume(final String data) throws IOException, HttpConsumerException {
+    void consume(final String data) throws IOException, HttpConsumerException {
         HttpUriRequest request = getHttpRequest(data);
         CloseableHttpResponse response = null;
         if (httpClient == null) {
@@ -63,7 +64,7 @@ class HttpConsumer implements Closeable {
             response = httpClient.execute(request);
             int httpStatusCode = response.getStatusLine().getStatusCode();
             if (httpStatusCode < 200 || httpStatusCode >= 300) {
-                String httpContent = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
+                String httpContent = new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8);
                 throw new HttpConsumerException(
                         String.format("Unexpected response %d from Sensors Analytics: %s", httpStatusCode, httpContent), data,
                         httpStatusCode, httpContent);
