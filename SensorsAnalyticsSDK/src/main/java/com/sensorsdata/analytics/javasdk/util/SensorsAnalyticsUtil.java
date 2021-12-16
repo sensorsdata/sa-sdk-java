@@ -160,7 +160,7 @@ public class SensorsAnalyticsUtil {
     }
     for (int i = 0; i < failedData.getFailedData().size(); i++) {
       final Map<String, Object> dataMap = failedData.getFailedData().get(i);
-      if (!dataMap.containsKey("type") || dataMap.get("type") == null) {
+      if (verifyMapValueIsBlank(dataMap, "type")) {
         throw new InvalidArgumentException(
             String.format("The index [%d] of failed data list have not [type].", i));
       }
@@ -168,26 +168,26 @@ public class SensorsAnalyticsUtil {
       switch (type) {
         case ITEM_SET_ACTION_TYPE:
         case ITEM_DELETE_ACTION_TYPE:
-          if (!dataMap.containsKey("item_id") || dataMap.get("item_id") == null) {
+          if (verifyMapValueIsBlank(dataMap, "item_id")) {
             throw new InvalidArgumentException(
                 String.format("The index [%d] of failed data list have not [item_id].", i));
           }
           assertValue("item id", dataMap.get("item_id").toString());
-          if (!dataMap.containsKey("item_type") || dataMap.get("item_type") == null) {
+          if (verifyMapValueIsBlank(dataMap, "item_type")) {
             throw new InvalidArgumentException(
                 String.format("The index [%d] of failed data list have not [item_type].", i));
           }
           assertValue("item type", dataMap.get("item_type").toString());
           break;
         case TRACK_SIGN_UP_ACTION_TYPE:
-          if (!dataMap.containsKey("original_id") || dataMap.get("original_id") == null) {
+          if (verifyMapValueIsBlank(dataMap, "original_id")) {
             throw new InvalidArgumentException(
                 String.format("The index [%d] of failed data list have not [original_id].", i));
           }
           assertValue("Original Distinct Id", dataMap.get("original_id").toString());
         case BIND_ID_ACTION_TYPE:
         case UNBIND_ID_ACTION_TYPE:
-          if (!dataMap.containsKey("identities") || dataMap.get("identities") == null) {
+          if (!type.equals(TRACK_SIGN_UP_ACTION_TYPE) && verifyMapValueIsBlank(dataMap, "identities")) {
             throw new InvalidArgumentException(
                 String.format("The index [%d] of failed data list have not [identities].", i));
           }
@@ -198,12 +198,11 @@ public class SensorsAnalyticsUtil {
         case PROFILE_INCREMENT_ACTION_TYPE:
         case PROFILE_UNSET_ACTION_TYPE:
         case PROFILE_DELETE_ACTION_TYPE:
-          if (!dataMap.containsKey("distinct_id") || dataMap.get("distinct_id") == null) {
+          if (verifyMapValueIsBlank(dataMap, "distinct_id")) {
             throw new InvalidArgumentException(
                 String.format("The index [%d] of failed data list have not [distinct_id].", i));
           }
-          if (!dataMap.containsKey("_track_id") || dataMap.get("_track_id") == null ||
-              !(dataMap.get("_track_id") instanceof Integer)) {
+          if (verifyMapValueIsBlank(dataMap, "_track_id") || !(dataMap.get("_track_id") instanceof Integer)) {
             throw new InvalidArgumentException(String.format("The index [%d] of of failed data list is invalid.", i));
           }
           assertValue("Distinct Id", dataMap.get("distinct_id").toString());
@@ -253,5 +252,9 @@ public class SensorsAnalyticsUtil {
       newList.add(newMap);
     }
     return newList;
+  }
+
+  private static boolean verifyMapValueIsBlank(Map<String, Object> map, String key) {
+    return !map.containsKey(key) || map.get(key) == null;
   }
 }
