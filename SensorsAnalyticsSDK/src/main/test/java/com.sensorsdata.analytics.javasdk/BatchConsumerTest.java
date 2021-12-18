@@ -29,7 +29,7 @@ public class BatchConsumerTest {
 
   @Before
   public void init() throws NoSuchFieldException, IllegalAccessException {
-    batchConsumer = new BatchConsumer("http://localhost:8016/sa", 1, 3, true);
+    batchConsumer = new BatchConsumer("http://localhost:8016/sa", 1, true, 3);
     Field field = batchConsumer.getClass().getDeclaredField("messageList");
     field.setAccessible(true);
     messageList = (List<Map<String, Object>>) field.get(batchConsumer);

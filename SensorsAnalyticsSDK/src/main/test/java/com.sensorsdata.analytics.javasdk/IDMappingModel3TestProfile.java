@@ -41,7 +41,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
     public void init() throws NoSuchFieldException, IllegalAccessException {
         String url = "http://10.120.73.51:8106/sa?project=default&token=";
 //        "\"http://10.120.235.239:8106/sa?project=default\""
-        batchConsumer = new BatchConsumer(url, 100, 3, true);
+        batchConsumer = new BatchConsumer(url, 100, true, 3);
         Field field = batchConsumer.getClass().getDeclaredField("messageList");
         field.setAccessible(true);
         messageList = (List<Map<String, Object>>) field.get(batchConsumer);

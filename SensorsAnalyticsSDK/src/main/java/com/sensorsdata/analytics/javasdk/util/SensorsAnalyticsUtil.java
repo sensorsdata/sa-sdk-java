@@ -187,7 +187,7 @@ public class SensorsAnalyticsUtil {
           assertValue("Original Distinct Id", dataMap.get("original_id").toString());
         case BIND_ID_ACTION_TYPE:
         case UNBIND_ID_ACTION_TYPE:
-          if (!type.equals(TRACK_SIGN_UP_ACTION_TYPE) && verifyMapValueIsBlank(dataMap, "identities")) {
+          if (!TRACK_SIGN_UP_ACTION_TYPE.equals(type) && verifyMapValueIsBlank(dataMap, "identities")) {
             throw new InvalidArgumentException(
                 String.format("The index [%d] of failed data list have not [identities].", i));
           }
@@ -255,6 +255,6 @@ public class SensorsAnalyticsUtil {
   }
 
   private static boolean verifyMapValueIsBlank(Map<String, Object> map, String key) {
-    return !map.containsKey(key) || map.get(key) == null;
+    return map == null || !map.containsKey(key) || map.get(key) == null;
   }
 }
