@@ -88,7 +88,7 @@ public class FastBatchConsumerTest {
 
         // 重发给一个正确的 serverUrl
         String url = "http://10.120.73.51:8106/sa?project=default&token=";
-        FastBatchConsumer consumer2 = new FastBatchConsumer(url, new Callback() {
+        FastBatchConsumer consumerRight = new FastBatchConsumer(url, new Callback() {
             @Override
             public void onFailed(FailedData failedData) {
                 System.out.println(failedData);
@@ -96,10 +96,13 @@ public class FastBatchConsumerTest {
         });
 
         //初始化重发送接口
-        SensorsLogsUtil.resend(consumer2);
+        SensorsLogsUtil.resend(consumerRight);
+        sa.trackSignUp("123", "456");
         sa.track("123", true, "test", null);
         sa.flush();
-        Thread.sleep(5000);
+        sa.track("123", true, "test", null);
+        sa.flush();
+        Thread.sleep(10000);
     }
 
 
@@ -486,10 +489,6 @@ public class FastBatchConsumerTest {
         Field field = consumer.getClass().getDeclaredField("buffer");
         field.setAccessible(true);
         buffer = (LinkedBlockingQueue<Map<String, Object>>) field.get(consumer);
-
-        field = consumer.getClass().getDeclaredField("bulkSize");
-        field.setAccessible(true);
-        int bulkSize = (Integer) field.get(consumer);
 
         SensorsAnalytics sa = new SensorsAnalytics(consumer);
 

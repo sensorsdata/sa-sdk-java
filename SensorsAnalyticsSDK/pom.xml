@@ -15,7 +15,7 @@
     <groupId>com.sensorsdata.analytics.javasdk</groupId>
     <name>SensorsAnalyticsSDK</name>
     <artifactId>SensorsAnalyticsSDK</artifactId>
-    <version>3.3.1</version>
+    <version>3.4.0</version>
     <description>The official Java SDK of Sensors Analytics</description>
     <url>http://sensorsdata.cn</url>
 
@@ -149,11 +149,11 @@
             <distributionManagement>
                 <snapshotRepository>
                     <id>ossrh</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
                 </snapshotRepository>
                 <repository>
                     <id>ossrh</id>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
                 </repository>
             </distributionManagement>
             <build>
