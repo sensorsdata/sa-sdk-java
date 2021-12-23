@@ -1,7 +1,9 @@
 package com.sensorsdata.analytics.javasdk;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sensorsdata.analytics.javasdk.bean.FailedData;
 import com.sensorsdata.analytics.javasdk.consumer.FastBatchConsumer;
+import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import lombok.SneakyThrows;
 
 import java.util.ArrayList;
@@ -40,7 +42,6 @@ public class SensorsLogsUtil {
             this.consumer = consumer;
         }
 
-        @SneakyThrows
         @Override
         public void run() {
             System.out.println("start schedule task.");
@@ -48,7 +49,14 @@ public class SensorsLogsUtil {
                 for (FailedData failedData : failedDataList) {
                     System.out.println("resend failed data." + failedData);
                     System.out.println("resend failed data." + failedData.getFailedData());
-                    boolean isSend = consumer.resendFailedData(failedData);
+                    boolean isSend = false;
+                    try {
+                        isSend = consumer.resendFailedData(failedData);
+                    } catch (InvalidArgumentException e) {
+                        e.printStackTrace();
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
                     System.out.println("resend success:" + isSend);
                     if(isSend){
                         failedDataList.remove(failedData);

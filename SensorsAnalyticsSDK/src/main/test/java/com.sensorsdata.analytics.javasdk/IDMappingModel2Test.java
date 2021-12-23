@@ -40,7 +40,7 @@ public class IDMappingModel2Test extends SensorsBaseTest {
 
   @Before
   public void init() throws NoSuchFieldException, IllegalAccessException {
-    batchConsumer = new BatchConsumer("http://10.120.73.51:8106/sa?project=default&token=", 100, 3, true);
+    batchConsumer = new BatchConsumer("http://10.120.73.51:8106/sa?project=default&token=", 100, true, 3);
     Field field = batchConsumer.getClass().getDeclaredField("messageList");
     field.setAccessible(true);
     messageList = (List<Map<String, Object>>) field.get(batchConsumer);
@@ -234,7 +234,7 @@ public class IDMappingModel2Test extends SensorsBaseTest {
 
 
   @Test
-  public void testProfileAppendById() throws InvalidArgumentException{
+  public void testProfileAppend() throws InvalidArgumentException{
     List<String> list = new ArrayList<>();
     list.add("aaa");
     list.add("bbb");
@@ -253,7 +253,7 @@ public class IDMappingModel2Test extends SensorsBaseTest {
   }
 
   @Test
-  public void testProfileAppendById01() throws InvalidArgumentException{
+  public void testProfileAppend01() throws InvalidArgumentException{
     List<String> list = new ArrayList<>();
     list.add("eee");
 
@@ -268,9 +268,9 @@ public class IDMappingModel2Test extends SensorsBaseTest {
     assertEquals("profile_append", messageList.get(0).get("type"));
   }
 
-  // profileUnsetById
+  // profileUnset
   @Test
-  public void testProfileUnsetById() throws InvalidArgumentException{
+  public void testProfileUnset() throws InvalidArgumentException{
     Map<String, Object> properties = new HashMap<>();
     properties.put("list1", true);
 
@@ -287,9 +287,9 @@ public class IDMappingModel2Test extends SensorsBaseTest {
     sa.flush();
   }
 
-  // profileUnsetById
+  // profileUnset
   @Test
-  public void testProfileUnsetById01() throws InvalidArgumentException{
+  public void testProfileUnset01() throws InvalidArgumentException{
     Map<String, Object> properties = new HashMap<>();
     properties.put("list1", true);
 
@@ -306,9 +306,9 @@ public class IDMappingModel2Test extends SensorsBaseTest {
     sa.flush();
   }
 
-  // profileDeleteById
+  // profileDelete
   @Test
-  public void testProfileDeleteById() throws InvalidArgumentException{
+  public void testProfileDelete() throws InvalidArgumentException{
     sa.profileDelete("123", true);
 
     Map<?, ?> messageListult = (Map<?, ?>) messageList.get(0).get("properties");

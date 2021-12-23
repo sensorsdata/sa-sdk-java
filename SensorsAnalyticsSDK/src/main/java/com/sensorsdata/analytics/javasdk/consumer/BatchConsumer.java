@@ -28,24 +28,33 @@ public class BatchConsumer implements Consumer {
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize) {
-        this(serverUrl, 3, bulkSize);
+        this(serverUrl, bulkSize, 3);
     }
 
-    public BatchConsumer(final String serverUrl, final int timeoutSec, final int bulkSize) {
-        this(serverUrl, bulkSize, timeoutSec, false);
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int timeoutSec) {
+        this(serverUrl, bulkSize, false, timeoutSec);
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize, final int timeoutSec,
+    public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException) {
+        this(serverUrl, bulkSize, throwException, 3);
+    }
+
+    public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException,
+        final int timeoutSec) {
+        this(serverUrl, bulkSize, 0, throwException, timeoutSec);
+    }
+
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
         final boolean throwException) {
-        this(serverUrl, bulkSize, timeoutSec, 0, throwException);
+        this(serverUrl, bulkSize, maxCacheSize, throwException, 3);
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize, final int timeoutSec, final int maxCacheSize,
-        final boolean throwException) {
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
+        final boolean throwException, final int timeoutSec) {
         this.messageList = new LinkedList<>();
         this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec, 1));
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
-        this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
+        this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, Math.max(1, bulkSize));
         if (maxCacheSize > MAX_CACHE_SIZE) {
             this.maxCacheSize = MAX_CACHE_SIZE;
         } else if (maxCacheSize > 0 && maxCacheSize < MIN_CACHE_SIZE) {
