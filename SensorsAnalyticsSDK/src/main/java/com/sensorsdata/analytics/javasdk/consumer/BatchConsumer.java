@@ -41,7 +41,7 @@ public class BatchConsumer implements Consumer {
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException,
         final int timeoutSec) {
-        this(serverUrl, bulkSize, 0, throwException);
+        this(serverUrl, bulkSize, 0, throwException, timeoutSec);
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
@@ -54,7 +54,7 @@ public class BatchConsumer implements Consumer {
         this.messageList = new LinkedList<>();
         this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec, 1));
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
-        this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, bulkSize);
+        this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, Math.max(1, bulkSize));
         if (maxCacheSize > MAX_CACHE_SIZE) {
             this.maxCacheSize = MAX_CACHE_SIZE;
         } else if (maxCacheSize > 0 && maxCacheSize < MIN_CACHE_SIZE) {
