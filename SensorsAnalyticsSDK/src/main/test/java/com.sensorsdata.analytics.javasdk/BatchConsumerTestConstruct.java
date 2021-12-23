@@ -127,6 +127,24 @@ public class BatchConsumerTestConstruct {
 
   /**
    * 测试 BatchConsumer 构造函数
+   * public BatchConsumer(final String serverUrl, final int bulkSize)
+   */
+  @Test
+  public void testBatchConsumer02BlukSize() throws NoSuchFieldException, IllegalAccessException, InterruptedException, InvalidArgumentException {
+    int bulkSize = 100;
+    int maxCacheSize = 0;
+    boolean throwException = false;
+
+    batchConsumer = new BatchConsumer(serverUrl, 0);
+    sa = new SensorsAnalytics(batchConsumer);
+
+    assertBlukSize(1);
+    assertMaxCacheSize(maxCacheSize);
+    assertThrowException(throwException);
+  }
+
+  /**
+   * 测试 BatchConsumer 构造函数
    * public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException)
    */
   @Test
