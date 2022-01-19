@@ -2,8 +2,10 @@ package com.sensorsdata.analytics.javasdk;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
+import com.sensorsdata.analytics.javasdk.consumer.LogSplitMode;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,5 +45,14 @@ public class ConcurrentLoggingConsumerTest {
     consumer.send(event);
     assertNotNull(messageBuffer);
     messageBuffer.setLength(0);
+  }
+
+  @Test
+  public void checkInit() {
+    new ConcurrentLoggingConsumer("file.log");
+    new ConcurrentLoggingConsumer("file.log", 30);
+    new ConcurrentLoggingConsumer("file.log", "lock.name", 20);
+    new ConcurrentLoggingConsumer("file.log", "lock.name", 20, LogSplitMode.DAY);
+    assertTrue(true);
   }
 }

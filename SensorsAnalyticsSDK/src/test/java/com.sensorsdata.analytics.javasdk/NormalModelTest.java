@@ -17,14 +17,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.sensorsdata.analytics.javasdk.bean.EventRecord;
-import com.sensorsdata.analytics.javasdk.bean.UserRecord;
-import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-import org.junit.Test;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 /**
  * 普通模式校验
