@@ -13,8 +13,6 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
-
 /**
  * Id-Mapping 模式
  *

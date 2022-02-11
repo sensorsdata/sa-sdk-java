@@ -112,9 +112,6 @@ class InnerLoggingConsumer implements Consumer {
         log.info("Call close method.");
     }
 
-    public enum LogSplitMode {
-        DAY, HOUR
-    }
 }
 
 interface LoggingFileWriter {
