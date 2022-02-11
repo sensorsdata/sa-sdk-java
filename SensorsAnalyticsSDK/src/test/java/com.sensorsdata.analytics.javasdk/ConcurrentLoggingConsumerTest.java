@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.LogSplitMode;
 
+import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -54,5 +55,88 @@ public class ConcurrentLoggingConsumerTest {
     new ConcurrentLoggingConsumer("file.log", "lock.name", 20);
     new ConcurrentLoggingConsumer("file.log", "lock.name", 20, LogSplitMode.DAY);
     assertTrue(true);
+  }
+
+  @Test
+  public void testInit01() throws InvalidArgumentException {
+    consumer = new ConcurrentLoggingConsumer("test.log");
+    SensorsAnalytics sa = new SensorsAnalytics(consumer);
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("test", "test");
+    properties.put("$project", "abc");
+    properties.put("$token", "123");
+    sa.track("123", true, "test", properties);
+  }
+
+  @Test
+  public void testInit02() throws InvalidArgumentException {
+    consumer = new ConcurrentLoggingConsumer("test.log", 100);
+    SensorsAnalytics sa = new SensorsAnalytics(consumer);
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("test", "test");
+    properties.put("$project", "abc");
+    properties.put("$token", "123");
+    sa.track("123", true, "test01", properties);
+    sa.track("123", true, "test01", properties);
+  }
+
+  @Test
+  public void testInit03() throws InvalidArgumentException {
+    consumer = new ConcurrentLoggingConsumer("test.log", "lock.log");
+    SensorsAnalytics sa = new SensorsAnalytics(consumer);
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("test", "test");
+    properties.put("$project", "abc");
+    properties.put("$token", "123");
+    sa.track("123", true, "test01", properties);
+    sa.track("123", true, "test01", properties);
+  }
+
+  @Test
+  public void testInit04() throws InvalidArgumentException {
+    consumer = new ConcurrentLoggingConsumer("test.log", "lock.log", 100);
+    SensorsAnalytics sa = new SensorsAnalytics(consumer);
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("test", "test");
+    properties.put("$project", "abc");
+    properties.put("$token", "123");
+    sa.track("123", true, "test01", properties);
+    sa.track("123", true, "test01", properties);
+  }
+
+  @Test
+  public void testInit05() throws InvalidArgumentException {
+    consumer = new ConcurrentLoggingConsumer("test.log", "lock.log", 100);
+    SensorsAnalytics sa = new SensorsAnalytics(consumer);
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("test", "test");
+    properties.put("$project", "abc");
+    properties.put("$token", "123");
+    sa.track("123", true, "test01", properties);
+    sa.track("123", true, "test01", properties);
+  }
+
+  @Test
+  public void testInit06() throws InvalidArgumentException {
+    consumer = new ConcurrentLoggingConsumer("test.log", "lock.log", 100, LogSplitMode.DAY);
+    SensorsAnalytics sa = new SensorsAnalytics(consumer);
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("test", "test");
+    properties.put("$project", "abc");
+    properties.put("$token", "123");
+    sa.track("123", true, "test01", properties);
+    sa.track("123", true, "test01", properties);
+  }
+
+  @Test
+  public void testInit07() throws InvalidArgumentException {
+    consumer = new ConcurrentLoggingConsumer("test.log", "lock.log", 100, LogSplitMode.HOUR);
+    SensorsAnalytics sa = new SensorsAnalytics(consumer);
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("test", "test");
+    properties.put("$project", "abc");
+    properties.put("$token", "123");
+    sa.track("123", true, "test01", properties);
+    sa.track("123", true, "test01", properties);
   }
 }
