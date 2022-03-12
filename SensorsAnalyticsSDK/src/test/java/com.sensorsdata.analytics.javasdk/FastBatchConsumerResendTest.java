@@ -17,7 +17,11 @@ import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * FastBatchConsumer 重发送接口单测

@@ -50,7 +50,7 @@ public class SensorsConst {
      * 系统预置属性
      */
     public static final String PROJECT_SYSTEM_ATTR = "$project";
-    public static final String TINE_SYSTEM_ATTR = "$time";
+    public static final String TIME_SYSTEM_ATTR = "$time";
     public static final String TOKEN_SYSTEM_ATTR = "$token";
     public static final String LOGIN_SYSTEM_ATTR = "$is_login_id";
     public static final String APP_VERSION_SYSTEM_ATTR = "$app_version";

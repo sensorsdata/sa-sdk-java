@@ -21,6 +21,8 @@ import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TY
 
 import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.bean.FailedData;
+import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
+import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -63,6 +65,28 @@ public class SensorsAnalyticsUtil {
     return jsonObjectMapper;
   }
 
+  /**
+   * 校验 IDM 用户纬度数据是否合法
+   *
+   * @param actionType  事件类型
+   * @param identityMap 用户纬度数据集合
+   * @throws InvalidArgumentException 不合法直接抛出异常
+   */
+  public static void assertIdentityMap(String actionType, Map<String, String> identityMap)
+      throws InvalidArgumentException {
+    for (Map.Entry<String, String> entry : identityMap.entrySet()) {
+      assertKey(actionType, entry.getKey());
+      assertValue(actionType, entry.getValue());
+    }
+  }
+
+  /**
+   * 校验数据属性是否合法
+   *
+   * @param eventType  事件类型
+   * @param properties 数据属性集合
+   * @throws InvalidArgumentException 不合法直接抛出异常
+   */
   public static void assertProperties(String eventType, Map<String, Object> properties)
       throws InvalidArgumentException {
     if (null == properties) {
@@ -87,14 +111,14 @@ public class SensorsAnalyticsUtil {
             property.getKey(), type));
       }
 
-      if (property.getKey().equals(SensorsConst.TINE_SYSTEM_ATTR)
+      if (property.getKey().equals(SensorsConst.TIME_SYSTEM_ATTR)
           && !(property.getValue() instanceof Date)) {
         throw new InvalidArgumentException("The property '$time' should be a java.util.Date.");
       }
 
       // List 类型的属性值，List 元素必须为 String 类型
-      if (property.getValue() instanceof List<?> && !eventType.equals(
-          SensorsConst.PROFILE_INCREMENT_ACTION_TYPE)) {
+      if (property.getValue() instanceof List<?> &&
+          !eventType.equals(SensorsConst.PROFILE_INCREMENT_ACTION_TYPE)) {
         for (final ListIterator<Object> it = ((List<Object>) property.getValue()).listIterator(); it.hasNext(); ) {
           Object element = it.next();
           if (!(element instanceof String)) {
@@ -153,6 +177,48 @@ public class SensorsAnalyticsUtil {
     }
   }
 
+  /**
+   * IDM3.0 校验 distinctId 和 identities 集合，并生成最终 distinctId
+   *
+   * @param distinctId 外部传入
+   * @param identities 用户维度集合
+   * @return 返回最终 distinctId 值和 isLoginId
+   */
+  public static Pair<String, Boolean> checkIdentitiesAndGenerateDistinctId(String distinctId,
+      Map<String, String> identities) throws InvalidArgumentException {
+    if (distinctId != null) {
+      assertValue("distinct_id", distinctId);
+    }
+    String tmpId = null;
+    //校验 idMap 是否正确，并尝试组装 distinct
+    for (Map.Entry<String, String> entry : identities.entrySet()) {
+      assertKey(TRACK_ACTION_TYPE, entry.getKey());
+      assertValue(TRACK_ACTION_TYPE, entry.getValue());
+      if (tmpId == null && distinctId == null) {
+        tmpId = String.format("%s+%s", entry.getKey(), entry.getValue());
+        if (tmpId.length() > 255) {
+          tmpId = null;
+        }
+      }
+    }
+    boolean isLoginId = false;
+    String id = tmpId;
+    //没有主动设置，则使用 SDK 内部逻辑
+    if (distinctId == null) {
+      //循环完毕,查看一下 map 中是否存在 $identity_login_id
+      if (identities.containsKey(SensorsAnalyticsIdentity.LOGIN_ID)) {
+        id = identities.get(SensorsAnalyticsIdentity.LOGIN_ID);
+        isLoginId = true;
+      } else if (tmpId == null) { // 不存在 $identity_login_id，并且 key+value 超长，使用第一个 value
+        id = identities.get(identities.keySet().iterator().next());
+      } else {// 否则使用 key+value
+        id = tmpId;
+      }
+    } else {
+      id = distinctId;
+    }
+    return Pair.of(id, isLoginId);
+  }
 
   public static void assertFailedData(FailedData failedData) throws InvalidArgumentException {
     if (failedData.getFailedData() == null || failedData.getFailedData().isEmpty()) {
@@ -257,4 +323,5 @@ public class SensorsAnalyticsUtil {
   private static boolean verifyMapValueIsBlank(Map<String, Object> map, String key) {
     return map == null || !map.containsKey(key) || map.get(key) == null;
   }
+
 }

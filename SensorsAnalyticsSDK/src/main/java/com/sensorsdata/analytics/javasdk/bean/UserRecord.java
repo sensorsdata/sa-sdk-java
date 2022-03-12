@@ -48,7 +48,7 @@ public class UserRecord implements Serializable {
     }
 
     public static class Builder {
-        private Map<String, Object> propertyMap = new HashMap<String, Object>();
+        private final Map<String, Object> propertyMap = new HashMap<String, Object>();
         private String distinctId;
         private Boolean isLoginId;
 

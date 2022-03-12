@@ -6,8 +6,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.LogSplitMode;
-
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+
 import org.junit.Before;
 import org.junit.Test;
 

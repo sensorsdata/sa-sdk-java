@@ -38,13 +38,18 @@ public class TestServlet extends HttpServlet {
     byte[] data = decompressGzip(bytes);
     ArrayNode arrayNode = (ArrayNode) SensorsAnalyticsUtil.getJsonObjectMapper().readTree(data);
     for (JsonNode jsonNode : arrayNode) {
-      assertNotNull(jsonNode);
-      assertTrue(jsonNode.has("_track_id"));
-      assertTrue(jsonNode.has("lib"));
-      assertTrue(jsonNode.has("time"));
-      assertTrue(jsonNode.has("distinct_id"));
-      assertTrue(jsonNode.has("type"));
-      assertTrue(jsonNode.has("event"));
+      assertNotNull("数据为空！", jsonNode);
+      assertTrue("数据中没有 type 节点！", jsonNode.has("type"));
+      assertTrue("数据中没有 actionType 节点！", jsonNode.has("event"));
+      if (jsonNode.get("event").asText().startsWith("item")) {
+        assertTrue("item 数据没有 item_id 节点！", jsonNode.has("item_id"));
+        assertTrue("item 数据没有 item_type 节点！", jsonNode.has("item_type"));
+      } else {
+        assertTrue("event or profile 数据没有 _track_id 节点！", jsonNode.has("_track_id"));
+        assertTrue("event or profile 数据没有 lib 节点！", jsonNode.has("lib"));
+        assertTrue("event or profile 数据没有 time 节点！", jsonNode.has("time"));
+        assertTrue("event or profile 数据没有 distinct_id 节点！", jsonNode.has("distinct_id"));
+      }
     }
     response.setStatus(200);
   }

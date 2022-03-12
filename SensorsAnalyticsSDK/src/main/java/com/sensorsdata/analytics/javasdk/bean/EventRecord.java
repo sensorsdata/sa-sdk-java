@@ -60,7 +60,7 @@ public class EventRecord implements Serializable {
     }
 
     public static class Builder {
-        private Map<String, Object> propertyMap = new HashMap<String, Object>();
+        private final Map<String, Object> propertyMap = new HashMap<String, Object>();
         private String eventName;
         private String distinctId;
         private Boolean isLoginId;
