@@ -1,25 +1,16 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * 普通模式校验
@@ -50,8 +41,13 @@ public class IDMappingModel2Test extends SensorsBaseTest {
     field.setAccessible(true);
     messageBuffer = (StringBuilder) field.get(consumer);
 
+
 //    sa = new SensorsAnalytics(consumer);
     sa = new SensorsAnalytics(batchConsumer);
+
+
+//    DebugConsumer consumer = new DebugConsumer("http://testaiaitiedatasink.sensorsdata.cn/sa?project=production", false);
+//    sa = new SensorsAnalytics(consumer);
   }
 
   /**
@@ -61,7 +57,7 @@ public class IDMappingModel2Test extends SensorsBaseTest {
   public void checkTrackEventLoginTrue() throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<>();
     properties.put("test", "test");
-    properties.put("$project", "abc");
+//    properties.put("$project", "abc");
     properties.put("$token", "123");
     sa.track("123", true, "test", properties);
 

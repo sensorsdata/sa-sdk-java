@@ -18,6 +18,8 @@ import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TYPE;
 
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
+import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
+import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
@@ -266,7 +268,12 @@ public class SensorsAnalytics implements ISensorsAnalytics {
     @Override
     public void trackById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String eventName,
         Map<String, Object> properties) throws InvalidArgumentException {
-        addEventIdentity(analyticsIdentity, TRACK_ACTION_TYPE, eventName, properties);
+        IDMEventRecord eventRecord = IDMEventRecord.starter()
+            .identityMap(analyticsIdentity.getIdentityMap())
+            .setEventName(eventName)
+            .addProperties(properties)
+            .build();
+        worker.doAddData(new SensorsData(eventRecord));
     }
 
     @Override
@@ -361,6 +368,42 @@ public class SensorsAnalytics implements ISensorsAnalytics {
     }
 
     @Override
+    public void trackById(@NonNull IDMEventRecord idmEventRecord) throws InvalidArgumentException {
+        worker.doAddData(new SensorsData(idmEventRecord));
+    }
+
+    @Override
+    public void profileSetById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertProperties(PROFILE_SET_ACTION_TYPE, idmUserRecord.getPropertyMap());
+        worker.doAddData(new SensorsData(idmUserRecord, PROFILE_SET_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileSetOnceById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertProperties(PROFILE_SET_ONCE_ACTION_TYPE, idmUserRecord.getPropertyMap());
+        worker.doAddData(new SensorsData(idmUserRecord, PROFILE_SET_ONCE_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileIncrementById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertProperties(PROFILE_INCREMENT_ACTION_TYPE, idmUserRecord.getPropertyMap());
+        worker.doAddData(new SensorsData(idmUserRecord, PROFILE_INCREMENT_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileAppendById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertProperties(PROFILE_APPEND_ACTION_TYPE, idmUserRecord.getPropertyMap());
+        worker.doAddData(new SensorsData(idmUserRecord, PROFILE_APPEND_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileUnsetById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertProperties(PROFILE_UNSET_ACTION_TYPE, idmUserRecord.getPropertyMap());
+        worker.doAddData(new SensorsData(idmUserRecord, PROFILE_UNSET_ACTION_TYPE));
+    }
+
+
+    @Override
     public void flush() {
         worker.flush();
     }
@@ -397,7 +440,11 @@ public class SensorsAnalytics implements ISensorsAnalytics {
 
     private void addEventIdentity(SensorsAnalyticsIdentity analyticsIdentity, String actionType, String eventName,
         Map<String, Object> properties) throws InvalidArgumentException {
-        Map<String, String> identityMap = analyticsIdentity.getIdentityMap();
+        addEventIdentity(analyticsIdentity.getIdentityMap(), actionType, eventName, properties);
+    }
+
+    private void addEventIdentity(Map<String, String> identityMap, String actionType, String eventName,
+        Map<String, Object> properties) throws InvalidArgumentException {
         if (identityMap.isEmpty()) {
             throw new InvalidArgumentException("The identity is empty.");
         }
@@ -406,8 +453,11 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         if (actionType.equals(TRACK_ACTION_TYPE)) {
             SensorsAnalyticsUtil.assertKey(EVENT_NAME, eventName);
         }
+
         worker.doAddEventIdentity(identityMap, actionType, eventName, properties);
     }
+
+
 
     private void assertIdentityMap(String actionType, Map<String, String> identityMap) throws InvalidArgumentException {
         for (Map.Entry<String, String> entry : identityMap.entrySet()) {

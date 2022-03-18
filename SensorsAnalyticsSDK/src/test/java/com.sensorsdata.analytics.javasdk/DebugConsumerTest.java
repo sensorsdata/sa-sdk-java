@@ -3,7 +3,6 @@ package com.sensorsdata.analytics.javasdk;
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
 import com.sensorsdata.analytics.javasdk.consumer.DebugConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import org.junit.Test;
 
 import java.util.Calendar;

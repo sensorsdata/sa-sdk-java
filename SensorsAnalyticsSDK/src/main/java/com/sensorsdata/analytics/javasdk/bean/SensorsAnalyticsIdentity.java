@@ -6,12 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Getter
-@Setter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter(AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SensorsAnalyticsIdentity {
     // 用户登录 ID
     public static final String LOGIN_ID = "$identity_login_id";
@@ -19,8 +20,10 @@ public class SensorsAnalyticsIdentity {
     public static final String MOBILE = "$identity_mobile";
     // 邮箱
     public static final String EMAIL = "$identity_email";
-
-    private Map<String, String> identityMap;
+    /**
+     * 用户纬度标识集合
+     */
+    protected Map<String, String> identityMap;
 
     public static Builder builder() {
         return new Builder();
@@ -28,10 +31,12 @@ public class SensorsAnalyticsIdentity {
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Builder {
-        private Map<String, String> idMap = new HashMap<String, String>();
+        private final Map<String, String> idMap = new LinkedHashMap<>();
 
         public SensorsAnalyticsIdentity.Builder identityMap(Map<String, String> identityMap) {
-            this.idMap.putAll(identityMap);
+            if (identityMap != null) {
+                this.idMap.putAll(identityMap);
+            }
             return this;
         }
 

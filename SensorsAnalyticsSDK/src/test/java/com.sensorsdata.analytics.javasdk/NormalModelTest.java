@@ -1,22 +1,13 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * 普通模式校验
@@ -37,15 +28,7 @@ public class NormalModelTest extends SensorsBaseTest {
     properties.put("$project", "abc");
     properties.put("$token", "123");
     sa.track("123", true, "test", properties);
-    assertEquals(1, res.size());
-    assertEquals("123", res.get(0).get("distinct_id"));
-    assertEquals("test", res.get(0).get("event"));
-    assertNotNull(res.get(0).get("time"));
-    assertNotNull(res.get(0).get("_track_id"));
-    assertEquals("track", res.get(0).get("type"));
-    assertNotNull(res.get(0).get("properties"));
-    assertNotNull(res.get(0).get("project"));
-    assertNotNull(res.get(0).get("token"));
+    assertEventData(data);
   }
 
   /**
@@ -59,9 +42,9 @@ public class NormalModelTest extends SensorsBaseTest {
         .setEventName("test")
         .build();
     sa.track(eventRecord);
-    assertEquals("abc", res.get(0).get("distinct_id"));
-    assertNull(res.get(0).get("$is_login_id"));
-    Map<?, ?> result = (Map<?, ?>) res.get(0).get("properties");
+    assertEquals("abc", data.get("distinct_id"));
+    assertNull(data.get("$is_login_id"));
+    Map<?, ?> result = (Map<?, ?>) data.get("properties");
     assertNull(result.get("$is_login_id"));
   }
 
@@ -76,9 +59,9 @@ public class NormalModelTest extends SensorsBaseTest {
         .setEventName("test")
         .build();
     sa.track(eventRecord);
-    assertEquals("abc", res.get(0).get("distinct_id"));
-    assertNull(res.get(0).get("$is_login_id"));
-    Map<?, ?> result = (Map<?, ?>) res.get(0).get("properties");
+    assertEquals("abc", data.get("distinct_id"));
+    assertNull(data.get("$is_login_id"));
+    Map<?, ?> result = (Map<?, ?>) data.get("properties");
     assertTrue((Boolean) result.get("$is_login_id"));
   }
 
@@ -101,7 +84,7 @@ public class NormalModelTest extends SensorsBaseTest {
         .addProperty("list1", list)
         .build();
     sa.profileSet(userRecord);
-    Map<?, ?> result = (Map<?, ?>) res.get(0).get("properties");
+    Map<?, ?> result = (Map<?, ?>) data.get("properties");
     assertEquals(1234, result.get("number1"));
     assertEquals(date, result.get("date1"));
     assertEquals("str", result.get("String1"));
@@ -115,10 +98,7 @@ public class NormalModelTest extends SensorsBaseTest {
   @Test
   public void checkTrackSignUp() throws InvalidArgumentException {
     sa.trackSignUp("123", "345");
-    assertEquals("track_signup", res.get(0).get("type"));
-    assertEquals("123", res.get(0).get("distinct_id"));
-    assertEquals("345", res.get(0).get("original_id"));
-    assertEquals("$SignUp", res.get(0).get("event"));
+    assertEventData(data);
   }
 
 }

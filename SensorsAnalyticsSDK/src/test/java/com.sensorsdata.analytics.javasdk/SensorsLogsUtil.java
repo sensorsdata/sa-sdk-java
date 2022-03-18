@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sensorsdata.analytics.javasdk.bean.FailedData;
 import com.sensorsdata.analytics.javasdk.consumer.FastBatchConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-import lombok.SneakyThrows;
 
 import java.util.ArrayList;
 import java.util.List;
