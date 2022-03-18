@@ -1,14 +1,13 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import org.junit.Test;
 
 import java.util.ArrayList;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * id-mapping profile 相关接口单元测试

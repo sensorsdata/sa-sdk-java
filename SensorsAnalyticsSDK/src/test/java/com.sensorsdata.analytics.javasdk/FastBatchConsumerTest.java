@@ -1,27 +1,19 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sensorsdata.analytics.javasdk.bean.FailedData;
 import com.sensorsdata.analytics.javasdk.consumer.Callback;
 import com.sensorsdata.analytics.javasdk.consumer.FastBatchConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import static org.junit.Assert.*;
 
 /**
  * FastBatchConsumer 单测

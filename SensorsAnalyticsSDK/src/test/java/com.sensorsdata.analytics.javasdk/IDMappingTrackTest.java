@@ -1,21 +1,16 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.consumer.DebugConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import org.junit.Test;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * Id-Mapping track 相关接口单元测试
@@ -49,6 +44,9 @@ public class IDMappingTrackTest extends SensorsBaseTest {
     // assertEquals("123", data.get("distinct_id"));
     // 3.4.2 版本以上 distinct_id 生成策略调整
     assertEquals("login_id+123", data.get("distinct_id"));
+
+    Map<String,Object> prop = (Map<String,Object>)data.get("properties");
+    assertFalse((Boolean) prop.get("$is_login_id"));
     assertNotNull(data.get("properties"));
     assertNotNull(data.get("project"));
     assertNotNull(data.get("token"));

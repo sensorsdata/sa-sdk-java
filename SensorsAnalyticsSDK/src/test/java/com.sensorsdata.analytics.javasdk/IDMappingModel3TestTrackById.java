@@ -1,117 +1,135 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
+import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
-import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static org.junit.Assert.*;
 
-
+/**
+ *  适用于 v3.4.2+ 版本
+ */
 public class IDMappingModel3TestTrackById extends SensorsBaseTest {
-
     private BatchConsumer batchConsumer;
 
     private List<Map<String, Object>> messageList;
-    private ConcurrentLoggingConsumer consumer;
-
-    private StringBuilder messageBuffer;
     SensorsAnalytics saTmp;
-
-//    @Before
-//    public void init() throws NoSuchFieldException, IllegalAccessException {
-//        consumer = new ConcurrentLoggingConsumer("file.log");
-//        Field field = consumer.getClass().getSuperclass().getDeclaredField("messageBuffer");
-//        field.setAccessible(true);
-//        messageBuffer = (StringBuilder) field.get(consumer);
-//        saTmp = new SensorsAnalytics(consumer);
-//    }
 
     @Before
     public void init() throws NoSuchFieldException, IllegalAccessException {
         String url = "http://10.120.73.51:8106/sa?project=default&token=";
-//        "\"http://10.120.235.239:8106/sa?project=default\""
+        // 注意要设置 bulkSize 稍微大一点，这里设置为 100，否则超过 1 条就上报，messageList 里面拿不到事件数据
         batchConsumer = new BatchConsumer(url, 100, true, 3);
-        Field field = batchConsumer.getClass().getDeclaredField("messageList");
+        // 通过反射机制获取 BatchConsumer 的 messageList
+        Field field = batchConsumer.getClass().getDeclaredField("messageList"); // messageList 是 BatchConsumer 用来暂存事件数据的成员变量
         field.setAccessible(true);
         messageList = (List<Map<String, Object>>) field.get(batchConsumer);
         saTmp = new SensorsAnalytics(batchConsumer);
     }
 
+    private void assertNotNullProp(){
+        assertNotNull(messageList.get(0).get("identities"));
+        assertNotNull(messageList.get(0).get("time"));
+        assertNotNull(messageList.get(0).get("_track_id"));
+        assertNotNull(messageList.get(0).get("properties"));
+        assertNotNull(messageList.get(0).get("project"));
+        assertNotNull(messageList.get(0).get("token"));
+    }
+
     @Test
-    public void TestSingleIdentity() throws InvalidArgumentException{
+    public void testSingleIdentity() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
                 .build();
         Map<String, Object> properties = new HashMap<>();
-//        properties.put("test", "test");
-//        properties.put("$project", "abc");
-//        properties.put("$token", "123");
+        properties.put("test", "test");
+        properties.put("$project", "abc");
+        properties.put("$token", "123");
         saTmp.trackById(identity, "test", properties);
-        saTmp.bind(identity,identity,identity);
-//        System.out.println(messageList.isEmpty());
         assertEquals(1, messageList.size());
-        assertNotNull(messageList.get(0).get("identities"));
-        assertNotNull(messageList.get(0).get("time"));
-        assertNotNull(messageList.get(0).get("_track_id"));
-        assertEquals("test", messageList.get(0).get("event"));
+        assertNotNullProp();
+
+        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
+        Boolean isLoginID = (Boolean)props.get("$is_login_id");
+        assertTrue(isLoginID);
+
         assertEquals("123", messageList.get(0).get("distinct_id"));
-        assertNotNull(messageList.get(0).get("properties"));
-        assertNotNull(messageList.get(0).get("project"));
-        assertNotNull(messageList.get(0).get("token"));
+        assertEquals("test", messageList.get(0).get("event"));
         saTmp.flush();
     }
 
     @Test
-    public void TestTrackByIdMultiIdentity() throws InvalidArgumentException{
+    public void testTrackByIdMultiIdentity() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
                 .addIdentityProperty(SensorsAnalyticsIdentity.MOBILE, "13800000001")
                 .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "email1@qq.com")
                 .build();
         Map<String, Object> properties = new HashMap<>();
-//        properties.put("test", "test");
-//        properties.put("$project", "abc");
-//        properties.put("$token", "123");
-        saTmp.trackById(identity, "TestMultiIdentity", properties);
+        properties.put("test", "test");
+        properties.put("$project", "abc");
+        properties.put("$token", "123");
+        saTmp.trackById(identity, "testMultiIdentity", properties);
         assertEquals(1, messageList.size());
-        assertNotNull(messageList.get(0).get("identities"));
-        assertNotNull(messageList.get(0).get("time"));
-        assertNotNull(messageList.get(0).get("_track_id"));
-        assertEquals("TestMultiIdentity", messageList.get(0).get("event"));
+
+        assertNotNullProp();
+
+        assertEquals("testMultiIdentity", messageList.get(0).get("event"));
         assertEquals("123", messageList.get(0).get("distinct_id"));
-        assertNotNull(messageList.get(0).get("properties"));
-        assertNotNull(messageList.get(0).get("project"));
-        assertNotNull(messageList.get(0).get("token"));
+
+        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
+        Boolean isLoginID = (Boolean)props.get("$is_login_id");
+        assertTrue(isLoginID);
+
         saTmp.flush();
     }
 
     @Test
-    public void TestTrackByIdPropertiesNull() throws InvalidArgumentException{
+    public void testTrackByIdMultiIdentity02() throws InvalidArgumentException{
+        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+                .addIdentityProperty(SensorsAnalyticsIdentity.MOBILE, "13800000001")
+                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "email1@qq.com")
+                .addIdentityProperty("MyID", "001")
+                .build();
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("test", "test");
+        properties.put("$project", "abc");
+        properties.put("$token", "123");
+
+        saTmp.trackById(identity, "testMultiIdentity", properties);
+        assertEquals(1, messageList.size());
+
+        assertNotNullProp();
+
+        assertEquals("testMultiIdentity", messageList.get(0).get("event"));
+
+        // v3.4.2 新增逻辑：distinct_id 取第一个维度标识作为 distinct_id，且取值格式为 key+value；
+        // 为："$identity_mobile+13800000001"
+        assertEquals("$identity_mobile+13800000001", messageList.get(0).get("distinct_id"));
+
+        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
+        Boolean isLoginID = (Boolean)props.get("$is_login_id");
+        assertFalse(isLoginID);
+
+        saTmp.flush();
+    }
+
+
+    @Test
+    public void testTrackByIdPropertiesNull() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
                 .addIdentityProperty(SensorsAnalyticsIdentity.MOBILE, "13800000001")
                 .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "email1@qq.com")
                 .build();
         Map<String, Object> properties = null;
-//        properties.put("test", "test");
-//        properties.put("$project", "abc");
-//        properties.put("$token", "123");
-        saTmp.trackById(null, "TestPropertiesNull", properties);
+        saTmp.trackById(identity, "testPropertiesNull", properties);
         assertFalse(messageList.isEmpty());
 
         Map<String, Object> identities = (Map<String, Object>) messageList.get(0).get("identities");
@@ -123,28 +141,37 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityNull() throws InvalidArgumentException{
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("test", "test");
-        properties.put("$project", "abc");
-        properties.put("$token", "123");
-        saTmp.trackById(null, "TestPropertiesNull", properties);
+    public void testTrackByIdInvalidIdentityNull() throws InvalidArgumentException{
+        try {
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("test", "test");
+            properties.put("$project", "abc");
+            properties.put("$token", "123");
+            saTmp.trackById(null, "testPropertiesNull", properties);
+            fail("[ERROR] should throw NullPointerException");
+        }catch (Exception e){
+            assertEquals("analyticsIdentity is marked non-null but is null", e.getMessage());
+        }
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityEmpty() throws InvalidArgumentException{
-        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
-                .build();
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("test", "test");
-        properties.put("$project", "abc");
-        properties.put("$token", "123");
-        saTmp.trackById(identity, "test", properties);
-        saTmp.flush();
+    public void testTrackByIdInvalidIdentityEmpty() throws InvalidArgumentException{
+        try {
+            SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+                    .build();
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("test", "test");
+            properties.put("$project", "abc");
+            properties.put("$token", "123");
+            saTmp.trackById(identity, "test", properties);
+            saTmp.flush();
+        }catch (Exception e){
+            assertEquals("The identity is empty.", e.getMessage());
+        }
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityKey01() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityKey01() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(null, "123")
@@ -160,7 +187,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityKey02() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityKey02() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty("", "123")
@@ -176,7 +203,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityKey03() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityKey03() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty("123id", "123")
@@ -192,7 +219,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityKey04() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityKey04() throws InvalidArgumentException{
         String key = "用户名";
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
@@ -209,7 +236,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityKey05() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityKey05() throws InvalidArgumentException{
         String key = "abc@#%^&*";
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
@@ -226,7 +253,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityKey06() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityKey06() throws InvalidArgumentException{
         String keys[] = {"date", "datetime", "distinct_id", "event", "events", "first_id", "id", "original_id",
                 "device_id", "properties", "second_id", "time", "user_id", "users", "user_group123", "user_tag456"};
 
@@ -248,7 +275,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityKey07() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityKey07() throws InvalidArgumentException{
         String key = "";
         for(int i = 0; i < 100; i++){
             key = key + i;
@@ -269,7 +296,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityValue01() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityValue01() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, null)
@@ -285,7 +312,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityValue03() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityValue03() throws InvalidArgumentException{
         String value = "";
         for(int i = 0; i < 255; i++){
             value = value + i;
@@ -305,7 +332,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityValue02() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityValue02() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "")
@@ -321,7 +348,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidIdentityEventName01() throws InvalidArgumentException{
+    public void testTrackByIdInvalidIdentityEventName01() throws InvalidArgumentException{
         // 创建集合
         ArrayList<String> eventNames = new ArrayList<String>();
         eventNames.add("");
@@ -339,7 +366,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
                 properties.put("$token", "123");
                 saTmp.trackById(identity, it.next(), properties);
             } catch (InvalidArgumentException e) {
-                assertEquals(String.format("The %s is empty or null.", "event name key"), e.getMessage());
+                assertEquals(String.format("The %s is empty or null.", "event_name key"), e.getMessage());
             } catch (NullPointerException e){
                 assertEquals("eventName is marked non-null but is null", e.getMessage());
             }
@@ -347,7 +374,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
     }
 
     @Test
-    public void TestTrackByIdInvalidEventName02() throws InvalidArgumentException{
+    public void testTrackByIdInvalidEventName02() throws InvalidArgumentException{
         String eventNames[] = {"date", "datetime", "distinct_id", "event", "events", "first_id", "id", "original_id",
                 "device_id", "properties", "second_id", "time", "user_id", "users", "user_group123", "user_tag456"};
 
@@ -363,7 +390,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
                 saTmp.trackById(identity, eventNames[i], properties);
             }catch (InvalidArgumentException e){
                 System.out.println(e.getMessage());
-                assertEquals(String.format("The %s key '%s' is invalid.", "event name", eventNames[i]), e.getMessage());
+                assertEquals(String.format("The %s key '%s' is invalid.", "event_name", eventNames[i]), e.getMessage());
             }
         }
     }
@@ -372,7 +399,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
      * 校验 ID-Mapping bind 接口
      */
     @Test
-    public void TestIdMappingBind() throws InvalidArgumentException {
+    public void testIdMappingBind() throws InvalidArgumentException {
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty("$identity_mobile", "123")
                 .addIdentityProperty("$identity_email", "fz@163.com")
@@ -392,7 +419,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
      * 校验 ID—Mapping bind 接口单用户属性
      */
     @Test
-    public void TestIdMappingBindOneId() {
+    public void testIdMappingBindOneId() {
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty("$identity_mobile", "123")
                 .build();
@@ -471,4 +498,251 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
         Map<?, ?> result = (Map<?, ?>) res.get(0).get("properties");
         assertEquals("123", result.get("asd"));
     }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 传入正常 distinctId，identityMap 传入 $identity_login_id
+     */
+    @Test
+    public void testTrackByIdIDMEventRecord() throws InvalidArgumentException  {
+        IDMEventRecord record = IDMEventRecord.starter()
+                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
+                .setDistinctId("disId123")
+                .setEventName("test")
+                .addProperty("test", "test")
+                .addProperty("$project", "default")
+                .addProperty("$token", "123")
+                .build();
+
+
+        saTmp.trackById(record);
+        assertEquals(1, messageList.size());
+        assertNotNullProp();
+
+        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
+        Boolean isLoginID = (Boolean)props.get("$is_login_id");
+        assertFalse(isLoginID);
+
+        assertEquals("disId123", messageList.get(0).get("distinct_id"));
+        assertEquals("test", messageList.get(0).get("event"));
+    }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 传入正常 distinctId，identityMap 传入其他用户标识
+     */
+    @Test
+    public void testTrackByIdIDMEventRecord01() throws InvalidArgumentException {
+        IDMEventRecord record = IDMEventRecord.starter()
+                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "email1@qq.com")
+                .setDistinctId("disId123")
+                .setEventName("test")
+                .addProperty("test", "test")
+                .addProperty("$project", "default")
+                .addProperty("$token", "123")
+                .build();
+
+        saTmp.trackById(record);
+        assertEquals(1, messageList.size());
+        assertNotNullProp();
+
+        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
+        Boolean isLoginID = (Boolean)props.get("$is_login_id");
+        assertFalse(isLoginID);
+
+        assertEquals("disId123", messageList.get(0).get("distinct_id"));
+        assertEquals("test", messageList.get(0).get("event"));
+    }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 不传入 distinctId，identityMap 传入 $identity_login_id
+     */
+
+    @Test
+    public void testTrackByIdIDMEventRecord02() throws InvalidArgumentException {
+        IDMEventRecord record = IDMEventRecord.starter()
+                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "xc001")
+                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "email1@qq.com")
+                .setEventName("test")
+                .addProperty("test", "test")
+                .addProperty("$project", "default")
+                .addProperty("$token", "123")
+                .build();
+
+        saTmp.trackById(record);
+        assertEquals(1, messageList.size());
+        assertNotNullProp();
+
+        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
+        Boolean isLoginID = (Boolean)props.get("$is_login_id");
+        assertTrue(isLoginID);
+
+        assertEquals("xc001", messageList.get(0).get("distinct_id"));
+        assertEquals("test", messageList.get(0).get("event"));
+    }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 不传入 distinctId，identityMap 传入其他用户标识
+     */
+
+    @Test
+    public void testTrackByIdIDMEventRecord03() throws InvalidArgumentException {
+        IDMEventRecord record = IDMEventRecord.starter()
+                .addIdentityProperty(SensorsAnalyticsIdentity.MOBILE, "1300000055")
+                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "email1@qq.com")
+                .setEventName("test")
+                .addProperty("test", "test")
+                .addProperty("$project", "default")
+                .addProperty("$token", "123")
+                .build();
+
+        saTmp.trackById(record);
+        assertEquals(1, messageList.size());
+        assertNotNullProp();
+
+        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
+        Boolean isLoginID = (Boolean)props.get("$is_login_id");
+        assertFalse(isLoginID);
+
+        assertEquals("$identity_mobile+1300000055", messageList.get(0).get("distinct_id"));
+        assertEquals("test", messageList.get(0).get("event"));
+    }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 不传入 distinctId，identityMap 传入其他用户标识
+     */
+
+    @Test
+    public void testTrackByIdIDMEventRecord04() throws InvalidArgumentException {
+        try {
+            IDMEventRecord record = IDMEventRecord.starter()
+                    .setDistinctId("dis123")
+                    .setEventName("test")
+                    .addProperty("test", "test")
+                    .addProperty("$project", "default")
+                    .addProperty("$token", "123")
+                    .build();
+
+            fail("[ERROR] should throw InvalidArgumentException");
+            saTmp.trackById(record);
+        }catch(InvalidArgumentException e){
+            e.printStackTrace();
+            assertEquals("The identity is empty.", e.getMessage());
+        }
+
+    }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 传入异常 distinctId = null
+     */
+    @Test
+    public void testTrackByIdIDMEventRecordInvalid01() throws InvalidArgumentException{
+        try {
+            IDMEventRecord record = IDMEventRecord.starter()
+                    .setDistinctId(null)
+                    .setEventName("test")
+                    .addProperty("test", "test")
+                    .addProperty("$project", "default")
+                    .addProperty("$token", "123")
+                    .build();
+
+            fail("[ERROR] should throw InvalidArgumentException");
+            saTmp.trackById(record);
+        }catch(NullPointerException e){
+            e.printStackTrace();
+            assertEquals("distinctId is marked non-null but is null", e.getMessage());
+        }
+    }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 传入异常 distinctId = null
+     */
+    @Test
+    public void testTrackByIdIDMEventRecordInvalid02() throws InvalidArgumentException {
+        try {
+            IDMEventRecord record = IDMEventRecord.starter()
+                    .setDistinctId(null)
+                    .addIdentityProperty(SensorsAnalyticsIdentity.MOBILE, "1300000055")
+                    .setEventName("test")
+                    .addProperty("test", "test")
+                    .addProperty("$project", "default")
+                    .addProperty("$token", "123")
+                    .build();
+
+            saTmp.trackById(record);
+            fail("[ERROR] should throw InvalidArgumentException");
+        }catch(NullPointerException e){
+            e.printStackTrace();
+            assertEquals("distinctId is marked non-null but is null", e.getMessage());
+        }
+    }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 传入异常 distinctId = ""
+     */
+    @Test
+    public void testTrackByIdIDMEventRecordInvalid03() {
+        try {
+            IDMEventRecord record = IDMEventRecord.starter()
+                    .setDistinctId("")
+                    .setEventName("test")
+                    .addProperty("test", "test")
+                    .addProperty("$project", "default")
+                    .addProperty("$token", "123")
+                    .build();
+
+            saTmp.trackById(record);
+            fail("[ERROR] should throw InvalidArgumentException");
+        }catch(InvalidArgumentException e){
+            e.printStackTrace();
+            assertEquals("The identity is empty.", e.getMessage());
+        }
+    }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 传入异常 distinctId = ""
+     */
+    @Test
+    public void testTrackByIdIDMEventRecordInvalid04()  {
+        try {
+            IDMEventRecord record = IDMEventRecord.starter()
+                    .setDistinctId("")
+                    .addIdentityProperty(SensorsAnalyticsIdentity.MOBILE, "1300000055")
+                    .setEventName("test")
+                    .addProperty("test", "test")
+                    .addProperty("$project", "default")
+                    .addProperty("$token", "123")
+                    .build();
+
+            saTmp.trackById(record);
+            fail("[ERROR] should throw InvalidArgumentException");
+        }catch(InvalidArgumentException e){
+            e.printStackTrace();
+            assertEquals("The distinct_id value is empty or null.", e.getMessage());
+        }
+    }
+
+    /**
+     *  v3.4.2 后新增接口 trackById(@NonNull IDMEventRecord idmEventRecord) 测试
+     *  测试点：IDMEventRecord 整体为 null
+     */
+    @Test
+    public void testTrackByIdIDMEventRecordInvalid05()  {
+        try {
+            saTmp.trackById(null);
+            fail("[ERROR] should throw NullPointerException");
+        }catch(Exception e){
+            e.printStackTrace();
+            assertEquals("idmEventRecord is marked non-null but is null", e.getMessage());
+        }
+    }
+
+
 }

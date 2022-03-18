@@ -1,21 +1,13 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * 普通模式校验
