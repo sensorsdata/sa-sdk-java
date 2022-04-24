@@ -26,19 +26,6 @@
         </license>
     </licenses>
 
-    <developers>
-        <developer>
-            <name>fangzhuo</name>
-            <email>fangzhuo@sensorsdata.cn</email>
-            <url>http://sensorsdata.cn</url>
-        </developer>
-        <developer>
-            <name>dengshiwei</name>
-            <email>dengshiwei@sensorsdata.cn</email>
-            <url>http://sensorsdata.cn</url>
-        </developer>
-    </developers>
-
     <scm>
         <connection>scm:git@github.com:sensorsdata/sa-sdk-java.git</connection>
         <developerConnection>scm:git@github.com:sensorsdata/sa-sdk-java.git</developerConnection>

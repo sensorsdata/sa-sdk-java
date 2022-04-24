@@ -1,7 +1,15 @@
 package com.sensorsdata.analytics.javasdk;
 
 
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_METHOD_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_VERSION_SYSTEM_ATTR;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -13,9 +21,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static com.sensorsdata.analytics.javasdk.SensorsConst.*;
-import static org.junit.Assert.*;
 
 public class SensorsBaseTest {
   /**
@@ -108,6 +113,8 @@ public class SensorsBaseTest {
     assertTrue("数据中没有 lib 节点！", data.containsKey("lib"));
     assertTrue("数据中没有 distinct_id 节点！", data.containsKey("distinct_id"));
     assertTrue("数据中没有 time 节点！", data.containsKey("time"));
+    //增加 time 类型校验
+    assertTrue("数据中 time 节点类型不正确！", data.get("time") instanceof Long);
     assertTrue("数据中没有 type 节点！", data.containsKey("type"));
     assertFalse("数据中包含 item_id 节点！", data.containsKey("item_id"));
     assertFalse("数据中包含 item_type 节点！", data.containsKey("item_type"));
