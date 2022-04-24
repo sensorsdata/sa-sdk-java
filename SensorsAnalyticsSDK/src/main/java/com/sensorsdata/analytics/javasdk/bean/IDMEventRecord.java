@@ -44,12 +44,16 @@ public class IDMEventRecord extends SensorsAnalyticsIdentity {
    */
   private final Map<String, Object> propertyMap;
 
+  private final Integer trackId;
+
+
   private IDMEventRecord(Map<String, String> identityMap, String eventName, String distinctId,
-      Map<String, Object> propertyMap) {
+      Map<String, Object> propertyMap, Integer trackId) {
     super(identityMap);
     this.eventName = eventName;
     this.distinctId = distinctId;
     this.propertyMap = propertyMap;
+    this.trackId = trackId;
   }
 
   public static IDMBuilder starter() {
@@ -62,6 +66,7 @@ public class IDMEventRecord extends SensorsAnalyticsIdentity {
     private final Map<String, Object> propertyMap = new HashMap<>();
     private String eventName;
     private String distinctId;
+    private Integer trackId;
 
     public IDMEventRecord build() throws InvalidArgumentException {
       SensorsAnalyticsUtil.assertKey("event_name", eventName);
@@ -74,7 +79,9 @@ public class IDMEventRecord extends SensorsAnalyticsIdentity {
       Pair<String, Boolean> resPair =
           SensorsAnalyticsUtil.checkIdentitiesAndGenerateDistinctId(distinctId, idMap);
       propertyMap.put(LOGIN_SYSTEM_ATTR, resPair.getValue());
-      return new IDMEventRecord(idMap, eventName, resPair.getKey(), propertyMap);
+      String message = String.format("[distinct_id=%s,event_name=%s]",distinctId,eventName);
+      trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
+      return new IDMEventRecord(idMap, eventName, resPair.getKey(), propertyMap,trackId);
     }
 
     public IDMEventRecord.IDMBuilder identityMap(Map<String, String> identityMap) {

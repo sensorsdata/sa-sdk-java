@@ -2,8 +2,11 @@ package com.sensorsdata.analytics.javasdk;
 
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
 
+import com.sensorsdata.analytics.javasdk.bean.EventRecord;
 import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
+import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
+import com.sensorsdata.analytics.javasdk.bean.UserRecord;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import lombok.Getter;
@@ -12,7 +15,6 @@ import lombok.Setter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 /**
  * 神策数据格式
@@ -77,18 +79,39 @@ class SensorsData {
    */
   private String itemId;
 
+  protected SensorsData(EventRecord eventRecord, String actionType) {
+    this(eventRecord.getDistinctId(), eventRecord.getOriginalId(), null, actionType, eventRecord.getEventName(),
+        eventRecord.getPropertyMap(), null, null, eventRecord.getTrackId(), eventRecord.getIsLoginId());
+  }
+
+  protected SensorsData(ItemRecord itemRecord, String actionType ) {
+    this(null,null,null,actionType,null,itemRecord.getPropertyMap(),
+        itemRecord.getItemType(),itemRecord.getItemId(), itemRecord.getTrackId(), null);
+  }
+
+  protected SensorsData (UserRecord userRecord, String actionType) {
+    this(userRecord.getDistinctId(), actionType, null, userRecord.getPropertyMap(), userRecord.getTrackId(),
+        userRecord.getIsLoginId());
+  }
+
   protected SensorsData(IDMUserRecord userRecord, String actionType) {
-    this(userRecord.getDistinctId(), actionType, userRecord.getIdentityMap(), userRecord.getPropertyMap());
+    this(userRecord.getDistinctId(), actionType, userRecord.getIdentityMap(), userRecord.getPropertyMap(),
+        userRecord.getTrackId(), null);
   }
 
   protected SensorsData(IDMEventRecord eventRecord) {
     this(eventRecord.getDistinctId(), eventRecord.getIdentityMap(), eventRecord.getEventName(),
-        eventRecord.getPropertyMap());
+        eventRecord.getPropertyMap(), eventRecord.getTrackId(), null);
+  }
+  
+  protected SensorsData(IDMEventRecord eventRecord, String actionType) {
+    this(eventRecord.getDistinctId(), null, eventRecord.getIdentityMap(), actionType,
+        eventRecord.getEventName(), eventRecord.getPropertyMap(), null, null, eventRecord.getTrackId(), null);
   }
 
   protected SensorsData(String distinctId, String type, Map<String, String> identities,
-      Map<String, Object> properties) {
-    this(distinctId, null, identities, type, null, properties, null, null);
+      Map<String, Object> properties, Integer trackId, Boolean loginId) {
+    this(distinctId, null, identities, type, null, properties, null, null, trackId, loginId);
   }
 
   /**
@@ -99,13 +122,13 @@ class SensorsData {
    * @param properties 事件属性集合
    */
   protected SensorsData(String distinctId, Map<String, String> identities, String event,
-      Map<String, Object> properties) {
-    this(distinctId, null, identities, TRACK_ACTION_TYPE, event, properties, null, null);
+      Map<String, Object> properties, Integer trackId, Boolean loginId) {
+    this(distinctId, null, identities, TRACK_ACTION_TYPE, event, properties, null, null, trackId, loginId);
   }
 
   private SensorsData(String distinctId, String originalId, Map<String, String> identities, String type, String event,
-      Map<String, Object> properties, String itemType, String itemId) {
-    this.trackId = new Random().nextInt();
+      Map<String, Object> properties, String itemType, String itemId, Integer trackId, Boolean loginId) {
+    this.trackId = trackId;
     this.distinctId = distinctId;
     this.originalId = originalId;
     this.identities = identities;
@@ -116,7 +139,11 @@ class SensorsData {
     this.properties = properties;
     this.itemType = itemType;
     this.itemId = itemId;
+    if (loginId != null) {
+      this.properties.put("$is_login_id",loginId);
+    }
   }
+
 
   protected static Map<String, Object> generateData(SensorsData sensorsData) {
     Map<String, Object> eventMap = new HashMap<>();
@@ -156,6 +183,9 @@ class SensorsData {
       eventMap.put("item_type", sensorsData.getItemType());
     }
     if (sensorsData.getProperties() != null) {
+      if (sensorsData.getTrackId() != null) {
+        sensorsData.getProperties().remove(SensorsConst.TRACK_ID);
+      }
       eventMap.put("properties", sensorsData.getProperties());
     }
     return eventMap;
