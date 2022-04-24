@@ -32,7 +32,7 @@ class SensorsAnalyticsWorker {
 
   private final Consumer consumer;
 
-  private final Map<String, Object> superProperties = new ConcurrentHashMap<String, Object>();
+  private final Map<String, Object> superProperties = new ConcurrentHashMap<>();
 
   private boolean enableTimeFree = false;
 
@@ -157,7 +157,7 @@ class SensorsAnalyticsWorker {
   private Map<String, Object> generateEventMap(String distinctId, Boolean isLoginId, String originDistinctId,
       Map<String, String> identity, String actionType, String eventName, Map<String, Object> properties) {
     Map<String, Object> eventMap = new HashMap<>();
-    eventMap.put("_track_id", new Random().nextInt());
+    eventMap.put("_track_id", SensorsAnalyticsUtil.getTrackId(properties, distinctId));
     eventMap.put("type", actionType);
     eventMap.put("lib", getLibProperties());
     //开启历史数据导入
