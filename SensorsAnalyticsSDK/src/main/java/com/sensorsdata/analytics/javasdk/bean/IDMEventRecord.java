@@ -1,8 +1,8 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LOGIN_SYSTEM_ATTR;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
 
+import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
@@ -44,12 +44,16 @@ public class IDMEventRecord extends SensorsAnalyticsIdentity {
    */
   private final Map<String, Object> propertyMap;
 
+  private final Integer trackId;
+
+
   private IDMEventRecord(Map<String, String> identityMap, String eventName, String distinctId,
-      Map<String, Object> propertyMap) {
+      Map<String, Object> propertyMap, Integer trackId) {
     super(identityMap);
     this.eventName = eventName;
     this.distinctId = distinctId;
     this.propertyMap = propertyMap;
+    this.trackId = trackId;
   }
 
   public static IDMBuilder starter() {
@@ -62,6 +66,7 @@ public class IDMEventRecord extends SensorsAnalyticsIdentity {
     private final Map<String, Object> propertyMap = new HashMap<>();
     private String eventName;
     private String distinctId;
+    private Integer trackId;
 
     public IDMEventRecord build() throws InvalidArgumentException {
       SensorsAnalyticsUtil.assertKey("event_name", eventName);
@@ -73,8 +78,12 @@ public class IDMEventRecord extends SensorsAnalyticsIdentity {
       }
       Pair<String, Boolean> resPair =
           SensorsAnalyticsUtil.checkIdentitiesAndGenerateDistinctId(distinctId, idMap);
-      propertyMap.put(LOGIN_SYSTEM_ATTR, resPair.getValue());
-      return new IDMEventRecord(idMap, eventName, resPair.getKey(), propertyMap);
+      if (resPair.getValue()) {
+        propertyMap.put(SensorsConst.LOGIN_SYSTEM_ATTR, true);
+      }
+      String message = String.format("[distinct_id=%s,event_name=%s]",distinctId,eventName);
+      trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
+      return new IDMEventRecord(idMap, eventName, resPair.getKey(), propertyMap,trackId);
     }
 
     public IDMEventRecord.IDMBuilder identityMap(Map<String, String> identityMap) {
@@ -97,7 +106,6 @@ public class IDMEventRecord extends SensorsAnalyticsIdentity {
     public IDMEventRecord.IDMBuilder setDistinctId(@NonNull String distinctId) {
       this.distinctId = distinctId;
       // IDM3.0 设置 distinctId,设置 $is_login_id = false,其实也可不设置
-      propertyMap.put(LOGIN_SYSTEM_ATTR, false);
       return this;
     }
 

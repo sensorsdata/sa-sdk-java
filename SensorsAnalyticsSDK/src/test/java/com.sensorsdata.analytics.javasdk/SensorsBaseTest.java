@@ -4,6 +4,9 @@ package com.sensorsdata.analytics.javasdk;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_METHOD_SYSTEM_ATTR;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_SYSTEM_ATTR;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_VERSION_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROPERTIES;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TIME_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ID;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -118,6 +121,9 @@ public class SensorsBaseTest {
     assertTrue("数据中没有 type 节点！", data.containsKey("type"));
     assertFalse("数据中包含 item_id 节点！", data.containsKey("item_id"));
     assertFalse("数据中包含 item_type 节点！", data.containsKey("item_type"));
+    if (data.containsKey(PROPERTIES)) {
+      assertProperties(data.get(PROPERTIES));
+    }
   }
 
   /**
@@ -170,5 +176,15 @@ public class SensorsBaseTest {
     assertTrue("lib 节点信息不存在 $lib_method 信息！", libMap.containsKey(LIB_METHOD_SYSTEM_ATTR));
   }
 
+  /**
+   * 校验 properties
+   * 校验原则：如果 properties 存在，判断 $time 和 $track_id 是否存在
+   */
+  protected void assertProperties(Object properties) {
+    assertTrue(properties instanceof Map);
+    Map<String, Object> propertiesMap = (Map<String, Object>) properties;
+     assertFalse("properties 中的 $time 属性并未删除", propertiesMap.containsKey(TIME_SYSTEM_ATTR));
+     assertFalse("properties 中的 $track_id 属性并未删除", propertiesMap.containsKey(TRACK_ID));
+  }
 
 }

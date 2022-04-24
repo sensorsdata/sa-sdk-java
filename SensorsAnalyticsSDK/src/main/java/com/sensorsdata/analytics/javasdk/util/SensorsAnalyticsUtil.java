@@ -28,6 +28,7 @@ import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import lombok.extern.slf4j.Slf4j;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,9 +37,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class SensorsAnalyticsUtil {
   private static final Pattern KEY_PATTERN = Pattern.compile(
       "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$|^user_group|^user_tag)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
@@ -175,6 +178,19 @@ public class SensorsAnalyticsUtil {
     if (!(KEY_PATTERN.matcher(key).matches())) {
       throw new InvalidArgumentException(String.format("The %s key '%s' is invalid.", type, key));
     }
+  }
+
+  public static Integer getTrackId(Map<String, Object> propertyMap, String message) {
+    try {
+      if (propertyMap.containsKey(SensorsConst.TRACK_ID)) {
+        return Integer.parseInt((String.valueOf(propertyMap.get(SensorsConst.TRACK_ID))));
+      }
+      return new Random().nextInt();
+    } catch (Exception e) {
+      log.error("Failed Get Track ID. {} ", message ,e);
+      return new Random().nextInt();
+    }
+
   }
 
   /**
