@@ -1,6 +1,8 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
+
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -25,10 +27,13 @@ public class UserRecord implements Serializable {
 
     private final Boolean isLoginId;
 
-    private UserRecord(Map<String, Object> propertyMap, String distinctId, Boolean isLoginId) {
+    private final Integer trackId;
+
+    private UserRecord(Map<String, Object> propertyMap, String distinctId, Boolean isLoginId, Integer trackId) {
         this.propertyMap = propertyMap;
         this.distinctId = distinctId;
         this.isLoginId = isLoginId;
+        this.trackId = trackId;
     }
 
     public static Builder builder() {
@@ -47,10 +52,13 @@ public class UserRecord implements Serializable {
         return propertyMap;
     }
 
+    public Integer getTrackId() {return trackId; }
+
     public static class Builder {
-        private final Map<String, Object> propertyMap = new HashMap<String, Object>();
+        private final Map<String, Object> propertyMap = new HashMap<>();
         private String distinctId;
         private Boolean isLoginId;
+        private Integer trackId;
 
         private Builder() {
         }
@@ -62,7 +70,10 @@ public class UserRecord implements Serializable {
             if (isLoginId == null) {
                 throw new InvalidArgumentException("The isLoginId is empty.");
             }
-            return new UserRecord(propertyMap, distinctId, isLoginId);
+            SensorsAnalyticsUtil.assertValue("distinct_id", distinctId);
+            String message = String.format("[distinct_id=%s,target_table=user]",distinctId);
+            trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
+            return new UserRecord(propertyMap, distinctId, isLoginId, trackId);
         }
 
         public UserRecord.Builder setDistinctId(String distinctId) {

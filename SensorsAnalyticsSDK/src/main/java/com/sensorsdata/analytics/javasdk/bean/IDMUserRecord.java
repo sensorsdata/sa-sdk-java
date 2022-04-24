@@ -35,10 +35,14 @@ public class IDMUserRecord extends SensorsAnalyticsIdentity {
 
   private final String distinctId;
 
-  private IDMUserRecord(Map<String, String> identityMap, Map<String, Object> propertyMap, String distinctId) {
+  private final Integer trackId;
+
+  private IDMUserRecord(Map<String, String> identityMap, Map<String, Object> propertyMap, String distinctId,
+      Integer trackId) {
     super(identityMap);
     this.propertyMap = propertyMap;
     this.distinctId = distinctId;
+    this.trackId = trackId;
   }
 
   public static IDMBuilder starter() {
@@ -50,12 +54,16 @@ public class IDMUserRecord extends SensorsAnalyticsIdentity {
     private final Map<String, String> idMap = new LinkedHashMap<>();
     private String distinctId;
     private final Map<String, Object> propertyMap = new HashMap<>();
+    private Integer trackId;
 
     public IDMUserRecord build() throws InvalidArgumentException {
       Pair<String, Boolean> resPair =
           SensorsAnalyticsUtil.checkIdentitiesAndGenerateDistinctId(distinctId, idMap);
       propertyMap.put(LOGIN_SYSTEM_ATTR, resPair.getValue());
-      return new IDMUserRecord(idMap, propertyMap, resPair.getKey());
+      // 填充 distinct_id 和 目标表
+      String message = String.format("[distinct_id=%s,target_table=user]",distinctId);
+      trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
+      return new IDMUserRecord(idMap, propertyMap, resPair.getKey(), trackId);
     }
 
     public IDMUserRecord.IDMBuilder identityMap(Map<String, String> identityMap) {
