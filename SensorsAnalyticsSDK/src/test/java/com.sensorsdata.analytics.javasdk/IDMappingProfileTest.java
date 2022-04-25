@@ -1,13 +1,16 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
-
-import static org.junit.Assert.assertEquals;
+import java.util.Map;
 
 /**
  * id-mapping profile 相关接口单元测试
@@ -21,6 +24,7 @@ public class IDMappingProfileTest extends SensorsBaseTest {
 
   private final String loginId = "fz123";
   private final String email = "fz@163.com";
+
   //------------------------------3.3.0----------------------------
 
   /**
@@ -39,7 +43,43 @@ public class IDMappingProfileTest extends SensorsBaseTest {
     assertIDM3UserData(data);
   }
 
+  /**
+   * 用户生成 IDM3.0 profile 数据的时候，不需要生成 super 里面的属性
+   * 期望 properties 不产生 super 属性
+   */
+  @Test
+  public void checkProfileSuperProperties() throws InvalidArgumentException {
+    final SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+        .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, loginId)
+        .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, email)
+        .build();
+    sa.profileSetById(identity, "test", "ddd");
+    assertIDM3UserData(data);
+    Map<String, Object> properties = (Map<String, Object>) data.get("properties");
+    assertEquals(2, properties.size());
+    assertTrue(properties.containsKey("$is_login_id"));
+    assertTrue(properties.containsKey("test"));
+  }
+
   //------------------------------3.4.2----------------------------
+
+  /**
+   * 用户生成 IDM3.0 profile 数据的时候，不需要生成 super 里面的属性
+   * 期望 properties 不产生 super 属性
+   */
+  @Test
+  public void checkProfileSuperProperties01() throws InvalidArgumentException {
+    IDMUserRecord userRecord = IDMUserRecord.starter()
+        .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "fz@163.com")
+        .addProperty("test", "ddd")
+        .build();
+    sa.profileSetById(userRecord);
+    assertIDM3UserData(data);
+    Map<String, Object> properties = (Map<String, Object>) data.get("properties");
+    assertEquals(2, properties.size());
+    assertTrue(properties.containsKey("$is_login_id"));
+    assertTrue(properties.containsKey("test"));
+  }
 
   /**
    * <p>
