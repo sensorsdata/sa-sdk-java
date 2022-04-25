@@ -1,9 +1,17 @@
 package com.sensorsdata.analytics.javasdk;
 
-import com.sensorsdata.analytics.javasdk.bean.*;
+import com.sensorsdata.analytics.javasdk.bean.EventRecord;
+import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
+import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
+import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
+import com.sensorsdata.analytics.javasdk.bean.UserRecord;
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author fz

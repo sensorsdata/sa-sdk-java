@@ -1,14 +1,9 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,7 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.*;
 
+/**
+ *  适用于 v3.4.2+ 版本
+ */
 public class IDMappingModel3TestBind extends SensorsBaseTest {
 
     private BatchConsumer batchConsumer;
@@ -28,19 +27,16 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     private StringBuilder messageBuffer;
     SensorsAnalytics saTmp;
 
-//    @Before
-//    public void init() throws NoSuchFieldException, IllegalAccessException {
-//        consumer = new ConcurrentLoggingConsumer("file.log");
-//        Field field = consumer.getClass().getSuperclass().getDeclaredField("messageBuffer");
-//        field.setAccessible(true);
-//        messageBuffer = (StringBuilder) field.get(consumer);
-//        saTmp = new SensorsAnalytics(consumer);
-//    }
+    private void initConcurrentLoggingConsumer() throws NoSuchFieldException, IllegalAccessException {
+        consumer = new ConcurrentLoggingConsumer("file.log");
+        Field field = consumer.getClass().getSuperclass().getDeclaredField("messageBuffer");
+        field.setAccessible(true);
+        messageBuffer = (StringBuilder) field.get(consumer);
+        saTmp = new SensorsAnalytics(consumer);
+    }
 
-    @Before
-    public void init() throws NoSuchFieldException, IllegalAccessException {
+    private void initBatchConsumer() throws NoSuchFieldException, IllegalAccessException {
         String url = "http://10.120.73.51:8106/sa?project=default&token=";
-//        "\"http://10.120.235.239:8106/sa?project=default\""
         batchConsumer = new BatchConsumer(url, 100, true, 3);
         Field field = batchConsumer.getClass().getDeclaredField("messageList");
         field.setAccessible(true);
@@ -48,22 +44,35 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
         saTmp = new SensorsAnalytics(batchConsumer);
     }
 
+    @Before
+    public void init() throws NoSuchFieldException, IllegalAccessException {
+        initBatchConsumer();
+    }
+
 
     /**
      * 校验 ID-Mapping bind 接口
+     * 测试点：SensorsAnalyticsIdentity 传入 $identity_login_id 和其他用户标识
      */
     @Test
-    public void TestIdMappingBind() throws InvalidArgumentException {
+    public void testIdMappingBind() throws InvalidArgumentException {
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "xc001")
                 .addIdentityProperty("$identity_mobile", "123")
                 .addIdentityProperty("$identity_email", "fz@163.com")
                 .build();
         saTmp.bind(identity);
-
+        assertEquals(1, messageList.size());
         assertNotNull(messageList.get(0).get("identities"));
         assertTrue(messageList.get(0).get("identities") instanceof Map);
+
+        Map<?, ?> lib = (Map<?, ?>) messageList.get(0).get("properties");
+        Boolean isLogin = (Boolean) lib.get("$is_login_id");
+        assertTrue(isLogin);
+        assertEquals("xc001", messageList.get(0).get("distinct_id"));
+
         Map<?, ?> result = (Map<?, ?>) messageList.get(0).get("identities");
-        assertEquals(2, result.size());
+        assertEquals(3, result.size());
         assertEquals("123", result.get("$identity_mobile"));
         assertEquals("fz@163.com", result.get("$identity_email"));
         assertEquals("$BindID", messageList.get(0).get("event"));
@@ -71,23 +80,51 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     /**
+     * 校验 ID-Mapping bind 接口
+     * 测试点：SensorsAnalyticsIdentity 传入 $identity_login_id 和其他用户标识
+     */
+    @Test
+    public void testIdMappingBindIdentity() throws InvalidArgumentException {
+        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+                .addIdentityProperty(SensorsAnalyticsIdentity.MOBILE, "123")
+                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "fz@163.com")
+                .build();
+        saTmp.bind(identity);
+        assertEquals(1, messageList.size());
+        assertNotNull(messageList.get(0).get("identities"));
+        assertTrue(messageList.get(0).get("identities") instanceof Map);
+
+        Map<?, ?> lib = (Map<?, ?>) messageList.get(0).get("properties");
+        Boolean isLogin = (Boolean) lib.get("$is_login_id");
+        assertFalse(isLogin);
+        // v3.4.2 新增逻辑：distinct_id 取第一个维度标识作为 distinct_id，且取值格式为 key+value；
+        assertEquals("$identity_mobile+123", messageList.get(0).get("distinct_id"));
+
+        Map<?, ?> result = (Map<?, ?>) messageList.get(0).get("identities");
+        assertEquals(2, result.size());
+        assertEquals("123", result.get("$identity_mobile"));
+        assertEquals("fz@163.com", result.get("$identity_email"));
+
+    }
+
+    /**
      * 校验 ID—Mapping bind 接口单用户属性
      */
     @Test
-    public void TestIdMappingBindOneId() {
+    public void testIdMappingBindOneId() {
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty("$identity_mobile", "123")
                 .build();
         try {
             saTmp.bind(identity);
+            fail("[ERROR] should throw InvalidArgumentException");
         } catch (InvalidArgumentException e) {
-            System.out.println(e.getMessage());
             assertEquals("The identities is invalid，you should have at least two identities.", e.getMessage());
         }
     }
 
     @Test
-    public void TestBindInvalidIdentityNull() throws InvalidArgumentException{
+    public void testBindInvalidIdentityNull() throws InvalidArgumentException{
         try{
             saTmp.bind(null);
         }catch (NullPointerException e){
@@ -98,7 +135,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestBindInvalidIdentityEmpty() throws InvalidArgumentException{
+    public void testBindInvalidIdentityEmpty() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .build();
@@ -112,7 +149,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestBindInvalidIdentityKey01() throws InvalidArgumentException{
+    public void testBindInvalidIdentityKey01() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty(null, "123")
@@ -126,7 +163,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestBindInvalidIdentityKey02() throws InvalidArgumentException{
+    public void testBindInvalidIdentityKey02() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty("", "123")
@@ -140,7 +177,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestBindInvalidIdentityKey03() throws InvalidArgumentException{
+    public void testBindInvalidIdentityKey03() throws InvalidArgumentException{
         String keys[] = {"123id", "用户名", "abc@#%^&*", "date", "datetime", "distinct_id", "event", "events", "first_id", "id", "original_id",
                 "device_id", "properties", "second_id", "time", "user_id", "users", "user_group123", "user_tag456"};
 
@@ -159,7 +196,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestBindInvalidIdentityKey04() throws InvalidArgumentException{
+    public void testBindInvalidIdentityKey04() throws InvalidArgumentException{
         String key = "";
         for(int i = 0; i < 100; i++){
             key = key + i;
@@ -177,7 +214,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestBindInvalidIdentityValue01() throws InvalidArgumentException{
+    public void testBindInvalidIdentityValue01() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, null)
@@ -191,7 +228,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestBindInvalidIdentityValue02() throws InvalidArgumentException{
+    public void testBindInvalidIdentityValue02() throws InvalidArgumentException{
         String value = "";
         for(int i = 0; i < 255; i++){
             value = value + i;
@@ -209,7 +246,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestBindInvalidIdentityValue03() throws InvalidArgumentException{
+    public void testBindInvalidIdentityValue03() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "")
@@ -224,31 +261,70 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
 
     /**
      * 校验 ID-Mapping unbind 接口用户格式
+     * 测试点：SensorsAnalyticsIdentity 传入 $identity_login_id
      */
     @Test
-    public void TestUnbindUserId() throws InvalidArgumentException {
+    public void testUnbindUserId() throws InvalidArgumentException {
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
-                .addIdentityProperty("id_test1", "id_value1")
+                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "xc001")
                 .build();
         saTmp.unbind(identity);
         assertNotNull(messageList.get(0).get("identities"));
+        Map<?, ?> lib = (Map<?, ?>) messageList.get(0).get("properties");
+        Boolean isLogin = (Boolean) lib.get("$is_login_id");
+        assertTrue(isLogin);
+        assertEquals("xc001", messageList.get(0).get("distinct_id"));
+
         assertTrue(messageList.get(0).get("identities") instanceof Map);
         Map<?, ?> result = (Map<?, ?>) messageList.get(0).get("identities");
-        assertEquals("id_value1", result.get("id_test1"));
+        assertEquals("xc001", result.get("$identity_login_id"));
+
         assertEquals("track_id_unbind", messageList.get(0).get("type"));
     }
 
     /**
      * 校验 ID-Mapping unbind 接口用户格式
+     * 测试点：SensorsAnalyticsIdentity 传入 $identity_login_id 和其他用户标识
      */
     @Test
-    public void TestUnbindUserId01() throws InvalidArgumentException {
+    public void testUnbindUserId01() throws InvalidArgumentException {
+        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+                .addIdentityProperty("id_test1", "id_value1")
+                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "xc001")
+                .build();
+        saTmp.unbind(identity);
+        assertNotNull(messageList.get(0).get("identities"));
+        Map<?, ?> lib = (Map<?, ?>) messageList.get(0).get("properties");
+        Boolean isLogin = (Boolean) lib.get("$is_login_id");
+        assertTrue(isLogin);
+        assertEquals("xc001", messageList.get(0).get("distinct_id"));
+
+        assertTrue(messageList.get(0).get("identities") instanceof Map);
+        Map<?, ?> result = (Map<?, ?>) messageList.get(0).get("identities");
+        assertEquals("id_value1", result.get("id_test1"));
+        assertEquals("xc001", result.get("$identity_login_id"));
+
+
+        assertEquals("track_id_unbind", messageList.get(0).get("type"));
+    }
+
+    /**
+     * 校验 ID-Mapping unbind 接口用户格式
+     * 测试点：SensorsAnalyticsIdentity 不传入 $identity_login_id
+     */
+    @Test
+    public void testUnbindUserId02() throws InvalidArgumentException {
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty("id_test1", "id_value1")
                 .addIdentityProperty("$anonymous_id", "anonymous_id_value1")
                 .addIdentityProperty("$login_id", "login_id_value1")
                 .build();
         saTmp.unbind(identity);
+        Map<?, ?> lib = (Map<?, ?>) messageList.get(0).get("properties");
+        Boolean isLogin = (Boolean) lib.get("$is_login_id");
+        assertFalse(isLogin);
+        assertEquals("id_test1+id_value1", messageList.get(0).get("distinct_id"));
+
         assertNotNull(messageList.get(0).get("identities"));
         assertTrue(messageList.get(0).get("identities") instanceof Map);
         Map<?, ?> result = (Map<?, ?>) messageList.get(0).get("identities");
@@ -257,7 +333,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestUnBindInvalidIdentityNull() throws InvalidArgumentException{
+    public void testUnBindInvalidIdentityNull() throws InvalidArgumentException{
         try{
             saTmp.unbind(null);
         }catch (NullPointerException e){
@@ -268,7 +344,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestUnBindInvalidIdentityEmpty() throws InvalidArgumentException{
+    public void testUnBindInvalidIdentityEmpty() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .build();
@@ -282,7 +358,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestUnBindInvalidIdentityKey01() throws InvalidArgumentException{
+    public void testUnBindInvalidIdentityKey01() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty(null, "123")
@@ -296,7 +372,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestUnBindInvalidIdentityKey02() throws InvalidArgumentException{
+    public void testUnBindInvalidIdentityKey02() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty("", "123")
@@ -310,7 +386,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestUnBindInvalidIdentityKey03() throws InvalidArgumentException{
+    public void testUnBindInvalidIdentityKey03() throws InvalidArgumentException{
         String keys[] = {"123id", "用户名", "abc@#%^&*", "date", "datetime", "distinct_id", "event", "events", "first_id", "id", "original_id",
                 "device_id", "properties", "second_id", "time", "user_id", "users", "user_group123", "user_tag456"};
 
@@ -329,7 +405,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestUnBindInvalidIdentityKey04() throws InvalidArgumentException{
+    public void testUnBindInvalidIdentityKey04() throws InvalidArgumentException{
         String key = "";
         for(int i = 0; i < 100; i++){
             key = key + i;
@@ -347,7 +423,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestUnBindInvalidIdentityValue01() throws InvalidArgumentException{
+    public void testUnBindInvalidIdentityValue01() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, null)
@@ -361,7 +437,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestUnBindInvalidIdentityValue02() throws InvalidArgumentException{
+    public void testUnBindInvalidIdentityValue02() throws InvalidArgumentException{
         String value = "";
         for(int i = 0; i < 255; i++){
             value = value + i;
@@ -379,7 +455,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void TestUnBindInvalidIdentityValue03() throws InvalidArgumentException{
+    public void testUnBindInvalidIdentityValue03() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                     .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "")
@@ -448,7 +524,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
      * 校验 ID-Mapping 公共属性
      */
     @Test
-    public void TestTrackByIdSuperProperties() throws InvalidArgumentException {
+    public void testTrackByIdSuperProperties() throws InvalidArgumentException {
         Map<String, Object> properties = new HashMap<>();
         properties.put("asd", "123");
         saTmp.registerSuperProperties(properties);
@@ -467,7 +543,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
      * 校验 ID-Mapping bind 接口公共属性
      */
     @Test
-    public void TestBindSuperProperties() throws InvalidArgumentException {
+    public void testBindSuperProperties() throws InvalidArgumentException {
         Map<String, Object> properties = new HashMap<>();
         properties.put("asd", "123");
         saTmp.registerSuperProperties(properties);
@@ -487,7 +563,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
      * 校验 ID_Mapping unbind 接口公共属性
      */
     @Test
-    public void TestUnbindSuperProperties() throws InvalidArgumentException {
+    public void testUnbindSuperProperties() throws InvalidArgumentException {
         Map<String, Object> properties = new HashMap<>();
         properties.put("asd", "123");
         saTmp.registerSuperProperties(properties);

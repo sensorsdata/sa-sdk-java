@@ -1,6 +1,8 @@
 package com.sensorsdata.analytics.javasdk;
 
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
+import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
+import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
@@ -497,6 +499,57 @@ public interface ISensorsAnalytics {
      * @throws InvalidArgumentException 不合法参数异常
      */
     void profileDeleteById(@NonNull SensorsAnalyticsIdentity analyticsIdentity) throws InvalidArgumentException;
+
+    /**
+     * 使用 IDM3.0 触发埋点事件
+     *
+     * @param idmEventRecord IDM 事件属性对象{@link com.sensorsdata.analytics.javasdk.bean.IDMEventRecord}
+     * @throws InvalidArgumentException 参数不合法异常
+     */
+    void trackById(@NonNull IDMEventRecord idmEventRecord) throws InvalidArgumentException;
+
+    /**
+     * 设置用户的属性。属性取值可接受类型为{@link Number}, {@link String}, {@link java.util.Date}和{@link java.util.List}；
+     * <p>
+     * 如果要设置的 properties 的 key，之前在这个用户的 profile 中已经存在，则覆盖，否则，新创建
+     *
+     * @param idmUserRecord 用户属性集合对象 {@link com.sensorsdata.analytics.javasdk.bean.IDMUserRecord}
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileSetById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException;
+
+    /**
+     * 首次设置用户的属性。
+     * 属性取值可接受类型为{@link Number}, {@link String}, {@link java.util.Date}和{@link java.util.List}；
+     *
+     * @param idmUserRecord 用户属性集合对象 {@link com.sensorsdata.analytics.javasdk.bean.IDMUserRecord}
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileSetOnceById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException;
+
+    /**
+     * 为用户的一个或多个数值类型的属性累加一个数值，若该属性不存在，则创建它并设置默认值为 0。属性取值只接受{@link Number}类型
+     *
+     * @param idmUserRecord 用户属性集合对象 {@link com.sensorsdata.analytics.javasdk.bean.IDMUserRecord}
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileIncrementById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException;
+
+    /**
+     * 为用户的一个或多个数组类型的属性追加字符串，属性取值类型必须为 {@link java.util.List}，且列表中元素的类型必须为 {@link String}
+     *
+     * @param idmUserRecord 用户属性集合对象 {@link com.sensorsdata.analytics.javasdk.bean.IDMUserRecord}
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileAppendById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException;
+
+    /**
+     * 删除用户指定属性
+     *
+     * @param idmUserRecord 用户属性集合对象 {@link com.sensorsdata.analytics.javasdk.bean.IDMUserRecord}
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileUnsetById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException;
 
     /**
      * 立即发送缓存中的所有日志
