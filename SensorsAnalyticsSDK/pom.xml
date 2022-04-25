@@ -15,7 +15,7 @@
     <groupId>com.sensorsdata.analytics.javasdk</groupId>
     <name>SensorsAnalyticsSDK</name>
     <artifactId>SensorsAnalyticsSDK</artifactId>
-    <version>3.4.2</version>
+    <version>3.4.3</version>
     <description>The official Java SDK of Sensors Analytics</description>
     <url>http://sensorsdata.cn</url>
 
@@ -25,19 +25,6 @@
             <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
-
-    <developers>
-        <developer>
-            <name>fangzhuo</name>
-            <email>fangzhuo@sensorsdata.cn</email>
-            <url>http://sensorsdata.cn</url>
-        </developer>
-        <developer>
-            <name>dengshiwei</name>
-            <email>dengshiwei@sensorsdata.cn</email>
-            <url>http://sensorsdata.cn</url>
-        </developer>
-    </developers>
 
     <scm>
         <connection>scm:git@github.com:sensorsdata/sa-sdk-java.git</connection>
