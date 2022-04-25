@@ -93,7 +93,8 @@ class SensorsAnalyticsWorker {
     if (this.superProperties.containsKey(APP_VERSION_SYSTEM_ATTR)) {
       sensorsData.getLib().put(APP_VERSION_SYSTEM_ATTR, (String) this.superProperties.get(APP_VERSION_SYSTEM_ATTR));
     }
-    if (!sensorsData.getType().startsWith("item")) {
+    // 只有 track 和 track_signup 事件才需要设置公共属性
+    if (sensorsData.getType().startsWith(TRACK_ACTION_TYPE)) {
       properties.putAll(superProperties);
     }
     //event or profile

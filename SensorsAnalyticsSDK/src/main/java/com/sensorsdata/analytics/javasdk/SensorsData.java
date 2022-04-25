@@ -141,7 +141,8 @@ class SensorsData {
     if (sensorsData.getLib() != null) {
       eventMap.put("lib", sensorsData.getLib());
     }
-    eventMap.put("time", sensorsData.getTime());
+    // fix 【SDK-4709】time 类型保持为时间戳类型
+    eventMap.put("time", sensorsData.getTime().getTime());
     if (sensorsData.getProject() != null) {
       eventMap.put("project", sensorsData.getProject());
     }
