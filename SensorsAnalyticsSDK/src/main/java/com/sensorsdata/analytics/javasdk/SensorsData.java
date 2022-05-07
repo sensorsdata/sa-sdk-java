@@ -79,38 +79,39 @@ class SensorsData {
    */
   private String itemId;
 
-  protected SensorsData(EventRecord eventRecord) {
-    this(eventRecord.getDistinctId(), null, eventRecord.getEventName(), eventRecord.getPropertyMap(),
-        eventRecord.getTrackId());
+  protected SensorsData(EventRecord eventRecord, String actionType) {
+    this(eventRecord.getDistinctId(), eventRecord.getOriginalId(), null, actionType, eventRecord.getEventName(),
+        eventRecord.getPropertyMap(), null, null, eventRecord.getTrackId(), eventRecord.getIsLoginId());
   }
 
   protected SensorsData(ItemRecord itemRecord, String actionType ) {
     this(null,null,null,actionType,null,itemRecord.getPropertyMap(),
-        itemRecord.getItemType(),itemRecord.getItemId(), itemRecord.getTrackId());
+        itemRecord.getItemType(),itemRecord.getItemId(), itemRecord.getTrackId(), null);
   }
 
   protected SensorsData (UserRecord userRecord, String actionType) {
-    this(userRecord.getDistinctId(), actionType, null, userRecord.getPropertyMap(), userRecord.getTrackId());
+    this(userRecord.getDistinctId(), actionType, null, userRecord.getPropertyMap(), userRecord.getTrackId(),
+        userRecord.getIsLoginId());
   }
 
   protected SensorsData(IDMUserRecord userRecord, String actionType) {
     this(userRecord.getDistinctId(), actionType, userRecord.getIdentityMap(), userRecord.getPropertyMap(),
-        userRecord.getTrackId());
+        userRecord.getTrackId(), null);
   }
 
   protected SensorsData(IDMEventRecord eventRecord) {
     this(eventRecord.getDistinctId(), eventRecord.getIdentityMap(), eventRecord.getEventName(),
-        eventRecord.getPropertyMap(), eventRecord.getTrackId());
+        eventRecord.getPropertyMap(), eventRecord.getTrackId(), null);
   }
   
   protected SensorsData(IDMEventRecord eventRecord, String actionType) {
     this(eventRecord.getDistinctId(), null, eventRecord.getIdentityMap(), actionType,
-        eventRecord.getEventName(), eventRecord.getPropertyMap(), null, null, eventRecord.getTrackId());
+        eventRecord.getEventName(), eventRecord.getPropertyMap(), null, null, eventRecord.getTrackId(), null);
   }
 
   protected SensorsData(String distinctId, String type, Map<String, String> identities,
-      Map<String, Object> properties, Integer trackId) {
-    this(distinctId, null, identities, type, null, properties, null, null, trackId);
+      Map<String, Object> properties, Integer trackId, Boolean loginId) {
+    this(distinctId, null, identities, type, null, properties, null, null, trackId, loginId);
   }
 
   /**
@@ -121,12 +122,12 @@ class SensorsData {
    * @param properties 事件属性集合
    */
   protected SensorsData(String distinctId, Map<String, String> identities, String event,
-      Map<String, Object> properties, Integer trackId) {
-    this(distinctId, null, identities, TRACK_ACTION_TYPE, event, properties, null, null, trackId);
+      Map<String, Object> properties, Integer trackId, Boolean loginId) {
+    this(distinctId, null, identities, TRACK_ACTION_TYPE, event, properties, null, null, trackId, loginId);
   }
 
   private SensorsData(String distinctId, String originalId, Map<String, String> identities, String type, String event,
-      Map<String, Object> properties, String itemType, String itemId, Integer trackId) {
+      Map<String, Object> properties, String itemType, String itemId, Integer trackId, Boolean loginId) {
     this.trackId = trackId;
     this.distinctId = distinctId;
     this.originalId = originalId;
@@ -138,6 +139,9 @@ class SensorsData {
     this.properties = properties;
     this.itemType = itemType;
     this.itemId = itemId;
+    if (loginId != null) {
+      this.properties.put("$is_login_id",loginId);
+    }
   }
 
 

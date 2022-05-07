@@ -28,7 +28,6 @@ import com.sensorsdata.analytics.javasdk.consumer.Consumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.NonNull;
 
 import java.util.ArrayList;
@@ -99,6 +98,20 @@ public class SensorsAnalytics implements ISensorsAnalytics {
 
     @Override
     public void profileUnset(@NonNull UserRecord userRecord) throws InvalidArgumentException {
+        if (userRecord.getPropertyMap() == null) {
+            return;
+        }
+        for (Map.Entry<String, Object> property : userRecord.getPropertyMap().entrySet()) {
+            if (!PROJECT_SYSTEM_ATTR.equals(property.getKey())) {
+                if (property.getValue() instanceof Boolean) {
+                    boolean value = (Boolean) property.getValue();
+                    if (value) {
+                        continue;
+                    }
+                }
+                throw new InvalidArgumentException("The property value of " + property.getKey() + " should be true.");
+            }
+        }
         dealProfile(userRecord, PROFILE_UNSET_ACTION_TYPE);
     }
 
@@ -397,6 +410,20 @@ public class SensorsAnalytics implements ISensorsAnalytics {
     @Override
     public void profileUnsetById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException {
         SensorsAnalyticsUtil.assertProperties(PROFILE_UNSET_ACTION_TYPE, idmUserRecord.getPropertyMap());
+        if (idmUserRecord.getPropertyMap() == null) {
+            return;
+        }
+        for (Map.Entry<String, Object> property : idmUserRecord.getPropertyMap().entrySet()) {
+            if (!PROJECT_SYSTEM_ATTR.equals(property.getKey())) {
+                if (property.getValue() instanceof Boolean) {
+                    boolean value = (Boolean) property.getValue();
+                    if (value) {
+                        continue;
+                    }
+                }
+                throw new InvalidArgumentException("The property value of " + property.getKey() + " should be true.");
+            }
+        }
         worker.doAddData(new SensorsData(idmUserRecord, PROFILE_UNSET_ACTION_TYPE));
     }
 
@@ -450,7 +477,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
             .isLoginId(isLoginId)
             .addProperties(properties)
             .build();
-        SensorsData sensorsData = new SensorsData(eventRecord);
+        SensorsData sensorsData = new SensorsData(eventRecord, actionType);
         sensorsData.setOriginalId(originDistinctId);
         worker.doAddData(sensorsData);
     }
@@ -461,6 +488,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
             throw new InvalidArgumentException("The identity is empty.");
         }
         assertIdentityMap(actionType, analyticsIdentity.getIdentityMap());
+        SensorsAnalyticsUtil.assertProperties(actionType, properties);
         IDMUserRecord idmUserRecord = IDMUserRecord.starter()
             .identityMap(analyticsIdentity.getIdentityMap())
             .addProperties(properties)

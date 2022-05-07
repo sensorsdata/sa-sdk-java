@@ -80,7 +80,7 @@ public class IDMEventRecord extends SensorsAnalyticsIdentity {
           SensorsAnalyticsUtil.checkIdentitiesAndGenerateDistinctId(distinctId, idMap);
       propertyMap.put(LOGIN_SYSTEM_ATTR, resPair.getValue());
       String message = String.format("[distinct_id=%s,event_name=%s]",distinctId,eventName);
-      trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, distinctId);
+      trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
       return new IDMEventRecord(idMap, eventName, resPair.getKey(), propertyMap,trackId);
     }
 

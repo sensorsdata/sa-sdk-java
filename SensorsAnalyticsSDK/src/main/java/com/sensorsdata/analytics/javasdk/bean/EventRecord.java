@@ -25,13 +25,16 @@ public class EventRecord implements Serializable {
 
     private final Integer trackId;
 
+    private final String originalId;
+
     private EventRecord(String eventName, String distinctId, Boolean isLoginId, Map<String, Object> propertyMap,
-            Integer trackId) {
+            Integer trackId, String originalId) {
         this.eventName = eventName;
         this.distinctId = distinctId;
         this.isLoginId = isLoginId;
         this.propertyMap = propertyMap;
         this.trackId = trackId;
+        this.originalId = originalId;
     }
 
     @Override
@@ -64,6 +67,10 @@ public class EventRecord implements Serializable {
         return isLoginId;
     }
 
+    public String getOriginalId() {
+        return originalId;
+    }
+
     public Integer getTrackId() {return trackId; }
 
     public static class Builder {
@@ -72,6 +79,7 @@ public class EventRecord implements Serializable {
         private String distinctId;
         private Boolean isLoginId;
         private Integer trackId;
+        private String originalId;
 
         private Builder() {
         }
@@ -90,7 +98,12 @@ public class EventRecord implements Serializable {
             SensorsAnalyticsUtil.assertValue("distinct_id", distinctId);
             String message = String.format("[distinct_id=%s,event_name=%s,is_login_id=%s]",distinctId,eventName,isLoginId);
             trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
-            return new EventRecord(eventName, distinctId, isLoginId, propertyMap,trackId);
+            return new EventRecord(eventName, distinctId, isLoginId, propertyMap,trackId, originalId);
+        }
+
+        public EventRecord.Builder setOriginalId(String originalId) {
+            this.originalId = originalId;
+            return this;
         }
 
         public EventRecord.Builder setEventName(String eventName) {
