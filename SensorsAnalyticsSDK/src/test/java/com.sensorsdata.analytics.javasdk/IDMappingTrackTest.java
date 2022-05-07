@@ -379,7 +379,7 @@ public class IDMappingTrackTest extends SensorsBaseTest {
         .build();
     sa.trackById(eventRecord);
     assertIDM3EventData(data);
-    assertEquals(time, data.get("time"));
+    assertEquals(time.getTime(), data.get("time"));
     assertTrue(data.containsKey("project"));
     assertEquals("test", data.get("project"));
     assertTrue(data.containsKey("token"));

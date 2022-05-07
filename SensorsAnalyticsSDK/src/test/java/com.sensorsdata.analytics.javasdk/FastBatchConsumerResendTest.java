@@ -652,7 +652,7 @@ public class FastBatchConsumerResendTest {
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));
     assertEquals("profile_set_once", messageList.get(0).get("type"));
-    assertEquals("123", messageList.get(0).get("distinct_id"));
+    assertEquals("$identity_email+123", messageList.get(0).get("distinct_id"));
     sa.flush();
   }
 
@@ -686,7 +686,7 @@ public class FastBatchConsumerResendTest {
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));
     assertEquals("profile_increment", messageList.get(0).get("type"));
-    assertEquals("123", messageList.get(0).get("distinct_id"));
+    assertEquals("$identity_email+123", messageList.get(0).get("distinct_id"));
     sa.flush();
   }
 
@@ -723,7 +723,7 @@ public class FastBatchConsumerResendTest {
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));
     assertEquals("profile_append", messageList.get(0).get("type"));
-    assertEquals("123", messageList.get(0).get("distinct_id"));
+    assertEquals("$identity_email+123", messageList.get(0).get("distinct_id"));
     sa.flush();
   }
 
@@ -749,7 +749,8 @@ public class FastBatchConsumerResendTest {
       fail();
     }
 
-    List<Map<String, Object>> messageList = dataList.get(0).getFailedData();    assertEquals(1, messageList.size());
+    List<Map<String, Object>> messageList = dataList.get(0).getFailedData();
+    assertEquals(1, messageList.size());
     assertNotNull(messageList.get(0).get("identities"));
     Map<String, Object> identities = (Map<String, Object>) messageList.get(0).get("identities");
     assertEquals("123", identities.get("$identity_email"));
@@ -761,7 +762,7 @@ public class FastBatchConsumerResendTest {
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));
     assertEquals("profile_unset", messageList.get(0).get("type"));
-    assertEquals("123", messageList.get(0).get("distinct_id"));
+    assertEquals("$identity_email+123", messageList.get(0).get("distinct_id"));
     sa.flush();
   }
 
@@ -799,7 +800,7 @@ public class FastBatchConsumerResendTest {
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));
     assertEquals("profile_append", messageList.get(0).get("type"));
-    assertEquals("123", messageList.get(0).get("distinct_id"));
+    assertEquals("$identity_email+123", messageList.get(0).get("distinct_id"));
     sa.flush();
   }
 
