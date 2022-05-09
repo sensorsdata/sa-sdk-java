@@ -646,7 +646,7 @@ public class FastBatchConsumerResendTest {
 
     Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
     assertEquals(1, props.get("age"));
-    assertEquals(false, props.get("$is_login_id"));
+    assertFalse(props.containsKey("$is_login_id"));
 
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));
@@ -680,7 +680,8 @@ public class FastBatchConsumerResendTest {
 
     Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
     assertEquals(1, props.get("age"));
-    assertEquals(false, props.get("$is_login_id"));
+    assertFalse(props.containsKey("$is_login_id"));
+    assertFalse(props.containsKey("$is_login_id"));
 
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));
@@ -717,7 +718,7 @@ public class FastBatchConsumerResendTest {
 
     Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
     assertEquals(list, props.get("favorite"));
-    assertEquals(false, props.get("$is_login_id"));
+    assertFalse(props.containsKey("$is_login_id"));
 
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));
@@ -756,7 +757,7 @@ public class FastBatchConsumerResendTest {
 
     Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
     assertEquals(true, props.get("favorite"));
-    assertEquals(false, props.get("$is_login_id"));
+    assertFalse(props.containsKey("$is_login_id"));
 
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));
@@ -794,7 +795,7 @@ public class FastBatchConsumerResendTest {
 
     Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
     assertEquals(list, props.get("favorite"));
-    assertEquals(false, props.get("$is_login_id"));
+    assertFalse(props.containsKey("$is_login_id"));
 
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));

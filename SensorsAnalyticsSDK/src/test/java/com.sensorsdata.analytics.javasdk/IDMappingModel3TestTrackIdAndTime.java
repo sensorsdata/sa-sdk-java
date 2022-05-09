@@ -15,8 +15,9 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- *  适用于 v3.4.2+ 版本
- *  测试数据是否能正常上传
+ *  适用于 v3.4.4+ 版本
+ *  测试点：验证事件的 _track_id 正常由 $track_id 生成，time 由 $time 生成。
+ *  无特殊情况，不在下面的 testcase 上一一说明
  */
 public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
     private BatchConsumer batchConsumer;
@@ -159,7 +160,8 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
 
 
     /**
-     * 校验 ID-Mapping bind 接口公共属性
+     * 【已知问题】https://jira.sensorsdata.cn/browse/SDK-4863
+     *  【Java SDK】【_track_id】公共属性设置 $time, 属性中也带 $time，同时这条事件的 time 也会由 $time 生成
      */
     @Test
     public void checkBindSuperProperties() throws InvalidArgumentException {
@@ -187,7 +189,8 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
     }
 
     /**
-     * 校验 ID_Mapping unbind 接口公共属性
+     * 【已知问题】https://jira.sensorsdata.cn/browse/SDK-4863
+     *  【Java SDK】【_track_id】公共属性设置 $time, 属性中也带 $time，同时这条事件的 time 也会由 $time 生成
      */
     @Test
     public void checkUnbindSuperProperties() throws InvalidArgumentException {

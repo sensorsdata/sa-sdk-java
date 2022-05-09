@@ -116,7 +116,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         Boolean isLoginID = (Boolean)props.get("$is_login_id");
-        assertFalse(isLoginID);
+        assertFalse(props.containsKey("$is_login_id"));
 
         saTmp.flush();
     }
@@ -522,7 +522,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         Boolean isLoginID = (Boolean)props.get("$is_login_id");
-        assertFalse(isLoginID);
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertEquals("disId123", messageList.get(0).get("distinct_id"));
         assertEquals("test", messageList.get(0).get("event"));
@@ -549,7 +549,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         Boolean isLoginID = (Boolean)props.get("$is_login_id");
-        assertFalse(isLoginID);
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertEquals("disId123", messageList.get(0).get("distinct_id"));
         assertEquals("test", messageList.get(0).get("event"));
@@ -605,7 +605,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         Boolean isLoginID = (Boolean)props.get("$is_login_id");
-        assertFalse(isLoginID);
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertEquals("$identity_mobile+1300000055", messageList.get(0).get("distinct_id"));
         assertEquals("test", messageList.get(0).get("event"));

@@ -15,11 +15,9 @@ import java.util.*;
 import static org.junit.Assert.fail;
 
 /**
- * 普通模式校验
- *
- * @author fangzhuo
- * @version 1.0.0
- * @since 2021/11/18 23:36
+ *  适用于 v3.4.4+ 版本
+ *  测试点：验证事件的 _track_id 正常由 $track_id 生成。
+ *  无特殊情况，不在下面的 testcase 上一一说明
  */
 public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
 
@@ -32,7 +30,7 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
   SensorsAnalytics sa;
 
   @Before
-  public void init() throws NoSuchFieldException, IllegalAccessException {
+  public void init() {
     String url = "http://10.120.111.143:8106/sa?project=default";
     DebugConsumer consumer = new DebugConsumer(url, true);
     sa = new SensorsAnalytics(consumer);
@@ -47,13 +45,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
     properties.put("$track_id", 111);
 
     sa.track("123", true, "test", properties);
-
-
-
-
-
-
-
   }
 
 
@@ -68,9 +59,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
     properties.put("boolean1", false);
     properties.put("$track_id", 111);
     sa.trackSignUp("123", "345",  properties);
-
-
-
   }
 
 
@@ -91,8 +79,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
     properties.put("list1", list);
     properties.put("$track_id", 111);
     sa.profileSet("123", true, properties);
-
-
   }
 
   /**
@@ -102,7 +88,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
   public void checkProfileSetDataType01() throws InvalidArgumentException {
 
     sa.profileSet("123", true, "$track_id", 111);
-
   }
   /**
    * 校验自定义属性格式是否正常
@@ -121,15 +106,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
     properties.put("list1", list);
     properties.put("$track_id", 111);
     sa.profileSetOnce("123", true, properties);
-
-
-
-
-
-
-
-
-
   }
 
   /**
@@ -141,16 +117,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
     properties.put("number1", 1234);
     properties.put("$track_id", 111);
     sa.profileIncrement("123", true, properties);
-
-
-
-
-
-
-
-
-
-
   }
 
   /**
@@ -159,13 +125,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
   @Test
   public void testProfileIncrement01() throws InvalidArgumentException {
     sa.profileIncrement("123", true, "$track_id", 111);
-
-
-
-
-
-
-
   }
 
 
@@ -186,22 +145,12 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
       fail("[ERROR] profileAppend should throw InvalidArgumentException.");
     }catch (Exception e){
       e.printStackTrace();
-
-    }
-
+  }
   }
 
   @Test
   public void testProfileAppend01() throws InvalidArgumentException{
     sa.profileAppend("123", true, "$track_id", "111");
-
-
-
-
-
-
-
-
   }
 
   // profileUnset
@@ -215,22 +164,13 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
       sa.profileUnset("123", true, properties);
       fail("[ERROR] profileUnset should throw InvalidArgumentException.");
     }catch (InvalidArgumentException e){
-
-    }
-
+  }
   }
 
   // profileUnset
   @Test
   public void testProfileUnset01() throws InvalidArgumentException{
     sa.profileUnset("123", true, "$track_id");
-
-
-
-
-
-
-
   }
 
   // profileDelete
@@ -269,12 +209,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
             .addProperty("$track_id", 111)
             .build();
     sa.track(eventRecord);
-
-
-
-
-
-
   }
 
   /**
@@ -289,12 +223,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
             .addProperty("$track_id", 111)
             .build();
     sa.track(eventRecord);
-
-
-
-
-
-
   }
 
   /**
@@ -317,12 +245,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
             .addProperty("$track_id", 111)
             .build();
     sa.profileSet(userRecord);
-
-
-
-
-
-
   }
 
   /**
@@ -345,12 +267,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
             .addProperty("$track_id", 111)
             .build();
     sa.profileSetOnce(userRecord);
-
-
-
-
-
-
   }
 
   /**
@@ -369,12 +285,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
             .addProperty("$track_id", 111)
             .build();
     sa.profileIncrement(userRecord);
-
-
-
-
-
-
   }
 
   @Test
@@ -392,9 +302,6 @@ public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
       sa.profileAppend(userRecord);
       fail("profileAppend should throw InvalidArgumentException");
     }catch (InvalidArgumentException e){
-
-    }
-
   }
-
-}
+  }
+  }

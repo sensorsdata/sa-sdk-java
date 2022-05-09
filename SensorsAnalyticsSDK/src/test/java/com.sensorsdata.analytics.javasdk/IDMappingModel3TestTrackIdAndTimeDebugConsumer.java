@@ -15,7 +15,7 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- *  适用于 v3.4.2+ 版本
+ *  适用于 v3.4.4+ 版本
  *  测试数据是否能正常上传
  */
 public class IDMappingModel3TestTrackIdAndTimeDebugConsumer extends SensorsBaseTest {
@@ -27,7 +27,8 @@ public class IDMappingModel3TestTrackIdAndTimeDebugConsumer extends SensorsBaseT
     @Before
     public void init() throws NoSuchFieldException, IllegalAccessException {
 //        String url = "http://10.120.73.51:8106/sa?project=default&token=";
-        String url = "http://10.120.111.143:8106/sa?project=default";
+//        String url = "http://10.120.111.143:8106/sa?project=default";
+        String url = "http://10.120.101.188:8106/sa?project=default";
         DebugConsumer debugConsumer = new DebugConsumer(url, true);
         saTmp = new SensorsAnalytics(debugConsumer);
     }

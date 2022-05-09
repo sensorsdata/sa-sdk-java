@@ -16,11 +16,9 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- * 普通模式校验
- *
- * @author fangzhuo
- * @version 1.0.0
- * @since 2021/11/18 23:36
+ *  适用于 v3.4.4+ 版本
+ *  测试点：验证事件的 _track_id 正常由 $track_id 生成，time 由 $time 生成。
+ *  无特殊情况，不在下面的 testcase 上一一说明
  */
 public class IDMappingModel1TrackIdAndTime extends SensorsBaseTest {
 

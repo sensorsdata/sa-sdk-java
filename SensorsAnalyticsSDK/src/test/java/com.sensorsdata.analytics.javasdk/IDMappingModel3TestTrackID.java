@@ -16,8 +16,8 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- *  适用于 v3.4.2+ 版本
- *  测试数据是否能正常上传
+ *  适用于 v3.4.4+ 版本
+ *  测试点：验证事件的 _track_id 正常由 $track_id 生成，不在下面的 testcase 上一一说明
  */
 public class IDMappingModel3TestTrackID extends SensorsBaseTest {
     private BatchConsumer batchConsumer;
@@ -32,7 +32,8 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
 //        DebugConsumer debugConsumer = new DebugConsumer(url, true);
 //        saTmp = new SensorsAnalytics(debugConsumer);
 
-        String url = "http://10.120.111.143:8106/sa?project=default";
+//        String url = "http://10.120.111.143:8106/sa?project=default";
+        String url = "http://10.120.101.188:8106/sa?project=default";
         // 注意要设置 bulkSize 稍微大一点，这里设置为 100，否则超过 1 条就上报，messageList 里面拿不到事件数据
         batchConsumer = new BatchConsumer(url, 100, true, 3);
         // 通过反射机制获取 BatchConsumer 的 messageList
@@ -68,6 +69,10 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
         assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
     }
 
+    /**
+     * 测试点： properties 传入错误的 $track_id：非 int 类型- float 类型
+     * @throws InvalidArgumentException
+     */
     @Test
     public void testInvalidTrackId() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
@@ -87,6 +92,10 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
         assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
     }
 
+    /**
+     * 测试点： properties 传入错误的 $track_id：非 int 类型- String 类型
+     * @throws InvalidArgumentException
+     */
     @Test
     public void testInvalidTrackId01() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
@@ -106,6 +115,11 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
         assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
     }
 
+    /**
+     * 测试点： properties 传入错误的 $track_id：null
+     * 【已知问题】 https://jira.sensorsdata.cn/browse/SDK-4841
+     * @throws InvalidArgumentException
+     */
     @Test
     @Ignore
     public void testInvalidTrackId02() throws InvalidArgumentException{
@@ -128,6 +142,11 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
         assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
     }
 
+    /**
+     * 测试点： properties 传入错误的 $time：非 Date 类型- number 类型
+     * [已知问题] 直接抛出异常 InvalidArgumentException: The property '$time' should be a java.util.Date.
+     * @throws InvalidArgumentException
+     */
     @Test
     @Ignore
     public void testInvalidTime() throws InvalidArgumentException{
@@ -136,7 +155,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
                 .build();
         Map<String, Object> properties = new HashMap<>();
         Date date = new Date();
-        properties.put("$time", date.getTime());
+        properties.put("$time", date.getTime()); // Long 型时间戳
 
         saTmp.trackById(identity, "test", properties);
         assertEquals(1, messageList.size());
@@ -149,6 +168,11 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
         assertFalse(props.containsKey("$time")); // properties 不包含 $track_id
     }
 
+    /**
+     * 测试点： properties 传入错误的 $time：非 Date 类型- String 类型
+     * [已知问题] 直接抛出异常 InvalidArgumentException: The property '$time' should be a java.util.Date.
+     * @throws InvalidArgumentException
+     */
     @Test
     @Ignore
     public void testInvalidTime01() throws InvalidArgumentException{
@@ -169,6 +193,11 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
         assertFalse(props.containsKey("$time")); // properties 不包含 $track_id
     }
 
+    /**
+     * 测试点： properties 传入错误的 $time：非 Date 类型- null
+     * [已知问题] 直接抛出异常 InvalidArgumentException: The property '$time' should be a java.util.Date.
+     * @throws InvalidArgumentException
+     */
     @Test
     @Ignore
     public void testInvalidTime02() throws InvalidArgumentException{
@@ -190,6 +219,10 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
         assertFalse(props.containsKey("$time")); // properties 不包含 $track_id
     }
 
+    /**
+     * 测试点：$time 超过服务端时间窗口
+     * @throws InvalidArgumentException
+     */
     @Test
     public void testInvalidTime03() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
@@ -211,7 +244,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
 
 
     /**
-     * 校验 ID-Mapping bind 接口
+     * 【已知问题】https://jira.sensorsdata.cn/browse/SDK-4848
      */
     @Test
     public void testIdMappingBind() throws InvalidArgumentException {
@@ -224,7 +257,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
 
 
     /**
-     * 校验 ID-Mapping unbind 接口用户格式
+     * 【已知问题】https://jira.sensorsdata.cn/browse/SDK-4848
      */
     @Test
     public void checkUnbindUserId() throws InvalidArgumentException {
@@ -236,7 +269,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
     }
 
     /**
-     * 校验 ID-Mapping 公共属性
+     *  测试点：公共属性传入 $track_id
      */
     @Test
     public void checkTrackByIdSuperProperties() throws InvalidArgumentException {
@@ -261,7 +294,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
     }
 
     /**
-     * 校验 ID-Mapping 公共属性
+     *  测试点：公共属性传入 $track_id ：$track_id 传入 String 类型
      */
     @Test
     public void checkTrackByIdSuperProperties01() throws InvalidArgumentException {
@@ -287,7 +320,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
 
 
     /**
-     * 校验 ID-Mapping bind 接口公共属性
+     *  测试点：公共属性传入 $track_id
      */
     @Test
     public void checkBindSuperProperties() throws InvalidArgumentException {
@@ -313,7 +346,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
     }
 
     /**
-     * 校验 ID_Mapping unbind 接口公共属性
+     *  测试点：公共属性传入 $track_id
      */
     @Test
     public void checkUnbindSuperProperties() throws InvalidArgumentException {

@@ -46,7 +46,7 @@ public class IDMappingTrackTest extends SensorsBaseTest {
     assertEquals("login_id+123", data.get("distinct_id"));
 
     Map<String,Object> prop = (Map<String,Object>)data.get("properties");
-    assertFalse((Boolean) prop.get("$is_login_id"));
+    assertFalse(data.containsKey("$is_login_id"));
     assertNotNull(data.get("properties"));
     assertNotNull(data.get("project"));
     assertNotNull(data.get("token"));

@@ -1,8 +1,5 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
@@ -11,6 +8,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * id-mapping profile 相关接口单元测试
@@ -76,8 +75,8 @@ public class IDMappingProfileTest extends SensorsBaseTest {
     sa.profileSetById(userRecord);
     assertIDM3UserData(data);
     Map<String, Object> properties = (Map<String, Object>) data.get("properties");
-    assertEquals(2, properties.size());
-    assertTrue(properties.containsKey("$is_login_id"));
+    assertEquals(1, properties.size());
+    assertFalse(properties.containsKey("$is_login_id"));
     assertTrue(properties.containsKey("test"));
   }
 

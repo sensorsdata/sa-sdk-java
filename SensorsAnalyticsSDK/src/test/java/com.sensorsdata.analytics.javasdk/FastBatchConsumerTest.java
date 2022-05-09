@@ -1,12 +1,14 @@
 package com.sensorsdata.analytics.javasdk;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.oracle.tools.packager.Log;
 import com.sensorsdata.analytics.javasdk.bean.FailedData;
 import com.sensorsdata.analytics.javasdk.consumer.Callback;
 import com.sensorsdata.analytics.javasdk.consumer.FastBatchConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import lombok.SneakyThrows;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -280,7 +282,8 @@ public class FastBatchConsumerTest {
 
     @Test
     public void testBulkSizeInvalid() throws InvalidArgumentException, NoSuchFieldException, IllegalAccessException, InterruptedException {
-        String url = "http://10.120.73.51:8106/sa?project=default&token=";
+//        String url = "http://10.120.73.51:8106/sa?project=default&token=";
+        String url = "http://10.120.111.143:8106/sa?project=default";
 
         FastBatchConsumer consumer = new FastBatchConsumer(url,false,0, new Callback() {
             @Override
@@ -387,13 +390,14 @@ public class FastBatchConsumerTest {
     }
 
     @Test
+    @Ignore
     public void testFlushSec0() throws InvalidArgumentException, NoSuchFieldException, IllegalAccessException, InterruptedException {
         String url = "http://localhost:8887/test";
 
         FastBatchConsumer consumer = new FastBatchConsumer(url,0, true,new Callback() {
             @Override
             public void onFailed(FailedData failedData) {
-                System.out.println(failedData);
+                Log.debug(failedData.toString());
             }
         });
 
@@ -437,7 +441,7 @@ public class FastBatchConsumerTest {
 
         assertEquals(50,bulkSize);
         sa.track("123", true, "test", null);
-        Thread.sleep(1000);
+        Thread.sleep(1300);
         assertEquals(0,buffer.size());
     }
 
@@ -566,6 +570,7 @@ public class FastBatchConsumerTest {
      */
     long endTime;
     @Test
+    @Ignore
     public void testTimeoutSec() throws InvalidArgumentException, InterruptedException, JsonProcessingException {
         String url = "http://localhost:8887/test";
         FastBatchConsumer consumer = new FastBatchConsumer(url, new Callback() {
@@ -606,6 +611,7 @@ public class FastBatchConsumerTest {
      *  需要使用 Charles 加断点
      */
     @Test
+    @Ignore
     public void testTimeoutSec05() throws InvalidArgumentException, InterruptedException, JsonProcessingException {
         String url = "http://localhost:8887/test";
         FastBatchConsumer consumer = new FastBatchConsumer(url, false, 50, 1000,1, 5,new Callback() {
@@ -646,6 +652,7 @@ public class FastBatchConsumerTest {
      *  需要使用 Charles 加断点
      */
     @Test
+    @Ignore
     public void testTimeoutSec01() throws InvalidArgumentException, InterruptedException, JsonProcessingException {
         String url = "http://localhost:8887/test";
         FastBatchConsumer consumer = new FastBatchConsumer(url, false, 50, 1000,1, 0,new Callback() {

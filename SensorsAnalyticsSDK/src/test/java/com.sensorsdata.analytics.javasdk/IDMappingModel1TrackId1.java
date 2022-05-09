@@ -15,11 +15,9 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- * 普通模式校验
- *
- * @author fangzhuo
- * @version 1.0.0
- * @since 2021/11/18 23:36
+ *  适用于 v3.4.4+ 版本
+ *  测试点：验证事件的 _track_id 正常由 $track_id 生成。
+ *  无特殊情况，不在下面的 testcase 上一一说明
  */
 public class IDMappingModel1TrackId1 extends SensorsBaseTest {
 
@@ -33,10 +31,6 @@ public class IDMappingModel1TrackId1 extends SensorsBaseTest {
 
   @Before
   public void init() throws NoSuchFieldException, IllegalAccessException {
-//    String url = "http://10.120.111.143:8106/sa?project=default";
-//    DebugConsumer consumer = new DebugConsumer(url, true);
-//    sa = new SensorsAnalytics(consumer);
-
     String url = "http://10.120.111.143:8106/sa?project=default";
     // 注意要设置 bulkSize 稍微大一点，这里设置为 100，否则超过 1 条就上报，messageList 里面拿不到事件数据
     batchConsumer = new BatchConsumer(url, 100, true, 3);
