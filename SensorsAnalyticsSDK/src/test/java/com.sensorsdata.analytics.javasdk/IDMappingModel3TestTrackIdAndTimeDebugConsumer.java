@@ -9,7 +9,6 @@ import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -25,10 +24,10 @@ public class IDMappingModel3TestTrackIdAndTimeDebugConsumer extends SensorsBaseT
     SensorsAnalytics saTmp;
 
     @Before
-    public void init() throws NoSuchFieldException, IllegalAccessException {
+    public void init() {
 //        String url = "http://10.120.73.51:8106/sa?project=default&token=";
-//        String url = "http://10.120.111.143:8106/sa?project=default";
-        String url = "http://10.120.101.188:8106/sa?project=default";
+        String url = "http://10.120.111.143:8106/sa?project=default";
+//        String url = "http://10.120.101.188:8106/sa?project=default";
         DebugConsumer debugConsumer = new DebugConsumer(url, true);
         saTmp = new SensorsAnalytics(debugConsumer);
     }

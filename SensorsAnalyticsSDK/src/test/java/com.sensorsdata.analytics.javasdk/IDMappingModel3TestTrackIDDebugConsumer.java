@@ -9,13 +9,11 @@ import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 /**
  *  适用于 v3.4.4+ 版本
@@ -28,7 +26,7 @@ public class IDMappingModel3TestTrackIDDebugConsumer extends SensorsBaseTest {
     SensorsAnalytics saTmp;
 
     @Before
-    public void init() throws NoSuchFieldException, IllegalAccessException {
+    public void init() {
 //        String url = "http://10.120.73.51:8106/sa?project=default&token=";
         String url = "http://10.120.111.143:8106/sa?project=default";
 //        String url = "http://10.120.101.188:8106/sa?project=default";

@@ -4,7 +4,6 @@ import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
-import com.sensorsdata.analytics.javasdk.consumer.DebugConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -27,11 +26,6 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
 
     @Before
     public void init() throws NoSuchFieldException, IllegalAccessException {
-//        String url = "http://10.120.73.51:8106/sa?project=default&token=";
-//        String url = "http://10.120.111.143:8106/sa?project=default";
-//        DebugConsumer debugConsumer = new DebugConsumer(url, true);
-//        saTmp = new SensorsAnalytics(debugConsumer);
-
 //        String url = "http://10.120.111.143:8106/sa?project=default";
         String url = "http://10.120.101.188:8106/sa?project=default";
         // 注意要设置 bulkSize 稍微大一点，这里设置为 100，否则超过 1 条就上报，messageList 里面拿不到事件数据

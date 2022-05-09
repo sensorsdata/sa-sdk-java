@@ -27,11 +27,6 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
 
     @Before
     public void init() throws NoSuchFieldException, IllegalAccessException {
-//        String url = "http://10.120.73.51:8106/sa?project=default&token=";
-//        String url = "http://10.120.111.143:8106/sa?project=default";
-//        DebugConsumer debugConsumer = new DebugConsumer(url, true);
-//        saTmp = new SensorsAnalytics(debugConsumer);
-
         String url = "http://10.120.111.143:8106/sa?project=default";
         // 注意要设置 bulkSize 稍微大一点，这里设置为 100，否则超过 1 条就上报，messageList 里面拿不到事件数据
         batchConsumer = new BatchConsumer(url, 100, true, 3);

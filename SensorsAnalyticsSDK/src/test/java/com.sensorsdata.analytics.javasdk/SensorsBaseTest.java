@@ -1,14 +1,7 @@
 package com.sensorsdata.analytics.javasdk;
 
 
-import static com.sensorsdata.analytics.javasdk.SensorsConst.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
-
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -20,6 +13,9 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.sensorsdata.analytics.javasdk.SensorsConst.*;
+import static org.junit.Assert.*;
 
 public class SensorsBaseTest {
   /**

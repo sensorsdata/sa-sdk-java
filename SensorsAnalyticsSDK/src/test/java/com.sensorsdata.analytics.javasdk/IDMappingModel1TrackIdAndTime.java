@@ -5,7 +5,6 @@ import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
-import com.sensorsdata.analytics.javasdk.consumer.DebugConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,16 +24,10 @@ public class IDMappingModel1TrackIdAndTime extends SensorsBaseTest {
   private BatchConsumer batchConsumer;
 
   private List<Map<String, Object>> messageList;
-  private ConcurrentLoggingConsumer consumer;
-
-  private StringBuilder messageBuffer;
   SensorsAnalytics sa;
 
   @Before
   public void init() throws NoSuchFieldException, IllegalAccessException {
-//    String url = "http://10.120.111.143:8106/sa?project=default";
-//    DebugConsumer consumer = new DebugConsumer(url, true);
-//    sa = new SensorsAnalytics(consumer);
 
     String url = "http://10.120.111.143:8106/sa?project=default";
     // 注意要设置 bulkSize 稍微大一点，这里设置为 100，否则超过 1 条就上报，messageList 里面拿不到事件数据
