@@ -1,6 +1,10 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
+import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_ID;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_TYPE;
+
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -25,10 +29,13 @@ public class ItemRecord implements Serializable {
 
     private final String itemType;
 
-    private ItemRecord(Map<String, Object> propertyMap, String itemId, String itemType) {
+    private final Integer trackId;
+
+    private ItemRecord(Map<String, Object> propertyMap, String itemId, String itemType, Integer trackId) {
         this.propertyMap = propertyMap;
         this.itemId = itemId;
         this.itemType = itemType;
+        this.trackId = trackId;
     }
 
     public Map<String, Object> getPropertyMap() {
@@ -43,17 +50,21 @@ public class ItemRecord implements Serializable {
         return itemType;
     }
 
+    public Integer getTrackId() { return trackId; }
+
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
 
-        private Map<String, Object> propertyMap = new HashMap<String, Object>();
+        private Map<String, Object> propertyMap = new HashMap<>();
 
         private String itemId;
 
         private String itemType;
+
+        private Integer trackId;
 
         private Builder() {
         }
@@ -65,7 +76,10 @@ public class ItemRecord implements Serializable {
             if (null == itemType) {
                 throw new InvalidArgumentException("The itemType is empty.");
             }
-            return new ItemRecord(propertyMap, itemId, itemType);
+            SensorsAnalyticsUtil.assertKey(ITEM_TYPE, itemType);
+            SensorsAnalyticsUtil.assertValue(ITEM_ID, itemId);
+            this.trackId = null;
+            return new ItemRecord(propertyMap, itemId, itemType, trackId);
         }
 
         public ItemRecord.Builder setItemId(String itemId) {

@@ -15,7 +15,7 @@ public class SensorsConst {
     /**
      * 当前JDK版本号，注意要和pom文件里面的version保持一致
      */
-    public static final String SDK_VERSION = "3.4.3";
+    public static final String SDK_VERSION = "3.4.4";
     /**
      * 当前语言类型
      */
@@ -38,6 +38,9 @@ public class SensorsConst {
      */
     public static final String BIND_ID_ACTION_TYPE = "track_id_bind";
     public static final String UNBIND_ID_ACTION_TYPE = "track_id_unbind";
+
+    public static final String ITEM_TYPE = "Item Type";
+    public static final String ITEM_ID = "Item Id";
     /**
      * 绑定事件名称
      */
@@ -46,9 +49,12 @@ public class SensorsConst {
      * 解绑事件名称
      */
     public static final String UNBIND_ID = "$UnbindID";
+
+    public static final String PROPERTIES = "properties";
     /**
      * 系统预置属性
      */
+    public static final String TRACK_ID = "$track_id";
     public static final String PROJECT_SYSTEM_ATTR = "$project";
     public static final String TIME_SYSTEM_ATTR = "$time";
     public static final String TOKEN_SYSTEM_ATTR = "$token";

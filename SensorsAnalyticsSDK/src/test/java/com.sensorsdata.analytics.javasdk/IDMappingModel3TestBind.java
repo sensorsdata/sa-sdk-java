@@ -36,7 +36,8 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     private void initBatchConsumer() throws NoSuchFieldException, IllegalAccessException {
-        String url = "http://10.120.73.51:8106/sa?project=default&token=";
+//        String url = "http://10.120.73.51:8106/sa?project=default&token=";
+        String url = "http://10.120.111.143:8106/sa?project=default";
         batchConsumer = new BatchConsumer(url, 100, true, 3);
         Field field = batchConsumer.getClass().getDeclaredField("messageList");
         field.setAccessible(true);
@@ -96,7 +97,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
 
         Map<?, ?> lib = (Map<?, ?>) messageList.get(0).get("properties");
         Boolean isLogin = (Boolean) lib.get("$is_login_id");
-        assertFalse(isLogin);
+        assertNull(isLogin);
         // v3.4.2 新增逻辑：distinct_id 取第一个维度标识作为 distinct_id，且取值格式为 key+value；
         assertEquals("$identity_mobile+123", messageList.get(0).get("distinct_id"));
 
@@ -322,7 +323,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
         saTmp.unbind(identity);
         Map<?, ?> lib = (Map<?, ?>) messageList.get(0).get("properties");
         Boolean isLogin = (Boolean) lib.get("$is_login_id");
-        assertFalse(isLogin);
+        assertNull(isLogin);
         assertEquals("id_test1+id_value1", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("identities"));
