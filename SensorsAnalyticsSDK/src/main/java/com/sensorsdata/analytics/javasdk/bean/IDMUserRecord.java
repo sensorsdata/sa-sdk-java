@@ -1,7 +1,7 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LOGIN_SYSTEM_ATTR;
 
+import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
@@ -59,7 +59,9 @@ public class IDMUserRecord extends SensorsAnalyticsIdentity {
     public IDMUserRecord build() throws InvalidArgumentException {
       Pair<String, Boolean> resPair =
           SensorsAnalyticsUtil.checkIdentitiesAndGenerateDistinctId(distinctId, idMap);
-      propertyMap.put(LOGIN_SYSTEM_ATTR, resPair.getValue());
+      if (resPair.getValue()) {
+        propertyMap.put(SensorsConst.LOGIN_SYSTEM_ATTR, true);
+      }
       // 填充 distinct_id 和 目标表
       String message = String.format("[distinct_id=%s,target_table=user]",distinctId);
       trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
@@ -81,7 +83,6 @@ public class IDMUserRecord extends SensorsAnalyticsIdentity {
     public IDMUserRecord.IDMBuilder setDistinctId(@NonNull String distinctId) {
       this.distinctId = distinctId;
       // IDM3.0 设置 distinctId,设置 $is_login_id = false,其实也可不设置
-      propertyMap.put(LOGIN_SYSTEM_ATTR, false);
       return this;
     }
 

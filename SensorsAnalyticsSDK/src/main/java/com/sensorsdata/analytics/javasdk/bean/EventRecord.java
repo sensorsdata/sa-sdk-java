@@ -1,5 +1,6 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
+import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
@@ -32,6 +33,9 @@ public class EventRecord implements Serializable {
         this.eventName = eventName;
         this.distinctId = distinctId;
         this.isLoginId = isLoginId;
+        if (isLoginId) {
+            propertyMap.put(SensorsConst.LOGIN_SYSTEM_ATTR, true);
+        }
         this.propertyMap = propertyMap;
         this.trackId = trackId;
         this.originalId = originalId;

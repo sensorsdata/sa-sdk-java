@@ -1,6 +1,7 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
 
+import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
@@ -31,6 +32,9 @@ public class UserRecord implements Serializable {
 
     private UserRecord(Map<String, Object> propertyMap, String distinctId, Boolean isLoginId, Integer trackId) {
         this.propertyMap = propertyMap;
+        if (isLoginId) {
+            propertyMap.put(SensorsConst.LOGIN_SYSTEM_ATTR, true);
+        }
         this.distinctId = distinctId;
         this.isLoginId = isLoginId;
         this.trackId = trackId;
