@@ -3,6 +3,7 @@ package com.sensorsdata.analytics.javasdk;
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -24,7 +25,9 @@ public class BatchConsumerTestConstruct {
   private BatchConsumer batchConsumer;
   private SensorsAnalytics sa;
   private List<Map<String, Object>> messageList;
-  private String serverUrl = "http://10.120.73.51:8106/sa?project=default&token=";
+//  private String serverUrl = "http://10.120.73.51:8106/sa?project=default&token=";
+  String serverUrl = "http://10.120.111.143:8106/sa?project=default";
+
 
   @Before
   public void init() throws NoSuchFieldException, IllegalAccessException {
@@ -249,6 +252,7 @@ public class BatchConsumerTestConstruct {
    * public BatchConsumer(final String serverUrl, final int bulkSize, final int timeoutSec)
    */
   @Test
+  @Ignore
   public void testBatchConsumerTimeoutSec06AssertTimeout() throws NoSuchFieldException, IllegalAccessException, InterruptedException, InvalidArgumentException {
     String serverUrl = "http://localhost:8887/test";
     int bulkSize = 100;
@@ -286,6 +290,7 @@ public class BatchConsumerTestConstruct {
    * public BatchConsumer(final String serverUrl, final int bulkSize, final int timeoutSec)
    */
   @Test
+  @Ignore
   public void testBatchConsumerTimeoutSec07AssertTimeout() throws NoSuchFieldException, IllegalAccessException, InterruptedException, InvalidArgumentException {
     String serverUrl = "http://localhost:8887/test";
     int bulkSize = 100;

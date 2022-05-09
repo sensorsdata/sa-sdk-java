@@ -120,7 +120,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_mobile+13800000001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -205,7 +205,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_mobile+13800000001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -232,7 +232,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertNotNull(messageList.get(0).get("time"));
         assertNotNull(messageList.get(0).get("_track_id"));
@@ -317,7 +317,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_mobile+13800000001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -340,7 +340,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertNotNull(messageList.get(0).get("time"));
         assertNotNull(messageList.get(0).get("_track_id"));
@@ -368,7 +368,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(list, props.get("favorite"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertNotNull(messageList.get(0).get("time"));
         assertNotNull(messageList.get(0).get("_track_id"));
@@ -460,7 +460,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
         assertEquals("13800000001", identities.get("$identity_mobile"));
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_mobile+13800000001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -487,7 +487,8 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(true, props.get("favorite"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertNotNull(messageList.get(0).get("time"));
         assertNotNull(messageList.get(0).get("_track_id"));
@@ -573,7 +574,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
         assertEquals("13800000001", identities.get("$identity_mobile"));
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_mobile+13800000001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -595,7 +596,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
         assertEquals("123", identities.get("$identity_email"));
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertNotNull(messageList.get(0).get("time"));
         assertNotNull(messageList.get(0).get("_track_id"));
@@ -679,7 +680,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
         assertEquals("13800000001", identities.get("$identity_mobile"));
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_mobile+13800000001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -716,7 +717,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -748,7 +749,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -810,7 +811,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_email+123@qq.com", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -857,7 +858,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -889,7 +890,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -951,7 +952,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_email+123@qq.com", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -998,7 +999,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -1030,7 +1031,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -1092,7 +1093,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(1, props.get("age"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_email+123@qq.com", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -1143,7 +1144,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(list, props.get("favorite"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -1179,7 +1180,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(list, props.get("favorite"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -1249,7 +1250,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(list, props.get("favorite"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_email+123@qq.com", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -1301,7 +1302,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(true, props.get("favorite"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -1337,7 +1338,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(true, props.get("favorite"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("xc001", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));
@@ -1407,7 +1408,7 @@ public class IDMappingModel3TestProfile extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertEquals(true, props.get("favorite"));
-        assertEquals(false, props.get("$is_login_id"));
+        assertFalse(props.containsKey("$is_login_id"));
         assertEquals("$identity_email+123@qq.com", messageList.get(0).get("distinct_id"));
 
         assertNotNull(messageList.get(0).get("time"));

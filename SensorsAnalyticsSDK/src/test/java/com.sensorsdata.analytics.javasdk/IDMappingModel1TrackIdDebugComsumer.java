@@ -12,14 +12,14 @@ import org.junit.Test;
 
 import java.util.*;
 
+import static org.junit.Assert.fail;
+
 /**
- * 普通模式校验
- *
- * @author fangzhuo
- * @version 1.0.0
- * @since 2021/11/18 23:36
+ *  适用于 v3.4.4+ 版本
+ *  测试点：验证事件的 _track_id 正常由 $track_id 生成。
+ *  无特殊情况，不在下面的 testcase 上一一说明
  */
-public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
+public class IDMappingModel1TrackIdDebugComsumer extends SensorsBaseTest {
 
   private BatchConsumer batchConsumer;
 
@@ -30,7 +30,7 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
   SensorsAnalytics sa;
 
   @Before
-  public void init() throws NoSuchFieldException, IllegalAccessException {
+  public void init() {
     String url = "http://10.120.111.143:8106/sa?project=default";
     DebugConsumer consumer = new DebugConsumer(url, true);
     sa = new SensorsAnalytics(consumer);
@@ -42,26 +42,11 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
   @Test
   public void checkTrackEventLoginTrue() throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<>();
-    properties.put("$time", new Date());
+    properties.put("$track_id", 111);
+
     sa.track("123", true, "test", properties);
   }
 
-  /**
-   * 校验调用 track 方法生成事件节点数是否完整
-   */
-  @Test
-  public void checkTrackEventLoginFalse() throws InvalidArgumentException {
-    Map<String, Object> properties = new HashMap<>();
-    sa.track("123", false, "test", properties);
-  }
-
-  /**
-   * 校验 trackSignup 记录节点
-   */
-  @Test
-  public void checkTrackSignUp() throws InvalidArgumentException {
-    sa.trackSignUp("123", "345");
-  }
 
   /**
    * 校验 trackSignup 记录节点
@@ -72,7 +57,8 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
     properties.put("number1", 1234);
     properties.put("String1", "str");
     properties.put("boolean1", false);
-    sa.trackSignUp("123", "345");
+    properties.put("$track_id", 111);
+    sa.trackSignUp("123", "345",  properties);
   }
 
 
@@ -91,7 +77,7 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
     properties.put("String1", "str");
     properties.put("boolean1", false);
     properties.put("list1", list);
-
+    properties.put("$track_id", 111);
     sa.profileSet("123", true, properties);
   }
 
@@ -100,7 +86,8 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
    */
   @Test
   public void checkProfileSetDataType01() throws InvalidArgumentException {
-    sa.profileSet("123", true, "number1", 1234);
+
+    sa.profileSet("123", true, "$track_id", 111);
   }
   /**
    * 校验自定义属性格式是否正常
@@ -117,6 +104,7 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
     properties.put("String1", "str");
     properties.put("boolean1", false);
     properties.put("list1", list);
+    properties.put("$track_id", 111);
     sa.profileSetOnce("123", true, properties);
   }
 
@@ -127,8 +115,8 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
   public void testProfileIncrement() throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<>();
     properties.put("number1", 1234);
+    properties.put("$track_id", 111);
     sa.profileIncrement("123", true, properties);
-
   }
 
   /**
@@ -136,7 +124,7 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
    */
   @Test
   public void testProfileIncrement01() throws InvalidArgumentException {
-    sa.profileIncrement("123", true, "number1", 1234);
+    sa.profileIncrement("123", true, "$track_id", 111);
   }
 
 
@@ -148,37 +136,41 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
     Map<String, Object> properties = new HashMap<>();
     properties.put("list1", list);
 
-    sa.profileAppend("123", true, properties);
+    List<Integer> listInt = new ArrayList<>();
+    listInt.add(111);
+    properties.put("$track_id", listInt);
 
+    try {
+      sa.profileAppend("123", true, properties);
+      fail("[ERROR] profileAppend should throw InvalidArgumentException.");
+    }catch (Exception e){
+      e.printStackTrace();
+  }
   }
 
   @Test
   public void testProfileAppend01() throws InvalidArgumentException{
-    List<String> list = new ArrayList<>();
-    list.add("eee");
-
-    sa.profileAppend("123", true, "list1", "eee");
+    sa.profileAppend("123", true, "$track_id", "111");
   }
 
   // profileUnset
   @Test
-  public void testProfileUnset() throws InvalidArgumentException{
+  public void testProfileUnset() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("list1", true);
+    properties.put("$track_id", 111);
 
-    sa.profileUnset("123", true, properties);
-
-    sa.flush();
+    try {
+      sa.profileUnset("123", true, properties);
+      fail("[ERROR] profileUnset should throw InvalidArgumentException.");
+    }catch (InvalidArgumentException e){
+  }
   }
 
   // profileUnset
   @Test
   public void testProfileUnset01() throws InvalidArgumentException{
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("list1", true);
-
-    sa.profileUnset("123", true, "list1");
-
+    sa.profileUnset("123", true, "$track_id");
   }
 
   // profileDelete
@@ -214,6 +206,7 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
             .setDistinctId("abc")
             .isLoginId(false)
             .setEventName("test")
+            .addProperty("$track_id", 111)
             .build();
     sa.track(eventRecord);
   }
@@ -227,6 +220,7 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
             .setDistinctId("abc")
             .isLoginId(true)
             .setEventName("test")
+            .addProperty("$track_id", 111)
             .build();
     sa.track(eventRecord);
   }
@@ -248,6 +242,7 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
             .addProperty("String1", "str")
             .addProperty("boolean1", false)
             .addProperty("list1", list)
+            .addProperty("$track_id", 111)
             .build();
     sa.profileSet(userRecord);
   }
@@ -269,6 +264,7 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
             .addProperty("String1", "str")
             .addProperty("boolean1", false)
             .addProperty("list1", list)
+            .addProperty("$track_id", 111)
             .build();
     sa.profileSetOnce(userRecord);
   }
@@ -286,6 +282,7 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
             .setDistinctId("123")
             .isLoginId(true)
             .addProperty("number1", 1234)
+            .addProperty("$track_id", 111)
             .build();
     sa.profileIncrement(userRecord);
   }
@@ -299,34 +296,12 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
             .setDistinctId("123")
             .isLoginId(true)
             .addProperty("list1", list)
+            .addProperty("$track_id", 111)
             .build();
-    sa.profileAppend(userRecord);
+    try {
+      sa.profileAppend(userRecord);
+      fail("profileAppend should throw InvalidArgumentException");
+    }catch (InvalidArgumentException e){
   }
-
-  // profileUnsetById
-  @Test
-  public void testProfileUnsetByIdEventBuilder() throws InvalidArgumentException{
-    List<String> list = new ArrayList<>();
-    list.add("aaa");
-    list.add("bbb");
-    UserRecord userRecord = UserRecord.builder()
-            .setDistinctId("123")
-            .isLoginId(true)
-            .build();
-    sa.profileUnset(userRecord);
   }
-
-  // profileDeleteById
-  @Test
-  public void testProfileDeleteByIdEventBuilder() throws InvalidArgumentException{
-    List<String> list = new ArrayList<>();
-    list.add("aaa");
-    list.add("bbb");
-    UserRecord userRecord = UserRecord.builder()
-            .setDistinctId("123")
-            .isLoginId(true)
-            .addProperty("list1", list)
-            .build();
-    sa.profileDelete(userRecord);
   }
-}

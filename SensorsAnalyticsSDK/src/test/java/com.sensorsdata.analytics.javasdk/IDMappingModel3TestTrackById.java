@@ -23,7 +23,8 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
 
     @Before
     public void init() throws NoSuchFieldException, IllegalAccessException {
-        String url = "http://10.120.73.51:8106/sa?project=default&token=";
+//        String url = "http://10.120.73.51:8106/sa?project=default&token=";
+        String url = "http://10.120.111.143:8106/sa?project=default";
         // 注意要设置 bulkSize 稍微大一点，这里设置为 100，否则超过 1 条就上报，messageList 里面拿不到事件数据
         batchConsumer = new BatchConsumer(url, 100, true, 3);
         // 通过反射机制获取 BatchConsumer 的 messageList
@@ -38,8 +39,8 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
         assertNotNull(messageList.get(0).get("time"));
         assertNotNull(messageList.get(0).get("_track_id"));
         assertNotNull(messageList.get(0).get("properties"));
-        assertNotNull(messageList.get(0).get("project"));
-        assertNotNull(messageList.get(0).get("token"));
+//        assertNotNull(messageList.get(0).get("project"));
+//        assertNotNull(messageList.get(0).get("token"));
     }
 
     @Test
@@ -115,7 +116,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         Boolean isLoginID = (Boolean)props.get("$is_login_id");
-        assertFalse(isLoginID);
+        assertFalse(props.containsKey("$is_login_id"));
 
         saTmp.flush();
     }
@@ -521,7 +522,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         Boolean isLoginID = (Boolean)props.get("$is_login_id");
-        assertFalse(isLoginID);
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertEquals("disId123", messageList.get(0).get("distinct_id"));
         assertEquals("test", messageList.get(0).get("event"));
@@ -548,7 +549,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         Boolean isLoginID = (Boolean)props.get("$is_login_id");
-        assertFalse(isLoginID);
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertEquals("disId123", messageList.get(0).get("distinct_id"));
         assertEquals("test", messageList.get(0).get("event"));
@@ -604,7 +605,7 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         Boolean isLoginID = (Boolean)props.get("$is_login_id");
-        assertFalse(isLoginID);
+        assertFalse(props.containsKey("$is_login_id"));
 
         assertEquals("$identity_mobile+1300000055", messageList.get(0).get("distinct_id"));
         assertEquals("test", messageList.get(0).get("event"));
@@ -744,5 +745,28 @@ public class IDMappingModel3TestTrackById extends SensorsBaseTest {
         }
     }
 
+    /**
+     *  v3.4.4 新增功能： properties 可传入的 $track_id
+     */
+    @Test
+    public void testTrackId() throws InvalidArgumentException {
+        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
+                .addIdentityProperty(SensorsAnalyticsIdentity.MOBILE, "13800000001")
+                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "email1@qq.com")
+                .build();
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("$track_id", 111);
+
+        saTmp.trackById(identity, "testMultiIdentity", properties);
+        assertEquals(1, messageList.size());
+
+        assertNotNullProp();
+
+        assertEquals(111, messageList.get(0).get("_track_id"));
+
+        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
+        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
+    }
 
 }
