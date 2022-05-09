@@ -6,6 +6,7 @@ import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -96,9 +97,11 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
     }
 
     /**
-     * 校验 ID-Mapping 公共属性
+     * 【已知问题】https://jira.sensorsdata.cn/browse/SDK-4863
+     *  【Java SDK】【_track_id】公共属性设置 $time, 属性中也带 $time，同时这条事件的 time 也会由 $time 生成
      */
     @Test
+    @Ignore
     public void checkTrackByIdSuperProperties() throws InvalidArgumentException {
         Map<String, Object> properties = new HashMap<>();
         properties.put("$track_id", 111);
@@ -116,7 +119,7 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
         assertNotNullProp();
 
         assertNotEquals(111, messageList.get(0).get("_track_id")); // 公共属性设置 $track_id 不生效的
-        assertNotEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $track_id 不生效的
+        assertNotEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $time 不生效的
 
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
@@ -125,9 +128,11 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
     }
 
     /**
-     * 校验 ID-Mapping 公共属性
+     * 【已知问题】https://jira.sensorsdata.cn/browse/SDK-4863
+     *  【Java SDK】【_track_id】公共属性设置 $time, 属性中也带 $time，同时这条事件的 time 也会由 $time 生成
      */
     @Test
+    @Ignore
     public void checkTrackByIdSuperProperties01() throws InvalidArgumentException {
         Map<String, Object> properties = new HashMap<>();
         properties.put("$track_id", "aaa");
@@ -145,7 +150,7 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
         assertNotNullProp();
 
         assertNotEquals("aaa", messageList.get(0).get("_track_id")); // 公共属性设置 $track_id 不生效的
-        assertNotEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $track_id 不生效的
+        assertNotEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $time 不生效的
 
         Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
         assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
@@ -297,80 +302,72 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
      * @throws InvalidArgumentException
      */
     @Test
-    public void testProfileIncrementById00() throws InvalidArgumentException {
-        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
-                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
-                .build();
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("age", 1);
-        properties.put("$track_id", 111);
-        Date date = new Date();
-        properties.put("$time", date);
+    public void testProfileIncrementById00(){
+        try {
+            SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+                    .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
+                    .build();
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("age", 1);
+            properties.put("$track_id", 111);
+            Date date = new Date();
+            properties.put("$time", date);
 
-        saTmp.profileIncrementById(identity, properties);
-
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id"));
-        assertEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("age")); // properties 包含其他自定义属性
+            saTmp.profileIncrementById(identity, properties);
+            fail("profileIncrementById should throw InvalidArgumentException.");
+        }catch (InvalidArgumentException e){
+            assertEquals("The property value of PROFILE_INCREMENT should be a Number.The current type is class java.util.Date.", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Test
-    public void testProfileAppendById() throws InvalidArgumentException {
-        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
-                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123")
-                .build();
-        List<String> list = new ArrayList<>();
-        list.add("apple");
-        list.add("orange");
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("favorite", list);
-        properties.put("$track_id", 111);
-        Date date = new Date();
-        properties.put("$time", date);
-        saTmp.profileAppendById(identity, properties);
+    public void testProfileAppendById() {
+        try{
+            SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+                    .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123")
+                    .build();
+            List<String> list = new ArrayList<>();
+            list.add("apple");
+            list.add("orange");
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("favorite", list);
+            properties.put("$track_id", 111);
+            Date date = new Date();
+            properties.put("$time", date);
+            saTmp.profileAppendById(identity, properties);
 
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id"));
-        assertEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("favorite")); // properties 包含其他自定义属性
+            fail("profileAppendById should throw InvalidArgumentException.");
+        }catch(InvalidArgumentException e){
+            String msg = "The property value of PROFILE_APPEND should be a List<String>.";
+            assertEquals(msg, e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Test
-    public void testProfileUnsetById() throws InvalidArgumentException {
-        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
-                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123")
-                .build();
-        List<String> list = new ArrayList<>();
-        list.add("apple");
-        list.add("orange");
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("favorite", true);
-        properties.put("$track_id", 111);
-        Date date = new Date();
-        properties.put("$time", date);
+    public void testProfileUnsetById() {
+        try{
+            SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+                    .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123")
+                    .build();
+            List<String> list = new ArrayList<>();
+            list.add("apple");
+            list.add("orange");
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("favorite", true);
+            properties.put("$track_id", 111);
+            Date date = new Date();
+            properties.put("$time", date);
 
-        saTmp.profileUnsetById(identity, properties);
+            saTmp.profileUnsetById(identity, properties);
 
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id"));
-        assertEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("age")); // properties 包含其他自定义属性
+            fail("profileUnsetById should throw InvalidArgumentException.");
+        }catch(InvalidArgumentException e){
+            String msg = "The property value of [$time] should be true.";
+            assertEquals(msg, e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // profileDeleteById
@@ -447,28 +444,25 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
      * @throws InvalidArgumentException
      */
     @Test
-    public void testProfileIncrementByIdNew() throws InvalidArgumentException {
+    public void testProfileIncrementByIdNew() {
         // 新版本接口
         Date date = new Date();
-        IDMUserRecord userRecord = IDMUserRecord.starter()
-                .setDistinctId("xc001") //手动指定外层 distinct_id
-                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "dis123") //用户维度标识
-                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123@qq.com")   //用户维度标识
-                .addProperty("age", 1) // 设置埋点事件属性
-                .addProperty("$track_id", 111)
-                .addProperty("$time", date) // 设置 $track_id
-                .build();
-        saTmp.profileIncrementById(userRecord);
-
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id"));
-        assertEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("age")); // properties 包含其他自定义属性
+        IDMUserRecord userRecord = null;
+        try {
+            userRecord = IDMUserRecord.starter()
+                    .setDistinctId("xc001") //手动指定外层 distinct_id
+                    .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "dis123") //用户维度标识
+                    .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123@qq.com")   //用户维度标识
+                    .addProperty("age", 1) // 设置埋点事件属性
+                    .addProperty("$track_id", 111)
+                    .addProperty("$time", date) // 设置 $track_id
+                    .build();
+            saTmp.profileIncrementById(userRecord);
+            fail("profileIncrementById should throw InvalidArgumentException.");
+        } catch (InvalidArgumentException e) {
+            assertEquals("The property value of PROFILE_INCREMENT should be a Number.The current type is class java.util.Date.", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -476,32 +470,30 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
      * @throws InvalidArgumentException
      */
     @Test
-    public void testProfileAppendByIdNew() throws InvalidArgumentException {
+    public void testProfileAppendByIdNew() {
         List<String> list = new ArrayList<>();
         list.add("apple");
         list.add("orange");
 
         // 新版本接口
         Date date = new Date();
-        IDMUserRecord userRecord = IDMUserRecord.starter()
-                .setDistinctId("xc001") //手动指定外层 distinct_id
-                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "dis123") //用户维度标识
-                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123@qq.com")   //用户维度标识
-                .addProperty("favorite", list) // 设置埋点事件属性
-                .addProperty("$track_id", 111)
-                .addProperty("$time", date) // 设置 $track_id
-                .build();
-        saTmp.profileAppendById(userRecord);
-
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id"));
-        assertEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("age")); // properties 包含其他自定义属性
+        IDMUserRecord userRecord = null;
+        try {
+            userRecord = IDMUserRecord.starter()
+                    .setDistinctId("xc001") //手动指定外层 distinct_id
+                    .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "dis123") //用户维度标识
+                    .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123@qq.com")   //用户维度标识
+                    .addProperty("favorite", list) // 设置埋点事件属性
+                    .addProperty("$track_id", 111)
+                    .addProperty("$time", date) // 设置 $track_id
+                    .build();
+            saTmp.profileAppendById(userRecord);
+            fail("profileAppendById should throw InvalidArgumentException.");
+        }catch(InvalidArgumentException e){
+            String msg = "The property value of PROFILE_APPEND should be a List<String>.";
+            assertEquals(msg, e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -509,33 +501,30 @@ public class IDMappingModel3TestTrackIdAndTime extends SensorsBaseTest {
      * @throws InvalidArgumentException
      */
     @Test
-    public void testProfileUnsetByIdNew() throws InvalidArgumentException {
+    public void testProfileUnsetByIdNew() {
         List<String> list = new ArrayList<>();
         list.add("apple");
         list.add("orange");
 
         // 新版本接口
         Date date = new Date();
-        IDMUserRecord userRecord = IDMUserRecord.starter()
-                .setDistinctId("xc001") //手动指定外层 distinct_id
-                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "dis123") //用户维度标识
-                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123@qq.com")   //用户维度标识
-                .addProperty("favorite", true) // 设置埋点事件属性
-                .addProperty("$track_id", 111)
-                .addProperty("$time", date) // 设置 $track_id
-                .build();
-        saTmp.profileUnsetById(userRecord);
-
-
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id"));
-        assertEquals(date.getTime(), messageList.get(0).get("time")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("favorite")); // properties 包含其他自定义属性
+        IDMUserRecord userRecord = null;
+        try {
+            userRecord = IDMUserRecord.starter()
+                    .setDistinctId("xc001") //手动指定外层 distinct_id
+                    .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "dis123") //用户维度标识
+                    .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123@qq.com")   //用户维度标识
+                    .addProperty("favorite", true) // 设置埋点事件属性
+                    .addProperty("$track_id", 111)
+                    .addProperty("$time", date) // 设置 $track_id
+                    .build();
+            saTmp.profileUnsetById(userRecord);
+            fail("profileUnsetById should throw InvalidArgumentException.");
+        }catch(InvalidArgumentException e){
+            String msg = "The property value of $time should be true.";
+            assertEquals(msg, e.getMessage());
+            e.printStackTrace();
+        }
     }
 
 }

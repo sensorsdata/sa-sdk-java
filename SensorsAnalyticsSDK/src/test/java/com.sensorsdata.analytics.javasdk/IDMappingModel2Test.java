@@ -57,7 +57,7 @@ public class IDMappingModel2Test extends SensorsBaseTest {
   public void checkTrackEventLoginTrue() throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<>();
     properties.put("test", "test");
-//    properties.put("$project", "abc");
+    properties.put("$project", "default");
     properties.put("$token", "123");
     sa.track("123", true, "test", properties);
 

@@ -179,40 +179,34 @@ public class IDMappingModel1TrackIdAndTime extends SensorsBaseTest {
    * 校验自定义属性格式是否正常
    */
   @Test
-  public void testProfileIncrement() throws InvalidArgumentException {
+  public void testProfileIncrement() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("number1", 1234);
         properties.put("$track_id", 111);
     Date date = new Date();
     properties.put("$time", date);
-    sa.profileIncrement("123", true, properties);
-
-    assertNotNullProp();
-
-    assertEquals(111, messageList.get(0).get("_track_id"));
-    assertEquals(date.getTime(), messageList.get(0).get("time"));
-
-    Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-    assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-    assertTrue(props.containsKey("number1")); // properties 包含其他自定义属性
-
-
+    try {
+      sa.profileIncrement("123", true, properties);
+        fail("[ERROR] profileIncrement should throw InvalidArgumentException.");
+    }catch (Exception e){
+      e.printStackTrace();
+      assertEquals("The property value of PROFILE_INCREMENT should be a Number.The current type is class java.util.Date.", e.getMessage());
+    }
   }
 
   /**
    * 校验自定义属性格式是否正常
    */
   @Test
-  public void testProfileIncrement01() throws InvalidArgumentException {
+  public void testProfileIncrement01(){
     Date date = new Date();
-    sa.profileIncrement("123", true, "$time", date.getTime());
-
-    assertNotNullProp();
-
-    assertEquals(date.getTime(), messageList.get(0).get("time"));
-
-    Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-    assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
+    try {
+      sa.profileIncrement("123", true, "$time", date.getTime());
+      fail("[ERROR] profileIncrement should throw InvalidArgumentException.");
+    }catch (Exception e){
+      e.printStackTrace();
+      assertEquals("The property '$time' should be a java.util.Date.", e.getMessage());
+    }
   }
 
 
@@ -264,7 +258,7 @@ public class IDMappingModel1TrackIdAndTime extends SensorsBaseTest {
       sa.profileUnset("123", true, properties);
       fail("[ERROR] profileUnset should throw InvalidArgumentException.");
     }catch (InvalidArgumentException e){
-      assertEquals("The property value of $track_id should be true.", e.getMessage());
+      assertEquals("The property value of $time should be true.", e.getMessage());
     }
 
   }
@@ -280,6 +274,7 @@ public class IDMappingModel1TrackIdAndTime extends SensorsBaseTest {
 
     Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
     assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
+
   }
 
   // profileDelete
@@ -420,26 +415,25 @@ public class IDMappingModel1TrackIdAndTime extends SensorsBaseTest {
    * 校验自定义属性格式是否正常
    */
   @Test
-  public void testProfileIncrementEventBuilder() throws InvalidArgumentException {
+  public void testProfileIncrementEventBuilder() {
     Date date = new Date();
     List<String> list = new ArrayList<>();
     list.add("aaa");
     list.add("bbb");
-    UserRecord userRecord = UserRecord.builder()
-            .setDistinctId("123")
-            .isLoginId(true)
-            .addProperty("number1", 1234)
-            .addProperty("$track_id", 111)
-            .addProperty("$time", date)
-            .build();
-    sa.profileIncrement(userRecord);
+    try {
+      UserRecord userRecord = UserRecord.builder()
+              .setDistinctId("123")
+              .isLoginId(true)
+              .addProperty("number1", 1234)
+              .addProperty("$track_id", 111)
+              .addProperty("$time", date)
+              .build();
 
-    assertNotNullProp();
-    assertEquals(111, messageList.get(0).get("_track_id"));
-    assertEquals(date.getTime(), messageList.get(0).get("time"));
-
-    Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-    assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
+        sa.profileIncrement(userRecord);
+        fail("profileIncrement should throw InvalidArgumentException");
+    }catch (InvalidArgumentException e){
+        assertEquals("The property value of PROFILE_INCREMENT should be a Number.The current type is class java.util.Date.", e.getMessage());
+    }
   }
 
   @Test
@@ -466,42 +460,35 @@ public class IDMappingModel1TrackIdAndTime extends SensorsBaseTest {
 
   // profileUnsetById
   @Test
-  public void testProfileUnsetByIdEventBuilder() throws InvalidArgumentException{
+  public void testProfileUnsetByIdEventBuilder(){
     Date date = new Date();
-    List<String> list = new ArrayList<>();
-    list.add("aaa");
-    list.add("bbb");
-    UserRecord userRecord = UserRecord.builder()
-            .setDistinctId("123")
-            .isLoginId(true)
-            .addProperty("list1", list)
-            .addProperty("$track_id", 111)
-            .addProperty("$time", date)
-            .build();
-    sa.profileUnset(userRecord);
-
-    assertNotNullProp();
-    assertEquals(111, messageList.get(0).get("_track_id"));
-    assertEquals(date.getTime(), messageList.get(0).get("time"));
-
-    Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-    assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
+    UserRecord userRecord = null;
+    try {
+      userRecord = UserRecord.builder()
+              .setDistinctId("123")
+              .isLoginId(true)
+              .addProperty("$track_id", 111)
+              .addProperty("$time", date)
+              .build();
+      sa.profileUnset(userRecord);
+      fail("profileUnset should throw InvalidArgumentException");
+    }catch (InvalidArgumentException e){
+      assertEquals("The property value of $time should be true.", e.getMessage());
+    }
 
   }
 
   // profileDeleteById
+
   @Test
   public void testProfileDeleteByIdEventBuilder() throws InvalidArgumentException{
     Date date = new Date();
-    List<String> list = new ArrayList<>();
-    list.add("aaa");
-    list.add("bbb");
     UserRecord userRecord = UserRecord.builder()
             .setDistinctId("123")
             .isLoginId(true)
-            .addProperty("list1", list)
             .addProperty("$track_id", 111)
             .addProperty("$time", date)
+            .addProperty("abc", "acb")
             .build();
     sa.profileDelete(userRecord);
 

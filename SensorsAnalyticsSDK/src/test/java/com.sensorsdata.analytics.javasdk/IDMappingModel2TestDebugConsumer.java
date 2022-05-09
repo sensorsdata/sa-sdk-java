@@ -42,8 +42,8 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
   @Test
   public void checkTrackEventLoginTrue() throws InvalidArgumentException {
     Map<String, Object> properties = new HashMap<>();
+    properties.put("$time", new Date());
     sa.track("123", true, "test", properties);
-
   }
 
   /**
@@ -312,7 +312,6 @@ public class IDMappingModel2TestDebugConsumer extends SensorsBaseTest {
     UserRecord userRecord = UserRecord.builder()
             .setDistinctId("123")
             .isLoginId(true)
-            .addProperty("list1", list)
             .build();
     sa.profileUnset(userRecord);
   }

@@ -112,28 +112,8 @@ public class IDMappingModel1TrackIdAndTimeDebugConsumer extends SensorsBaseTest 
     properties.put("list1", list);
         properties.put("$track_id", 111);
     properties.put("$time", date);
-    sa.profileSetOnce("123", true, properties);}
-
-  /**
-   * 校验自定义属性格式是否正常
-   */
-  @Test
-  public void testProfileIncrement() throws InvalidArgumentException {
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("number1", 1234);
-        properties.put("$track_id", 111);
-    Date date = new Date();
-    properties.put("$time", date);
-    sa.profileIncrement("123", true, properties);
+    sa.profileSetOnce("123", true, properties);
   }
-
-  /**
-   * 校验自定义属性格式是否正常
-   */
-  @Test
-  public void testProfileIncrement01() throws InvalidArgumentException {
-    Date date = new Date();
-    sa.profileIncrement("123", true, "$time", date.getTime());}
 
 
   @Test
@@ -285,25 +265,9 @@ public class IDMappingModel1TrackIdAndTimeDebugConsumer extends SensorsBaseTest 
             .addProperty("$track_id", 111)
             .addProperty("$time", date)
             .build();
-    sa.profileSetOnce(userRecord);}
+    sa.profileSetOnce(userRecord);
+  }
 
-  /**
-   * 校验自定义属性格式是否正常
-   */
-  @Test
-  public void testProfileIncrementEventBuilder() throws InvalidArgumentException {
-    Date date = new Date();
-    List<String> list = new ArrayList<>();
-    list.add("aaa");
-    list.add("bbb");
-    UserRecord userRecord = UserRecord.builder()
-            .setDistinctId("123")
-            .isLoginId(true)
-            .addProperty("number1", 1234)
-            .addProperty("$track_id", 111)
-            .addProperty("$time", date)
-            .build();
-    sa.profileIncrement(userRecord);}
 
   @Test
   public void testProfileAppendByIdEventBuilder() throws InvalidArgumentException{
@@ -327,21 +291,6 @@ public class IDMappingModel1TrackIdAndTimeDebugConsumer extends SensorsBaseTest 
 
   }
 
-  // profileUnsetById
-  @Test
-  public void testProfileUnsetByIdEventBuilder() throws InvalidArgumentException{
-    Date date = new Date();
-    List<String> list = new ArrayList<>();
-    list.add("aaa");
-    list.add("bbb");
-    UserRecord userRecord = UserRecord.builder()
-            .setDistinctId("123")
-            .isLoginId(true)
-            .addProperty("list1", list)
-            .addProperty("$track_id", 111)
-            .addProperty("$time", date)
-            .build();
-    sa.profileUnset(userRecord);}
 
   // profileDeleteById
   @Test
@@ -357,5 +306,6 @@ public class IDMappingModel1TrackIdAndTimeDebugConsumer extends SensorsBaseTest 
             .addProperty("$track_id", 111)
             .addProperty("$time", date)
             .build();
-    sa.profileDelete(userRecord);}
+    sa.profileDelete(userRecord);
+  }
 }

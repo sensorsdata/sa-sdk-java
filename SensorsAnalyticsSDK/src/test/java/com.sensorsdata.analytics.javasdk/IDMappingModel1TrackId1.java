@@ -431,23 +431,22 @@ public class IDMappingModel1TrackId1 extends SensorsBaseTest {
 
   // profileUnsetById
   @Test
-  public void testProfileUnsetByIdEventBuilder() throws InvalidArgumentException{
+  public void testProfileUnsetByIdEventBuilder() {
     List<String> list = new ArrayList<>();
     list.add("aaa");
     list.add("bbb");
-    UserRecord userRecord = UserRecord.builder()
-            .setDistinctId("123")
-            .isLoginId(true)
-            .addProperty("list1", list)
-            .addProperty("$track_id", 111)
-            .build();
-    sa.profileUnset(userRecord);
-
-    assertNotNullProp();
-    assertEquals(111, messageList.get(0).get("_track_id"));
-
-    Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-    assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
+    UserRecord userRecord = null;
+    try {
+      userRecord = UserRecord.builder()
+              .setDistinctId("123")
+              .isLoginId(true)
+              .addProperty("$track_id", 111)
+              .build();
+      sa.profileUnset(userRecord);
+      fail("[ERROR] profileUnset should throw InvalidArgumentException.");
+    }catch (InvalidArgumentException e){
+      assertEquals("The property value of $track_id should be true.", e.getMessage());
+    }
 
   }
 

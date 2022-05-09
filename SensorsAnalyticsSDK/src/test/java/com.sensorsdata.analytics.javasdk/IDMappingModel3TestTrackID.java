@@ -7,6 +7,7 @@ import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.DebugConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -106,6 +107,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
     }
 
     @Test
+    @Ignore
     public void testInvalidTrackId02() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
@@ -127,6 +129,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
     }
 
     @Test
+    @Ignore
     public void testInvalidTime() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
@@ -147,6 +150,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
     }
 
     @Test
+    @Ignore
     public void testInvalidTime01() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
@@ -166,6 +170,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
     }
 
     @Test
+    @Ignore
     public void testInvalidTime02() throws InvalidArgumentException{
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "123")
@@ -433,7 +438,7 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
     }
 
     @Test
-    public void testProfileAppendById() throws InvalidArgumentException {
+    public void testProfileAppendById() {
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123")
                 .build();
@@ -443,20 +448,17 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
         Map<String, Object> properties = new HashMap<>();
         properties.put("favorite", list);
         properties.put("$track_id", 111);
-        saTmp.profileAppendById(identity, properties);
-
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("favorite")); // properties 包含其他自定义属性
+        try {
+            saTmp.profileAppendById(identity, properties);
+            fail("profileAppendById should throw InvalidArgumentException.");
+        }catch (InvalidArgumentException e){
+            assertEquals("The property value of PROFILE_APPEND should be a List<String>.", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Test
-    public void testProfileUnsetById() throws InvalidArgumentException {
+    public void testProfileUnsetById() {
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
                 .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123")
                 .build();
@@ -467,16 +469,13 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
         properties.put("favorite", true);
         properties.put("$track_id", 111);
 
-        saTmp.profileUnsetById(identity, properties);
-
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("age")); // properties 包含其他自定义属性
+        try {
+            saTmp.profileUnsetById(identity, properties);
+            fail("profileUnsetById should throw InvalidArgumentException.");
+        }catch (InvalidArgumentException e){
+            assertEquals("The property value of [$track_id] should be true.", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // profileDeleteById
@@ -573,11 +572,12 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
      * @throws InvalidArgumentException
      */
     @Test
-    public void testProfileAppendByIdNew() throws InvalidArgumentException {
+    public void testProfileAppendByIdNew() {
         List<String> list = new ArrayList<>();
         list.add("apple");
         list.add("orange");
 
+        try {
         // 新版本接口
         IDMUserRecord userRecord = IDMUserRecord.starter()
                 .setDistinctId("xc001") //手动指定外层 distinct_id
@@ -586,16 +586,13 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
                 .addProperty("favorite", list) // 设置埋点事件属性
                 .addProperty("$track_id", 111) // 设置 $track_id
                 .build();
-        saTmp.profileAppendById(userRecord);
 
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("age")); // properties 包含其他自定义属性
+            saTmp.profileAppendById(userRecord);
+            fail("profileAppendById should throw InvalidArgumentException.");
+        }catch (InvalidArgumentException e){
+            assertEquals("The property value of PROFILE_APPEND should be a List<String>.", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -603,30 +600,28 @@ public class IDMappingModel3TestTrackID extends SensorsBaseTest {
      * @throws InvalidArgumentException
      */
     @Test
-    public void testProfileUnsetByIdNew() throws InvalidArgumentException {
+    public void testProfileUnsetByIdNew() {
         List<String> list = new ArrayList<>();
         list.add("apple");
         list.add("orange");
 
         // 新版本接口
-        IDMUserRecord userRecord = IDMUserRecord.starter()
-                .setDistinctId("xc001") //手动指定外层 distinct_id
-                .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "dis123") //用户维度标识
-                .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123@qq.com")   //用户维度标识
-                .addProperty("favorite", true) // 设置埋点事件属性
-                .addProperty("$track_id", 111) // 设置 $track_id
-                .build();
-        saTmp.profileUnsetById(userRecord);
+        IDMUserRecord userRecord = null;
+        try {
+            userRecord = IDMUserRecord.starter()
+                    .setDistinctId("xc001") //手动指定外层 distinct_id
+                    .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "dis123") //用户维度标识
+                    .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "123@qq.com")   //用户维度标识
+                    .addProperty("favorite", true) // 设置埋点事件属性
+                    .addProperty("$track_id", 111) // 设置 $track_id
+                    .build();
 
-
-        assertEquals(1, messageList.size());
-        assertNotNullProp();
-
-        assertEquals(111, messageList.get(0).get("_track_id")); // 公共属性设置 $track_id 不生效的
-
-        Map<String, Object> props = (Map<String, Object>)messageList.get(0).get("properties");
-        assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
-        assertTrue(props.containsKey("favorite")); // properties 包含其他自定义属性
+            saTmp.profileUnsetById(userRecord);
+            fail("profileUnsetById should throw InvalidArgumentException.");
+        }catch (InvalidArgumentException e){
+            assertEquals("The property value of $track_id should be true.", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
 }

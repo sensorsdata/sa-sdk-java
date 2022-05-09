@@ -186,11 +186,11 @@ public class IDMappingModel2BuilderTest extends SensorsBaseTest {
     UserRecord userRecord = UserRecord.builder()
             .setDistinctId("123")
             .isLoginId(true)
-            .addProperty("list1", list)
+            .addProperty("list1", true)
             .build();
     sa.profileUnset(userRecord);
     Map<?, ?> messageListult = (Map<?, ?>) messageList.get(0).get("properties");
-    assertEquals(list, messageListult.get("list1"));
+    assertEquals(true, messageListult.get("list1"));
     assertEquals("123", messageList.get(0).get("distinct_id"));
     assertNotNull(messageList.get(0).get("time"));
     assertNotNull(messageList.get(0).get("_track_id"));

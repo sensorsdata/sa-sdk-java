@@ -618,7 +618,6 @@ public class FastBatchConsumerResendTest {
     assertNotNull(messageList.get(0).get("_track_id"));
     assertEquals("profile_set", messageList.get(0).get("type"));
     assertEquals("123", messageList.get(0).get("distinct_id"));
-    assertNotNull(messageList.get(0).get("project"));
     sa.flush();
   }
 
