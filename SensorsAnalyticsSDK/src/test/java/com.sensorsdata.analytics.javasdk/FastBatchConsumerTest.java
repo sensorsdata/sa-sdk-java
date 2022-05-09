@@ -1,7 +1,6 @@
 package com.sensorsdata.analytics.javasdk;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.oracle.tools.packager.Log;
 import com.sensorsdata.analytics.javasdk.bean.FailedData;
 import com.sensorsdata.analytics.javasdk.consumer.Callback;
 import com.sensorsdata.analytics.javasdk.consumer.FastBatchConsumer;
@@ -397,7 +396,6 @@ public class FastBatchConsumerTest {
         FastBatchConsumer consumer = new FastBatchConsumer(url,0, true,new Callback() {
             @Override
             public void onFailed(FailedData failedData) {
-                Log.debug(failedData.toString());
             }
         });
 
