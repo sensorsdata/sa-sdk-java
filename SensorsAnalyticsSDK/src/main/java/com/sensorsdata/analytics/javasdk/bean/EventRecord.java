@@ -1,6 +1,8 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
+import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -22,11 +24,21 @@ public class EventRecord implements Serializable {
 
     private final Boolean isLoginId;
 
-    private EventRecord(String eventName, String distinctId, Boolean isLoginId, Map<String, Object> propertyMap) {
+    private final Integer trackId;
+
+    private final String originalId;
+
+    private EventRecord(String eventName, String distinctId, Boolean isLoginId, Map<String, Object> propertyMap,
+            Integer trackId, String originalId) {
         this.eventName = eventName;
         this.distinctId = distinctId;
         this.isLoginId = isLoginId;
+        if (isLoginId) {
+            propertyMap.put(SensorsConst.LOGIN_SYSTEM_ATTR, true);
+        }
         this.propertyMap = propertyMap;
+        this.trackId = trackId;
+        this.originalId = originalId;
     }
 
     @Override
@@ -59,16 +71,24 @@ public class EventRecord implements Serializable {
         return isLoginId;
     }
 
+    public String getOriginalId() {
+        return originalId;
+    }
+
+    public Integer getTrackId() {return trackId; }
+
     public static class Builder {
-        private final Map<String, Object> propertyMap = new HashMap<String, Object>();
+        private final Map<String, Object> propertyMap = new HashMap<>();
         private String eventName;
         private String distinctId;
         private Boolean isLoginId;
+        private Integer trackId;
+        private String originalId;
 
         private Builder() {
         }
-
         public EventRecord build() throws InvalidArgumentException {
+
             if (eventName == null) {
                 throw new InvalidArgumentException("The eventName is empty.");
             }
@@ -78,7 +98,16 @@ public class EventRecord implements Serializable {
             if (isLoginId == null) {
                 throw new InvalidArgumentException("The isLoginId is empty.");
             }
-            return new EventRecord(eventName, distinctId, isLoginId, propertyMap);
+            SensorsAnalyticsUtil.assertKey("event_name",eventName);
+            SensorsAnalyticsUtil.assertValue("distinct_id", distinctId);
+            String message = String.format("[distinct_id=%s,event_name=%s,is_login_id=%s]",distinctId,eventName,isLoginId);
+            trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
+            return new EventRecord(eventName, distinctId, isLoginId, propertyMap,trackId, originalId);
+        }
+
+        public EventRecord.Builder setOriginalId(String originalId) {
+            this.originalId = originalId;
+            return this;
         }
 
         public EventRecord.Builder setEventName(String eventName) {

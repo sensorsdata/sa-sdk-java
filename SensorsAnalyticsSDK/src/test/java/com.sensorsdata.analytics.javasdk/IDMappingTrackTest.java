@@ -46,7 +46,7 @@ public class IDMappingTrackTest extends SensorsBaseTest {
     assertEquals("login_id+123", data.get("distinct_id"));
 
     Map<String,Object> prop = (Map<String,Object>)data.get("properties");
-    assertFalse((Boolean) prop.get("$is_login_id"));
+    assertFalse(data.containsKey("$is_login_id"));
     assertNotNull(data.get("properties"));
     assertNotNull(data.get("project"));
     assertNotNull(data.get("token"));
@@ -379,7 +379,7 @@ public class IDMappingTrackTest extends SensorsBaseTest {
         .build();
     sa.trackById(eventRecord);
     assertIDM3EventData(data);
-    assertEquals(time, data.get("time"));
+    assertEquals(time.getTime(), data.get("time"));
     assertTrue(data.containsKey("project"));
     assertEquals("test", data.get("project"));
     assertTrue(data.containsKey("token"));
