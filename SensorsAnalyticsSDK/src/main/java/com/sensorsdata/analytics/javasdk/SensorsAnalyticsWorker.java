@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -69,6 +68,8 @@ class SensorsAnalyticsWorker {
     this.consumer.send(
         generateEventMap(distinctId, isLoginId, originDistinctId, null, actionType, eventName, properties));
   }
+
+
 
   void doAddData(@NonNull SensorsData sensorsData) {
     //enable history data import
@@ -233,5 +234,13 @@ class SensorsAnalyticsWorker {
       libInfo.put(APP_VERSION_SYSTEM_ATTR, (String) this.superProperties.get(APP_VERSION_SYSTEM_ATTR));
     }
     return libInfo;
+  }
+
+  public void doSchemaData(@NonNull SensorsSchemaData schemaData) {
+    // 开启历史数据导入，兼容之前接口逻辑
+    if (enableTimeFree && schemaData.isEventSchemaData()) {
+      schemaData.getProperties().put("time_free", true);
+    }
+    this.consumer.send(schemaData.generateData());
   }
 }

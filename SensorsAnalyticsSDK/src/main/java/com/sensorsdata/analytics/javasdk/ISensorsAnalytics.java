@@ -7,6 +7,11 @@ import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.schema.ItemEventSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 
 import lombok.NonNull;
@@ -550,6 +555,35 @@ public interface ISensorsAnalytics {
      * @throws InvalidArgumentException 不合法参数异常
      */
     void profileUnsetById(@NonNull IDMUserRecord idmUserRecord) throws InvalidArgumentException;
+
+
+    void track(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException;
+
+    void track(@NonNull ItemEventSchema itemEventSchema) throws InvalidArgumentException;
+
+    void bind(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException;
+
+    void unbind(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException;
+
+    void profileSet(@NonNull UserSchema userSchema) throws InvalidArgumentException;
+
+    void profileSetOnce(@NonNull UserSchema userSchema) throws InvalidArgumentException;
+
+    void profileSetIncrement(@NonNull UserSchema userSchema) throws InvalidArgumentException;
+
+    void profileAppend(@NonNull UserSchema userSchema) throws InvalidArgumentException;
+
+    void profileUnset(@NonNull UserSchema userSchema) throws InvalidArgumentException;
+
+    void profileDelete(@NonNull UserSchema userSchema) throws InvalidArgumentException;
+
+    void itemSet(@NonNull ItemSchema itemSchema) throws InvalidArgumentException;
+
+    void itemDelete(@NonNull ItemSchema itemSchema) throws InvalidArgumentException;
+
+    void itemSet(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException;
+
+    void itemDelete(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException;
 
     /**
      * 立即发送缓存中的所有日志

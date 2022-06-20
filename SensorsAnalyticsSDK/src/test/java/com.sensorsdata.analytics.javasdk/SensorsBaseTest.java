@@ -1,7 +1,20 @@
 package com.sensorsdata.analytics.javasdk;
 
 
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_DETAIL_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_METHOD_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_VERSION_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.PROPERTIES;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TIME_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ID;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -11,11 +24,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import static com.sensorsdata.analytics.javasdk.SensorsConst.*;
-import static org.junit.Assert.*;
+import java.util.Set;
 
 public class SensorsBaseTest {
   /**
@@ -36,6 +48,8 @@ public class SensorsBaseTest {
   protected static Server server = null;
 
   protected String url = "http://localhost:8888/sa";
+
+  protected static Set<String> actionTypeSet = new HashSet<>();
 
 
   class TestConsumer implements Consumer {
@@ -65,6 +79,18 @@ public class SensorsBaseTest {
     handler.addServlet(new ServletHolder(new TestServlet()), "/sa");
     server.setHandler(handler);
     server.start();
+    actionTypeSet.add(SensorsConst.TRACK_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.TRACK_SIGN_UP_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.PROFILE_SET_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.PROFILE_INCREMENT_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.PROFILE_UNSET_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.PROFILE_SET_ONCE_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.PROFILE_APPEND_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.BIND_ID_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.UNBIND_ID_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.PROFILE_DELETE_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.ITEM_SET_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.ITEM_DELETE_ACTION_TYPE);
   }
 
   @Test
@@ -184,8 +210,87 @@ public class SensorsBaseTest {
   protected void assertProperties(Object properties) {
     assertTrue(properties instanceof Map);
     Map<String, Object> propertiesMap = (Map<String, Object>) properties;
-     assertFalse("properties 中的 $time 属性并未删除", propertiesMap.containsKey(TIME_SYSTEM_ATTR));
-     assertFalse("properties 中的 $track_id 属性并未删除", propertiesMap.containsKey(TRACK_ID));
+    assertFalse("properties 中的 $time 属性并未删除", propertiesMap.containsKey(TIME_SYSTEM_ATTR));
+    assertFalse("properties 中的 $track_id 属性并未删除", propertiesMap.containsKey(TRACK_ID));
+  }
+
+  /**
+   * 校验 userEventSchema 数据
+   */
+  protected void assertUESData(Map<String, Object> data) {
+    assertIESData(data);
+    Object properties = data.get("properties");
+    assertTrue("数据节点 properties 类型不正确！", properties instanceof Map);
+    Map<String, String> proMap = (Map<String, String>) properties;
+    assertTrue("数据中用户信息节点（identities+distinct_id/user_id）丢失！",
+        (proMap.containsKey("identities") && proMap.containsKey("distinct_id")) || proMap.containsKey("user_id"));
+  }
+
+  protected void assertEventIdentitiesInfo(Map<String, Object> data, String expectDistinctId) {
+    Map<String, String> proMap = (Map<String, String>) data.get("properties");
+    assertTrue(proMap.containsKey("identities"));
+    assertTrue(proMap.containsKey("distinct_id"));
+    assertEquals(expectDistinctId, proMap.get("distinct_id").toString());
+  }
+
+  /**
+   * 校验 itemEventSchema 数据
+   */
+  protected void assertIESData(Map<String, Object> data) {
+    assertSchemaDataNode(data);
+    assertTrue("数据节点中不存在 event 节点！", data.containsKey("event"));
+    assertTrue("数据节点中不存在 time 节点！", data.containsKey("time"));
+    assertEquals("数据节点个数不正常，可能丢失节点或多出来异常节点！", 8, data.size());
+  }
+
+  /**
+   * 校验 itemSchema 数据
+   */
+  protected void assertISData(Map<String, Object> data) {
+    assertSchemaDataNode(data);
+    assertTrue("数据节点中不存在 id 节点！", data.containsKey("id"));
+    assertNotNull("数据节点 id 不可为空！", data.get("id"));
+    assertEquals("数据节点个数不正常，可能丢失节点或多出来异常节点！", 7, data.size());
+  }
+
+  /**
+   * 校验 UserSchema 数据
+   */
+  protected void assertUSData(Map<String, Object> data) {
+    assertSchemaDataNode(data);
+    assertTrue("数据中用户信息节点（identities+distinct_id/user_id）丢失！",
+        (data.containsKey("identities") && data.containsKey("distinct_id")) || data.containsKey("user_id"));
+  }
+
+  /**
+   * 校验 UserItemSchema 数据
+   */
+  protected void assertUISData(Map<String, Object> data) {
+    assertSchemaDataNode(data);
+    assertTrue("数据节点中 id 不可为空！", data.containsKey("id"));
+    Object properties = data.get("properties");
+    assertTrue("数据节点 properties 类型不正确！", properties instanceof Map);
+    Map<String, String> proMap = (Map<String, String>) properties;
+    assertTrue("数据中用户信息节点（identities+distinct_id/user_id）丢失！",
+        (proMap.containsKey("identities") && proMap.containsKey("distinct_id")) || proMap.containsKey("user_id"));
+    assertTrue("数据节点 properties 内节点个数不正常！", proMap.size() >= 2);
+  }
+
+  protected void assertSchemaDataNode(Map<String, Object> data) {
+    assertNotNull("数据节点为空！", data);
+    assertTrue("数据节点中不存在 version 节点！", data.containsKey("version"));
+    assertEquals("数据节点 version 值不正确！", SensorsConst.PROTOCOL_VERSION, data.get("version").toString());
+    assertTrue("数据节点中不存在 type 节点！", data.containsKey("type"));
+    assertTrue("数据节点中 type 值不正确！", actionTypeSet.contains(data.get("type").toString()));
+    assertTrue("数据节点中不存在 schema 节点！", data.containsKey("schema"));
+    assertTrue("数据节点中 schema 值不正确！", data.get("schema") instanceof String);
+    assertTrue("数据节点中不存在 properties 节点！", data.containsKey("properties"));
+    assertTrue("数据节点中不存在 track_id 节点！", data.containsKey("_track_id"));
+    assertTrue("数据节点 track_id 值类型不正确！", data.get("_track_id") instanceof Integer);
+    assertTrue("数据节点中不存在 lib 节点！", data.containsKey("lib"));
+    Object lib = data.get("lib");
+    assertTrue("数据节点中 lib 节点类型不正确！", lib instanceof Map);
+    assertEquals("数据节点 lib 内节点个数异常！", 4, ((Map<?, ?>) lib).size());
   }
 
 }

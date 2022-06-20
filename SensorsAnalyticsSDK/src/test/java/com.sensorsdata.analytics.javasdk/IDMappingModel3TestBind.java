@@ -124,7 +124,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
         }
     }
 
-    @Test
+   /* @Test
     public void testBindInvalidIdentityNull() throws InvalidArgumentException{
         try{
             saTmp.bind(null);
@@ -133,7 +133,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
             assertEquals("identities is marked non-null but is null", e.getMessage());
         }
 
-    }
+    }*/
 
     @Test
     public void testBindInvalidIdentityEmpty() throws InvalidArgumentException{

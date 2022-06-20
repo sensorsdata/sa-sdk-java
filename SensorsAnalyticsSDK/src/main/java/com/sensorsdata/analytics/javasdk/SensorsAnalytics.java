@@ -24,6 +24,11 @@ import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.schema.ItemEventSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
@@ -427,6 +432,82 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         worker.doAddData(new SensorsData(idmUserRecord, PROFILE_UNSET_ACTION_TYPE));
     }
 
+
+    @Override
+    public void track(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(userEventSchema, TRACK_ACTION_TYPE));
+    }
+
+    @Override
+    public void track(@NonNull ItemEventSchema itemEventSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(itemEventSchema, TRACK_ACTION_TYPE));
+    }
+
+    @Override
+    public void bind(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(userEventSchema, BIND_ID_ACTION_TYPE));
+    }
+
+    @Override
+    public void unbind(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(userEventSchema, UNBIND_ID_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileSet(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_SET_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_SET_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileSetOnce(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_SET_ONCE_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_SET_ONCE_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileSetIncrement(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_INCREMENT_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_INCREMENT_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileAppend(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_APPEND_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_APPEND_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileUnset(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_UNSET_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_UNSET_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileDelete(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_DELETE_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_DELETE_ACTION_TYPE));
+    }
+
+    @Override
+    public void itemSet(@NonNull ItemSchema itemSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(itemSchema, ITEM_SET_ACTION_TYPE));
+    }
+
+    @Override
+    public void itemDelete(@NonNull ItemSchema itemSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(itemSchema, ITEM_DELETE_ACTION_TYPE));
+    }
+
+    @Override
+    public void itemSet(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(userItemSchema, ITEM_SET_ACTION_TYPE));
+    }
+
+    @Override
+    public void itemDelete(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(userItemSchema, ITEM_DELETE_ACTION_TYPE));
+    }
 
     @Override
     public void flush() {
