@@ -7,6 +7,9 @@ import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
 import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.common.SchemaTypeEnum;
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +21,7 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2022/06/14 14:44
  */
+@Slf4j
 class SensorsSchemaData extends SensorsData {
 
   private String version = SensorsConst.PROTOCOL_VERSION;
@@ -60,6 +64,7 @@ class SensorsSchemaData extends SensorsData {
   protected SensorsSchemaData(UserSchema userSchema, String actionType) {
     super(userSchema, actionType);
     this.schema = SensorsConst.USER_SCHEMA;
+    this.userId = userSchema.getUserId();
     this.schemaTypeEnum = SchemaTypeEnum.USER;
   }
 
@@ -89,32 +94,17 @@ class SensorsSchemaData extends SensorsData {
         getProperties().put(belongItemPair.getKey(), belongItemPair.getValue());
         break;
       case USER:
-        if (null != userId) {
-          data.put("user_id", userId);
-        } else {
-          data.put("identities", getIdentities());
-          data.put("distinct_id", getDistinctId());
-        }
+        checkUserIdAndAddUser(data, userId, getDistinctId(), getIdentities());
         break;
       case USER_EVENT:
         data.put("event", getEvent());
         data.put("time", getTime().getTime());
-        if (null != userId) {
-          getProperties().put("user_id", userId);
-        } else {
-          getProperties().put("identities", getIdentities());
-          getProperties().put("distinct_id", getDistinctId());
-        }
+        checkUserIdAndAddUser(getProperties(), userId, getDistinctId(), getIdentities());
         break;
       case USER_ITEM:
         data.put("id", getItemId());
         getProperties().put(belongItemPair.getKey(), belongItemPair.getValue());
-        if (null != userId) {
-          getProperties().put("user_id", userId);
-        } else {
-          getProperties().put("identities", getIdentities());
-          getProperties().put("distinct_id", getDistinctId());
-        }
+        checkUserIdAndAddUser(getProperties(), userId, getDistinctId(), getIdentities());
         break;
       default:
         break;
@@ -143,5 +133,21 @@ class SensorsSchemaData extends SensorsData {
 
   public SchemaTypeEnum getSchemaTypeEnum() {
     return schemaTypeEnum;
+  }
+
+
+  private void checkUserIdAndAddUser(Map<String, Object> data, Long userId, String distinctId,
+      Map<String, String> identities) {
+    if (null != userId) {
+      if (null != distinctId || (null != identities && !identities.isEmpty())) {
+        log.warn(
+            "data record found userId,so (distinct_id/identities) node expired.[userId:{},distinctId:{},identities:{}]",
+            userId, distinctId, SensorsAnalyticsUtil.toString(identities));
+      }
+      data.put("user_id", userId);
+    } else {
+      data.put("identities", getIdentities());
+      data.put("distinct_id", getDistinctId());
+    }
   }
 }
