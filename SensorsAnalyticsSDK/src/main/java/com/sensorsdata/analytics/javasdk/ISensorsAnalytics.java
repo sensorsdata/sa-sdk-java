@@ -575,7 +575,9 @@ public interface ISensorsAnalytics {
 
     void profileUnset(@NonNull UserSchema userSchema) throws InvalidArgumentException;
 
-    void profileDelete(@NonNull UserSchema userSchema) throws InvalidArgumentException;
+    void profileDelete(@NonNull SensorsAnalyticsIdentity identity) throws InvalidArgumentException;
+
+    void profileDelete(@NonNull Long userId) throws InvalidArgumentException;
 
     void itemSet(@NonNull ItemSchema itemSchema) throws InvalidArgumentException;
 

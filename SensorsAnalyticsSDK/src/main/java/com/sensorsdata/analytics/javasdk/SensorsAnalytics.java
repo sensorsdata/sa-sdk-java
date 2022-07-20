@@ -34,6 +34,7 @@ import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import java.util.Map;
 /**
  * Sensors Analytics SDK
  */
+@Slf4j
 public class SensorsAnalytics implements ISensorsAnalytics {
 
     private final SensorsAnalyticsWorker worker;
@@ -484,8 +486,14 @@ public class SensorsAnalytics implements ISensorsAnalytics {
     }
 
     @Override
-    public void profileDelete(@NonNull UserSchema userSchema) throws InvalidArgumentException {
-        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_DELETE_ACTION_TYPE);
+    public void profileDelete(@NonNull SensorsAnalyticsIdentity identity) throws InvalidArgumentException {
+        UserSchema userSchema = UserSchema.init().identityMap(identity.getIdentityMap()).start();
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_DELETE_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileDelete(@NonNull Long userId) throws InvalidArgumentException {
+        UserSchema userSchema = UserSchema.init().setUserId(userId).start();
         worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_DELETE_ACTION_TYPE));
     }
 

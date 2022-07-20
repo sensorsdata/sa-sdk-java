@@ -421,7 +421,24 @@ public class SensorsAnalyticsUtil {
                   value.getClass().getName()));
         }
       }
+      //处理 profile_unset
+      if (PROFILE_UNSET_ACTION_TYPE.equals(actionType)) {
+        if (!(value instanceof Boolean) || !Boolean.parseBoolean(value.toString())) {
+          throw new InvalidArgumentException("The property value of " + entry.getKey() + " should be true.");
+        }
+      }
     }
   }
 
+
+  public static String toString(Map<String, String> identities) {
+    if (identities == null) {
+      return null;
+    }
+    StringBuilder res = new StringBuilder("");
+    for (Map.Entry<String, String> entry : identities.entrySet()) {
+      res.append("{").append(entry.getKey()).append(":").append(entry.getValue()).append("},");
+    }
+    return res.toString();
+  }
 }
