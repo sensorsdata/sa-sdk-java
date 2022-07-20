@@ -422,8 +422,10 @@ public class SensorsAnalyticsUtil {
         }
       }
       //处理 profile_unset
-      if (PROFILE_UNSET_ACTION_TYPE.equals(actionType) && !(value instanceof Boolean)) {
-        throw new InvalidArgumentException("The property value of " + entry.getKey() + " should be true.");
+      if (PROFILE_UNSET_ACTION_TYPE.equals(actionType)) {
+        if (!(value instanceof Boolean) || !Boolean.parseBoolean(value.toString())) {
+          throw new InvalidArgumentException("The property value of " + entry.getKey() + " should be true.");
+        }
       }
     }
   }
