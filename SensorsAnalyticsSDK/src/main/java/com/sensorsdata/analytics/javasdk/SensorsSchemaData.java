@@ -42,13 +42,13 @@ class SensorsSchemaData extends SensorsData {
   }
 
   protected SensorsSchemaData(ItemSchema itemSchema, String actionType) {
-    super(itemSchema.getTrackId(), itemSchema.getItemId(), actionType, null, itemSchema.getProperties());
+    super(itemSchema.getTrackId(), null, null, itemSchema.getItemId(), actionType, null, itemSchema.getProperties());
     this.schema = itemSchema.getSchema();
     this.schemaTypeEnum = SchemaTypeEnum.ITEM;
   }
 
   protected SensorsSchemaData(ItemEventSchema itemEventSchema, String actionType) {
-    super(itemEventSchema.getTrackId(), null, actionType,
+    super(itemEventSchema.getTrackId(), null, null, null, actionType,
         itemEventSchema.getEventName(),
         itemEventSchema.getProperties());
     this.schema = itemEventSchema.getSchema();
@@ -64,7 +64,8 @@ class SensorsSchemaData extends SensorsData {
 
 
   protected SensorsSchemaData(UserItemSchema userItemSchema, String actionType) {
-    super(userItemSchema.getTrackId(), userItemSchema.getItemId(), actionType, null, userItemSchema.getProperties());
+    super(userItemSchema.getTrackId(), userItemSchema.getDistinctId(), userItemSchema.getIdentityMap(),
+        userItemSchema.getItemId(), actionType, null, userItemSchema.getProperties());
     this.schema = userItemSchema.getSchema();
     this.userId = userItemSchema.getUserId();
     this.schemaTypeEnum = SchemaTypeEnum.USER_ITEM;

@@ -62,4 +62,16 @@ public class SchemaUserItemTest extends SensorsBaseTest {
     }
   }
 
+  @Test
+  public void checkIdentities() throws InvalidArgumentException {
+    UserItemSchema userItemSchema = UserItemSchema.init()
+        .setItemId("eee")
+        .setSchema("www")
+        .addIdentityProperty("key1", "value1")
+        .addIdentityProperty("key2", "value2")
+        .start();
+    sa.itemSet(userItemSchema);
+    assertUISData(data);
+  }
+
 }
