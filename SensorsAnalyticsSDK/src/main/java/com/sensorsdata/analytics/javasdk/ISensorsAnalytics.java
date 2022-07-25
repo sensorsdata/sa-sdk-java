@@ -569,7 +569,7 @@ public interface ISensorsAnalytics {
 
     void profileSetOnce(@NonNull UserSchema userSchema) throws InvalidArgumentException;
 
-    void profileSetIncrement(@NonNull UserSchema userSchema) throws InvalidArgumentException;
+    void profileIncrement(@NonNull UserSchema userSchema) throws InvalidArgumentException;
 
     void profileAppend(@NonNull UserSchema userSchema) throws InvalidArgumentException;
 

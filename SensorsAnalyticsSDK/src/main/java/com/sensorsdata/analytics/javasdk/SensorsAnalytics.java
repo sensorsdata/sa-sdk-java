@@ -468,7 +468,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
     }
 
     @Override
-    public void profileSetIncrement(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+    public void profileIncrement(@NonNull UserSchema userSchema) throws InvalidArgumentException {
         SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_INCREMENT_ACTION_TYPE);
         worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_INCREMENT_ACTION_TYPE));
     }
