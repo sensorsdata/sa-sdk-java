@@ -1,6 +1,10 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
+import com.sensorsdata.analytics.javasdk.bean.schema.IdentitySchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 
@@ -55,5 +59,67 @@ public class SchemaUserEventTest extends SensorsBaseTest {
     assertEventIdentitiesInfo(data, DISTINCT_ID);
   }
 
+  /**
+   * 校验用户绑定事件
+   */
+  @Test
+  public void checkSchemaBind() throws InvalidArgumentException {
+    IdentitySchema identitySchema = IdentitySchema.init().build();
+    try {
+      sa.bind(identitySchema);
+      fail("生成异常数据");
+    } catch (InvalidArgumentException e) {
+      assertTrue(e.getMessage().contains("The identities is invalid，you should have at least two identities."));
+    }
+
+    IdentitySchema oneIdentity = IdentitySchema.init()
+        .addIdentityProperty("key1", "value1")
+        .build();
+    try {
+      sa.bind(oneIdentity);
+      fail("生成异常数据");
+    } catch (InvalidArgumentException e) {
+      assertTrue(e.getMessage().contains("The identities is invalid，you should have at least two identities."));
+    }
+
+    IdentitySchema moreIdentity = IdentitySchema.init()
+        .addIdentityProperty("key1", "value1")
+        .addIdentityProperty("key2", "value2")
+        .build();
+    sa.bind(moreIdentity);
+    assertUESData(data);
+  }
+
+  @Test
+  public void checkSchemaUnbind() throws InvalidArgumentException {
+    IdentitySchema identitySchema = IdentitySchema.init().build();
+    try {
+      sa.unbind(identitySchema);
+      fail("生成异常数据");
+    } catch (InvalidArgumentException e) {
+      assertTrue(e.getMessage().contains("unbind user operation cannot input multiple or none identifiers"));
+    }
+
+    IdentitySchema moreIdentity = IdentitySchema.init()
+        .addIdentityProperty("key1", "value1")
+        .addIdentityProperty("key2", "value2")
+        .build();
+
+    try {
+      sa.unbind(moreIdentity);
+      fail("生成异常数据");
+    } catch (InvalidArgumentException e) {
+      assertTrue(e.getMessage().contains("unbind user operation cannot input multiple or none identifiers"));
+    }
+
+
+    IdentitySchema oneIdentity = IdentitySchema.init()
+        .addIdentityProperty("key1", "value1")
+        .build();
+    sa.unbind(oneIdentity);
+    assertUESData(data);
+
+
+  }
 
 }

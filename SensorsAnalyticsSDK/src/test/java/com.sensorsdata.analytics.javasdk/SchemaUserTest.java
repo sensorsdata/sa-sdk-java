@@ -20,7 +20,6 @@ public class SchemaUserTest extends SensorsBaseTest {
   private static final Long USER_ID = 12345L;
 
   private static final String DISTINCT_ID = "fz123";
-
   /**
    * 用户
    */
@@ -79,19 +78,12 @@ public class SchemaUserTest extends SensorsBaseTest {
     assertUSData(data);
   }
 
-  @Test
-  public void checkProfileDelete() throws InvalidArgumentException {
-    UserSchema userSchema = UserSchema.init()
-        .addIdentityProperty("login_id", DISTINCT_ID)
-        .addProperty("key1", "value")
-        .start();
-    sa.profileDelete(userSchema);
-    assertUSData(data);
-  }
 
   @Test
   public void checkProfileDeleteByUserId() throws InvalidArgumentException {
     sa.profileDelete(123L);
     assertUSData(data);
   }
+
+
 }
