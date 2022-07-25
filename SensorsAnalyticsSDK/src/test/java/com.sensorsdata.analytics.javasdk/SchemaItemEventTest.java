@@ -23,7 +23,6 @@ public class SchemaItemEventTest extends SensorsBaseTest {
     ItemEventSchema itemEventSchema = ItemEventSchema.init()
         .setSchema(SCHEMA)
         .setEventName(EVENT_NAME)
-        .setItemSchemaPair("product_id", "test_11")
         .addProperty("key1","value1")
         .start();
     sa.track(itemEventSchema);

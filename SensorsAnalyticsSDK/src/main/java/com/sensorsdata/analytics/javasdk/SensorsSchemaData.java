@@ -5,7 +5,6 @@ import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
-import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.common.SchemaTypeEnum;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
@@ -27,10 +26,6 @@ class SensorsSchemaData extends SensorsData {
   private String version = SensorsConst.PROTOCOL_VERSION;
 
   private String schema;
-  /**
-   * 专门保存 itemEvent /userItem 数据中的 item 信息
-   */
-  private Pair<String, String> belongItemPair;
 
   private Long userId;
 
@@ -57,7 +52,6 @@ class SensorsSchemaData extends SensorsData {
         itemEventSchema.getEventName(),
         itemEventSchema.getProperties());
     this.schema = itemEventSchema.getSchema();
-    this.belongItemPair = itemEventSchema.getItemPair();
     this.schemaTypeEnum = SchemaTypeEnum.ITEM_EVENT;
   }
 
@@ -72,7 +66,6 @@ class SensorsSchemaData extends SensorsData {
   protected SensorsSchemaData(UserItemSchema userItemSchema, String actionType) {
     super(userItemSchema.getTrackId(), userItemSchema.getItemId(), actionType, null, userItemSchema.getProperties());
     this.schema = userItemSchema.getSchema();
-    this.belongItemPair = userItemSchema.getItemPair();
     this.userId = userItemSchema.getUserId();
     this.schemaTypeEnum = SchemaTypeEnum.USER_ITEM;
   }
@@ -91,7 +84,6 @@ class SensorsSchemaData extends SensorsData {
         break;
       case ITEM_EVENT:
         data.put("event", getEvent());
-        getProperties().put(belongItemPair.getKey(), belongItemPair.getValue());
         break;
       case USER:
         checkUserIdAndAddUser(data, userId, getDistinctId(), getIdentities());
@@ -102,7 +94,6 @@ class SensorsSchemaData extends SensorsData {
         break;
       case USER_ITEM:
         data.put("id", getItemId());
-        getProperties().put(belongItemPair.getKey(), belongItemPair.getValue());
         checkUserIdAndAddUser(getProperties(), userId, getDistinctId(), getIdentities());
         break;
       default:

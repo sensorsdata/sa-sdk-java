@@ -30,12 +30,11 @@ public class ItemEventSchema {
 
   private Integer trackId;
 
-  protected ItemEventSchema(Integer trackId, String schema, String eventName, Pair<String, String> itemPair,
+  protected ItemEventSchema(Integer trackId, String schema, String eventName,
       Map<String, Object> properties) {
     this.trackId = trackId;
     this.schema = schema;
     this.eventName = eventName;
-    this.itemPair = itemPair;
     this.properties = properties;
   }
 
@@ -47,22 +46,17 @@ public class ItemEventSchema {
 
     private String schema;
     private String eventName;
-    private Pair<String, String> itemPair;
     private Integer trackId;
     private Map<String, Object> properties = new HashMap<>();
 
     public ItemEventSchema start() throws InvalidArgumentException {
       SensorsAnalyticsUtil.assertKey("event_name", eventName);
       SensorsAnalyticsUtil.assertSchema(schema);
-      if (itemPair == null) {
-        throw new InvalidArgumentException("Item event must set belong item schema info.");
-      }
-      SensorsAnalyticsUtil.assertKey("item_schema_key", itemPair.getKey());
-      SensorsAnalyticsUtil.assertValue("itemId", itemPair.getValue());
+
       SensorsAnalyticsUtil.assertSchemaProperties(properties, null);
-      this.trackId = SensorsAnalyticsUtil.getTrackId(properties, String.format("[itemPair<%s,%s>,event=%s,schema=%s]",
-          itemPair.getKey(), itemPair.getValue(), eventName, schema));
-      return new ItemEventSchema(trackId, schema, eventName, itemPair, properties);
+      this.trackId = SensorsAnalyticsUtil.getTrackId(properties, String.format("[event=%s,schema=%s]",
+         eventName, schema));
+      return new ItemEventSchema(trackId, schema, eventName, properties);
     }
 
     public IEBuilder setSchema(@NonNull String schema) {
@@ -72,11 +66,6 @@ public class ItemEventSchema {
 
     public IEBuilder setEventName(@NonNull String eventName) {
       this.eventName = eventName;
-      return this;
-    }
-
-    public IEBuilder setItemSchemaPair(@NonNull String itemSchemaKey, @NonNull String itemId) {
-      this.itemPair = Pair.of(itemSchemaKey, itemId);
       return this;
     }
 
@@ -121,10 +110,6 @@ public class ItemEventSchema {
 
   public String getEventName() {
     return eventName;
-  }
-
-  public Pair<String, String> getItemPair() {
-    return itemPair;
   }
 
   public Map<String, Object> getProperties() {

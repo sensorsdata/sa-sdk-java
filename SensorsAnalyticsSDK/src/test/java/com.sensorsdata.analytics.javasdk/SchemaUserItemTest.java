@@ -23,7 +23,6 @@ public class SchemaUserItemTest extends SensorsBaseTest {
     UserItemSchema userItemSchema = UserItemSchema.init()
         .setSchema(SCHEMA)
         .setItemId(ITEM_ID)
-        .setItemSchemaPair("product_id", "product1")
         .setUserId(USER_ID)
         .addProperty("key1", "value1")
         .start();
@@ -36,7 +35,6 @@ public class SchemaUserItemTest extends SensorsBaseTest {
     UserItemSchema userItemSchema = UserItemSchema.init()
         .setSchema(SCHEMA)
         .setItemId(ITEM_ID)
-        .setItemSchemaPair("product_id", "product1")
         .setUserId(USER_ID)
         .addProperty("key1", "value1")
         .addProperty(SensorsConst.TRACK_ID, 12)
