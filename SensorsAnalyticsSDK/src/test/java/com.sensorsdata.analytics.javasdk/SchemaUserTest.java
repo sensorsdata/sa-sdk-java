@@ -52,7 +52,7 @@ public class SchemaUserTest extends SensorsBaseTest {
         .addIdentityProperty("login_id", DISTINCT_ID)
         .addProperty("key1", 20)
         .start();
-    sa.profileSetIncrement(userSchema);
+    sa.profileIncrement(userSchema);
     assertUSData(data);
   }
 

@@ -250,7 +250,7 @@ public class SensorsBaseTest {
     assertSchemaDataNode(data);
     assertTrue("数据节点中不存在 id 节点！", data.containsKey("id"));
     assertNotNull("数据节点 id 不可为空！", data.get("id"));
-    assertEquals("数据节点个数不正常，可能丢失节点或多出来异常节点！", 7, data.size());
+    assertEquals("数据节点个数不正常，可能丢失节点或多出来异常节点！", 8, data.size());
   }
 
   /**
@@ -288,6 +288,8 @@ public class SensorsBaseTest {
     assertTrue("数据节点中不存在 track_id 节点！", data.containsKey("_track_id"));
     assertTrue("数据节点 track_id 值类型不正确！", data.get("_track_id") instanceof Integer);
     assertTrue("数据节点中不存在 lib 节点！", data.containsKey("lib"));
+    assertTrue("数据节点中不存在 time 节点！", data.containsKey("time"));
+    assertTrue("数据节点中 time 节点类型不正确！", data.get("time") instanceof Long);
     Object lib = data.get("lib");
     assertTrue("数据节点中 lib 节点类型不正确！", lib instanceof Map);
     assertEquals("数据节点 lib 内节点个数异常！", 4, ((Map<?, ?>) lib).size());

@@ -84,13 +84,13 @@ class SensorsSchemaData extends SensorsData {
     data.put("type", getType());
     data.put("schema", schema);
     data.put("lib", getLib());
+    data.put("time", getTime().getTime());
     switch (schemaTypeEnum) {
       case ITEM:
         data.put("id", getItemId());
         break;
       case ITEM_EVENT:
         data.put("event", getEvent());
-        data.put("time", getTime().getTime());
         getProperties().put(belongItemPair.getKey(), belongItemPair.getValue());
         break;
       case USER:
@@ -98,7 +98,6 @@ class SensorsSchemaData extends SensorsData {
         break;
       case USER_EVENT:
         data.put("event", getEvent());
-        data.put("time", getTime().getTime());
         checkUserIdAndAddUser(getProperties(), userId, getDistinctId(), getIdentities());
         break;
       case USER_ITEM:
