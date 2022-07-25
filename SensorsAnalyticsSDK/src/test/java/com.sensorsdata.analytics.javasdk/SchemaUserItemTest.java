@@ -1,5 +1,8 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 
@@ -41,6 +44,22 @@ public class SchemaUserItemTest extends SensorsBaseTest {
         .start();
     sa.itemSet(userItemSchema);
     assertUISData(data);
+  }
+
+  @Test
+  public void checkSelfProperties() {
+    try {
+      UserItemSchema userItemSchema = UserItemSchema.init()
+          .setSchema(SCHEMA)
+          .setItemId(ITEM_ID)
+          .setUserId(USER_ID)
+          .addProperty("11age", "22")
+          .start();
+      sa.itemSet(userItemSchema);
+      fail("生成异常数据");
+    } catch (InvalidArgumentException e) {
+      assertTrue(e.getMessage().contains("is invalid."));
+    }
   }
 
 }

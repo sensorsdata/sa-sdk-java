@@ -24,8 +24,6 @@ public class ItemEventSchema {
 
   private String eventName;
 
-  private Pair<String, String> itemPair;
-
   private Map<String, Object> properties;
 
   private Integer trackId;
@@ -52,7 +50,6 @@ public class ItemEventSchema {
     public ItemEventSchema start() throws InvalidArgumentException {
       SensorsAnalyticsUtil.assertKey("event_name", eventName);
       SensorsAnalyticsUtil.assertSchema(schema);
-
       SensorsAnalyticsUtil.assertSchemaProperties(properties, null);
       this.trackId = SensorsAnalyticsUtil.getTrackId(properties, String.format("[event=%s,schema=%s]",
          eventName, schema));

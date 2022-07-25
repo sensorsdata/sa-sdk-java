@@ -68,6 +68,7 @@ public class UserItemSchema extends SensorsAnalyticsIdentity {
       this.trackId = SensorsAnalyticsUtil.getTrackId(properties,
           String.format("user item event generate trackId error.[distinct_id=%s,user_id=%s,item_id=%s,schema=%s]",
               distinctId, userId, itemId, schema));
+      SensorsAnalyticsUtil.assertSchemaProperties(properties, null);
       return new UserItemSchema(idMap, schema, itemId, properties, trackId, userId, distinctId);
     }
 
