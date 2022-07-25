@@ -149,8 +149,10 @@ class SensorsData {
     this.properties = properties;
     this.itemType = itemType;
     this.itemId = itemId;
-    this.project = String.valueOf(properties.get(SensorsConst.PROJECT_SYSTEM_ATTR));
-    this.token = String.valueOf(properties.get(SensorsConst.TOKEN_SYSTEM_ATTR));
+    this.project = properties.get(SensorsConst.PROJECT_SYSTEM_ATTR) == null ?
+        null : String.valueOf(properties.get(SensorsConst.PROJECT_SYSTEM_ATTR));
+    this.token = properties.get(SensorsConst.TOKEN_SYSTEM_ATTR) == null ?
+        null : String.valueOf(properties.get(SensorsConst.TOKEN_SYSTEM_ATTR));
   }
 
 

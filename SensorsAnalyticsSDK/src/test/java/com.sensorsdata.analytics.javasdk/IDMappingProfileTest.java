@@ -1,14 +1,18 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  * id-mapping profile 相关接口单元测试
@@ -200,4 +204,38 @@ public class IDMappingProfileTest extends SensorsBaseTest {
     sa.profileUnsetById(userRecord);
     assertIDM3UserData(data);
   }
+
+  //------------------------------------bug fix 3.5.0-------------------------------
+
+  /**
+   * bug fix : 修复解绑可以传入多个用户ID
+   * <p>修复后的逻辑为：解绑只可以传入一个用户维度ID</p>
+   */
+  @Test
+  public void checkUnbind() throws InvalidArgumentException {
+    SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
+        .addIdentityProperty("key1", "value1")
+        .addIdentityProperty("key2", "value2")
+        .build();
+    try {
+      sa.unbind(identity);
+      fail("生成异常数据！");
+    } catch (InvalidArgumentException e) {
+      assertTrue(e.getMessage().contains("unbind user operation cannot input multiple or none identifiers"));
+    }
+
+    //正常单个用户标识
+    sa.unbind("key1", "value1");
+    assertIDM3EventData(data);
+
+    // 无用户标识
+    SensorsAnalyticsIdentity noIdentity = SensorsAnalyticsIdentity.builder().build();
+    try {
+      sa.unbind(noIdentity);
+      fail("生成异常数据！");
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains("unbind user operation cannot input multiple or none identifiers"));
+    }
+  }
+
 }
