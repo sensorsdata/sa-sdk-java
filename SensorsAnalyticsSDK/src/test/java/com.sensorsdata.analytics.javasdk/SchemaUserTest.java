@@ -20,7 +20,6 @@ public class SchemaUserTest extends SensorsBaseTest {
   private static final Long USER_ID = 12345L;
 
   private static final String DISTINCT_ID = "fz123";
-
   /**
    * 用户
    */
@@ -30,6 +29,7 @@ public class SchemaUserTest extends SensorsBaseTest {
         .setUserId(USER_ID)
         .addProperty("key1", "value1")
         .addProperty("key2", 22)
+        .setDistinctId("aaa")
         .start();
     sa.profileSet(userSchema);
     assertUSData(data);
@@ -41,6 +41,7 @@ public class SchemaUserTest extends SensorsBaseTest {
     UserSchema userSchema = UserSchema.init()
         .addIdentityProperty("login_id", DISTINCT_ID)
         .addIdentityProperty("key1", "value1")
+        .setDistinctId("aaa")
         .start();
     sa.profileSetOnce(userSchema);
     assertUSData(data);
@@ -52,7 +53,7 @@ public class SchemaUserTest extends SensorsBaseTest {
         .addIdentityProperty("login_id", DISTINCT_ID)
         .addProperty("key1", 20)
         .start();
-    sa.profileSetIncrement(userSchema);
+    sa.profileIncrement(userSchema);
     assertUSData(data);
   }
 
@@ -79,19 +80,19 @@ public class SchemaUserTest extends SensorsBaseTest {
     assertUSData(data);
   }
 
-  @Test
-  public void checkProfileDelete() throws InvalidArgumentException {
-    UserSchema userSchema = UserSchema.init()
-        .addIdentityProperty("login_id", DISTINCT_ID)
-        .addProperty("key1", "value")
-        .start();
-    sa.profileDelete(userSchema);
-    assertUSData(data);
-  }
-
+  /**
+   * 删除用户属性；只支持传入单个用户
+   */
   @Test
   public void checkProfileDeleteByUserId() throws InvalidArgumentException {
     sa.profileDelete(123L);
     assertUSData(data);
+
+    sa.profileDelete("key1", "value1");
+    assertUSData(data);
   }
+
+
+
+
 }

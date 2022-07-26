@@ -27,7 +27,7 @@ public class SensorsConst {
     /**
      * user events 所属 schema
      */
-    public static final String USER_EVENT_SCHEMA = "users_event";
+    public static final String USER_EVENT_SCHEMA = "events";
     /**
      * user 所属 schema
      */

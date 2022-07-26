@@ -5,7 +5,6 @@ import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
-import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.common.SchemaTypeEnum;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
@@ -27,10 +26,6 @@ class SensorsSchemaData extends SensorsData {
   private String version = SensorsConst.PROTOCOL_VERSION;
 
   private String schema;
-  /**
-   * 专门保存 itemEvent /userItem 数据中的 item 信息
-   */
-  private Pair<String, String> belongItemPair;
 
   private Long userId;
 
@@ -47,17 +42,16 @@ class SensorsSchemaData extends SensorsData {
   }
 
   protected SensorsSchemaData(ItemSchema itemSchema, String actionType) {
-    super(itemSchema.getTrackId(), itemSchema.getItemId(), actionType, null, itemSchema.getProperties());
+    super(itemSchema.getTrackId(), null, null, itemSchema.getItemId(), actionType, null, itemSchema.getProperties());
     this.schema = itemSchema.getSchema();
     this.schemaTypeEnum = SchemaTypeEnum.ITEM;
   }
 
   protected SensorsSchemaData(ItemEventSchema itemEventSchema, String actionType) {
-    super(itemEventSchema.getTrackId(), null, actionType,
+    super(itemEventSchema.getTrackId(), null, null, null, actionType,
         itemEventSchema.getEventName(),
         itemEventSchema.getProperties());
     this.schema = itemEventSchema.getSchema();
-    this.belongItemPair = itemEventSchema.getItemPair();
     this.schemaTypeEnum = SchemaTypeEnum.ITEM_EVENT;
   }
 
@@ -70,9 +64,9 @@ class SensorsSchemaData extends SensorsData {
 
 
   protected SensorsSchemaData(UserItemSchema userItemSchema, String actionType) {
-    super(userItemSchema.getTrackId(), userItemSchema.getItemId(), actionType, null, userItemSchema.getProperties());
+    super(userItemSchema.getTrackId(), userItemSchema.getDistinctId(), userItemSchema.getIdentityMap(),
+        userItemSchema.getItemId(), actionType, null, userItemSchema.getProperties());
     this.schema = userItemSchema.getSchema();
-    this.belongItemPair = userItemSchema.getItemPair();
     this.userId = userItemSchema.getUserId();
     this.schemaTypeEnum = SchemaTypeEnum.USER_ITEM;
   }
@@ -84,26 +78,23 @@ class SensorsSchemaData extends SensorsData {
     data.put("type", getType());
     data.put("schema", schema);
     data.put("lib", getLib());
+    data.put("time", getTime().getTime());
     switch (schemaTypeEnum) {
       case ITEM:
         data.put("id", getItemId());
         break;
       case ITEM_EVENT:
         data.put("event", getEvent());
-        data.put("time", getTime().getTime());
-        getProperties().put(belongItemPair.getKey(), belongItemPair.getValue());
         break;
       case USER:
         checkUserIdAndAddUser(data, userId, getDistinctId(), getIdentities());
         break;
       case USER_EVENT:
         data.put("event", getEvent());
-        data.put("time", getTime().getTime());
         checkUserIdAndAddUser(getProperties(), userId, getDistinctId(), getIdentities());
         break;
       case USER_ITEM:
         data.put("id", getItemId());
-        getProperties().put(belongItemPair.getKey(), belongItemPair.getValue());
         checkUserIdAndAddUser(getProperties(), userId, getDistinctId(), getIdentities());
         break;
       default:

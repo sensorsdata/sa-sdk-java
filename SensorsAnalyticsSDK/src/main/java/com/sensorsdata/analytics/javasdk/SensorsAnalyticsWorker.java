@@ -78,18 +78,6 @@ class SensorsAnalyticsWorker {
     }
     //check properties
     final Map<String, Object> properties = sensorsData.getProperties();
-    if (properties.containsKey(PROJECT_SYSTEM_ATTR)) {
-      sensorsData.setProject(properties.get(PROJECT_SYSTEM_ATTR).toString());
-      properties.remove(PROJECT_SYSTEM_ATTR);
-    }
-    if (properties.containsKey(TOKEN_SYSTEM_ATTR)) {
-      sensorsData.setToken(properties.get(TOKEN_SYSTEM_ATTR).toString());
-      properties.remove(TOKEN_SYSTEM_ATTR);
-    }
-    if (properties.containsKey(TIME_SYSTEM_ATTR)) {
-      sensorsData.setTime((Date) properties.get(TIME_SYSTEM_ATTR));
-      properties.remove(TIME_SYSTEM_ATTR);
-    }
     //check common properties contains $app_version
     if (this.superProperties.containsKey(APP_VERSION_SYSTEM_ATTR)) {
       sensorsData.getLib().put(APP_VERSION_SYSTEM_ATTR, (String) this.superProperties.get(APP_VERSION_SYSTEM_ATTR));

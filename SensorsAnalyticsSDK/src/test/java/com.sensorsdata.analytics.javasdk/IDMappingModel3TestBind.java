@@ -334,17 +334,6 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
     }
 
     @Test
-    public void testUnBindInvalidIdentityNull() throws InvalidArgumentException{
-        try{
-            saTmp.unbind(null);
-        }catch (NullPointerException e){
-            e.printStackTrace();
-            assertEquals("analyticsIdentity is marked non-null but is null", e.getMessage());
-        }
-
-    }
-
-    @Test
     public void testUnBindInvalidIdentityEmpty() throws InvalidArgumentException{
         try {
             SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()

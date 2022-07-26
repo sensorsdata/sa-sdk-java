@@ -7,6 +7,7 @@ import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.schema.IdentitySchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemEventSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
@@ -367,8 +368,19 @@ public interface ISensorsAnalytics {
      *
      * @param analyticsIdentity 用户标识 ID
      * @throws InvalidArgumentException 不合法参数异常
+     * @see #unbind(String, String)
      */
+    @Deprecated
     void unbind(@NonNull SensorsAnalyticsIdentity analyticsIdentity) throws InvalidArgumentException;
+
+    /**
+     * 用户标识解绑
+     *
+     * @param key   用户标识 key
+     * @param value 用户标识值
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void unbind(@NonNull String key, @NonNull String value) throws InvalidArgumentException;
 
     /**
      * 使用用户标识 3.0 系统埋点事件
@@ -502,8 +514,19 @@ public interface ISensorsAnalytics {
      *
      * @param analyticsIdentity 用户标识 ID
      * @throws InvalidArgumentException 不合法参数异常
+     * @see #profileDeleteById(String, String)
      */
+    @Deprecated
     void profileDeleteById(@NonNull SensorsAnalyticsIdentity analyticsIdentity) throws InvalidArgumentException;
+
+    /**
+     * 删除指定用户的所有属性
+     *
+     * @param key   用户标识 key
+     * @param value 用户标识值
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void profileDeleteById(@NonNull String key, @NonNull String value) throws InvalidArgumentException;
 
     /**
      * 使用 IDM3.0 触发埋点事件
@@ -561,21 +584,21 @@ public interface ISensorsAnalytics {
 
     void track(@NonNull ItemEventSchema itemEventSchema) throws InvalidArgumentException;
 
-    void bind(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException;
+    void bind(@NonNull IdentitySchema identitySchema) throws InvalidArgumentException;
 
-    void unbind(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException;
+    void unbind(@NonNull IdentitySchema identitySchema) throws InvalidArgumentException;
 
     void profileSet(@NonNull UserSchema userSchema) throws InvalidArgumentException;
 
     void profileSetOnce(@NonNull UserSchema userSchema) throws InvalidArgumentException;
 
-    void profileSetIncrement(@NonNull UserSchema userSchema) throws InvalidArgumentException;
+    void profileIncrement(@NonNull UserSchema userSchema) throws InvalidArgumentException;
 
     void profileAppend(@NonNull UserSchema userSchema) throws InvalidArgumentException;
 
     void profileUnset(@NonNull UserSchema userSchema) throws InvalidArgumentException;
 
-    void profileDelete(@NonNull SensorsAnalyticsIdentity identity) throws InvalidArgumentException;
+    void profileDelete(@NonNull String key, @NonNull String value) throws InvalidArgumentException;
 
     void profileDelete(@NonNull Long userId) throws InvalidArgumentException;
 

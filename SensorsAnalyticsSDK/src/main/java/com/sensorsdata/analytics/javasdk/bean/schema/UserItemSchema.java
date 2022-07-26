@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TODO
+ * user-item schema
  *
  * @author fangzhuo
  * @version 1.0.0
@@ -32,15 +32,12 @@ public class UserItemSchema extends SensorsAnalyticsIdentity {
 
   private String itemId;
 
-  private Pair<String, String> itemPair;
-
   private Map<String, Object> properties;
 
-  protected UserItemSchema(Map<String, String> idMap, String schema, String itemId, Pair<String, String> itemPair,
+  protected UserItemSchema(Map<String, String> idMap, String schema, String itemId,
       Map<String, Object> properties, Integer trackId, Long userId, String distinctId) {
     super(idMap);
     this.schema = schema;
-    this.itemPair = itemPair;
     this.itemId = itemId;
     this.properties = properties;
     this.trackId = trackId;
@@ -58,7 +55,6 @@ public class UserItemSchema extends SensorsAnalyticsIdentity {
     private Map<String, String> idMap = new HashMap<>();
     private String schema;
     private String itemId;
-    private Pair<String, String> itemPair;
     private Map<String, Object> properties = new HashMap<>();
     private String distinctId;
 
@@ -69,20 +65,11 @@ public class UserItemSchema extends SensorsAnalyticsIdentity {
       this.distinctId = SensorsAnalyticsUtil.checkUserInfo(userId, idMap, distinctId);
       SensorsAnalyticsUtil.assertValue("item_id", itemId);
       SensorsAnalyticsUtil.assertSchema(schema);
-      if (itemPair == null) {
-        throw new InvalidArgumentException("Item event must set belong item schema info.");
-      }
-      SensorsAnalyticsUtil.assertKey("item_schema_key", itemPair.getKey());
-      SensorsAnalyticsUtil.assertValue("item_id", itemPair.getValue());
       this.trackId = SensorsAnalyticsUtil.getTrackId(properties,
           String.format("user item event generate trackId error.[distinct_id=%s,user_id=%s,item_id=%s,schema=%s]",
               distinctId, userId, itemId, schema));
-      return new UserItemSchema(idMap, schema, itemId, itemPair, properties, trackId, userId, distinctId);
-    }
-
-    public UISBuilder setItemSchemaPair(@NonNull String itemSchemaKey, @NonNull String itemId) {
-      this.itemPair = Pair.of(itemSchemaKey, itemId);
-      return this;
+      SensorsAnalyticsUtil.assertSchemaProperties(properties, null);
+      return new UserItemSchema(idMap, schema, itemId, properties, trackId, userId, distinctId);
     }
 
     public UISBuilder setItemId(@NonNull String itemId) {
@@ -169,10 +156,6 @@ public class UserItemSchema extends SensorsAnalyticsIdentity {
 
   public String getItemId() {
     return itemId;
-  }
-
-  public Pair<String, String> getItemPair() {
-    return itemPair;
   }
 
   public Map<String, Object> getProperties() {

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TODO
+ * user-event schema
  *
  * @author fangzhuo
  * @version 1.0.0

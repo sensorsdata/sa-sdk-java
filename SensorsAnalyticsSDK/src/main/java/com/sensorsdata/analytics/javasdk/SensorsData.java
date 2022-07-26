@@ -131,8 +131,9 @@ class SensorsData {
   /**
    * 专用于 item 相关 schema 构建
    */
-  protected SensorsData(Integer trackId, String itemId, String type, String event, Map<String, Object> properties) {
-    this(null, null, null, type, event, properties, null, itemId, trackId);
+  protected SensorsData(Integer trackId, String distinctId, Map<String, String> identities, String itemId, String type,
+      String event, Map<String, Object> properties) {
+    this(distinctId, null, identities, type, event, properties, null, itemId, trackId);
   }
 
   private SensorsData(String distinctId, String originalId, Map<String, String> identities, String type, String event,
@@ -149,8 +150,10 @@ class SensorsData {
     this.properties = properties;
     this.itemType = itemType;
     this.itemId = itemId;
-    this.project = String.valueOf(properties.get(SensorsConst.PROJECT_SYSTEM_ATTR));
-    this.token = String.valueOf(properties.get(SensorsConst.TOKEN_SYSTEM_ATTR));
+    this.project = properties.get(SensorsConst.PROJECT_SYSTEM_ATTR) == null ?
+        null : String.valueOf(properties.get(SensorsConst.PROJECT_SYSTEM_ATTR));
+    this.token = properties.get(SensorsConst.TOKEN_SYSTEM_ATTR) == null ?
+        null : String.valueOf(properties.get(SensorsConst.TOKEN_SYSTEM_ATTR));
   }
 
 

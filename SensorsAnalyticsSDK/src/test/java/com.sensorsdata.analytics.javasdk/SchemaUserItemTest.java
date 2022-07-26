@@ -1,5 +1,8 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 
@@ -23,7 +26,6 @@ public class SchemaUserItemTest extends SensorsBaseTest {
     UserItemSchema userItemSchema = UserItemSchema.init()
         .setSchema(SCHEMA)
         .setItemId(ITEM_ID)
-        .setItemSchemaPair("product_id", "product1")
         .setUserId(USER_ID)
         .addProperty("key1", "value1")
         .start();
@@ -36,10 +38,37 @@ public class SchemaUserItemTest extends SensorsBaseTest {
     UserItemSchema userItemSchema = UserItemSchema.init()
         .setSchema(SCHEMA)
         .setItemId(ITEM_ID)
-        .setItemSchemaPair("product_id", "product1")
         .setUserId(USER_ID)
         .addProperty("key1", "value1")
         .addProperty(SensorsConst.TRACK_ID, 12)
+        .start();
+    sa.itemSet(userItemSchema);
+    assertUISData(data);
+  }
+
+  @Test
+  public void checkSelfProperties() {
+    try {
+      UserItemSchema userItemSchema = UserItemSchema.init()
+          .setSchema(SCHEMA)
+          .setItemId(ITEM_ID)
+          .setUserId(USER_ID)
+          .addProperty("11age", "22")
+          .start();
+      sa.itemSet(userItemSchema);
+      fail("生成异常数据");
+    } catch (InvalidArgumentException e) {
+      assertTrue(e.getMessage().contains("is invalid."));
+    }
+  }
+
+  @Test
+  public void checkIdentities() throws InvalidArgumentException {
+    UserItemSchema userItemSchema = UserItemSchema.init()
+        .setItemId("eee")
+        .setSchema("www")
+        .addIdentityProperty("key1", "value1")
+        .addIdentityProperty("key2", "value2")
         .start();
     sa.itemSet(userItemSchema);
     assertUISData(data);
