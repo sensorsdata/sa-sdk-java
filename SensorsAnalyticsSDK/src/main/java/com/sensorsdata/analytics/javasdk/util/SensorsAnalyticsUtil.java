@@ -441,4 +441,12 @@ public class SensorsAnalyticsUtil {
     }
     return res.toString();
   }
+
+  public static void assertEventItemPair(Pair<String, String> itemPair) throws InvalidArgumentException {
+    if (itemPair == null) {
+      throw new InvalidArgumentException("item event record must be set item id info");
+    }
+    assertKey("item event id", itemPair.getKey());
+    assertValue("item event value", itemPair.getValue());
+  }
 }

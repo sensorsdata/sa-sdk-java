@@ -5,6 +5,7 @@ import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
+import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.common.SchemaTypeEnum;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
@@ -28,6 +29,8 @@ class SensorsSchemaData extends SensorsData {
   private String schema;
 
   private Long userId;
+
+  private Pair<String, String> itemEventPair;
 
   private SchemaTypeEnum schemaTypeEnum;
 
@@ -53,6 +56,7 @@ class SensorsSchemaData extends SensorsData {
         itemEventSchema.getEventName(),
         itemEventSchema.getProperties());
     this.schema = itemEventSchema.getSchema();
+    this.itemEventPair = itemEventSchema.getItemPair();
     this.schemaTypeEnum = SchemaTypeEnum.ITEM_EVENT;
   }
 
@@ -92,6 +96,7 @@ class SensorsSchemaData extends SensorsData {
         data.put("id", getItemId());
         break;
       case ITEM_EVENT:
+        getProperties().put(itemEventPair.getKey(), itemEventPair.getValue());
         data.put("event", getEvent());
         break;
       case USER:
