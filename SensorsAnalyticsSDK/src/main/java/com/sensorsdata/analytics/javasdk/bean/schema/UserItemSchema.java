@@ -1,11 +1,10 @@
 package com.sensorsdata.analytics.javasdk.bean.schema;
 
 
-import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
-import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
+import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Date;
@@ -20,7 +19,8 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2022/06/13 16:07
  */
-public class UserItemSchema extends SensorsAnalyticsIdentity {
+@Getter
+public class UserItemSchema {
 
   private Integer trackId;
 
@@ -34,9 +34,12 @@ public class UserItemSchema extends SensorsAnalyticsIdentity {
 
   private Map<String, Object> properties;
 
+  private Map<String, String> identityMap;
+
+
   protected UserItemSchema(Map<String, String> idMap, String schema, String itemId,
       Map<String, Object> properties, Integer trackId, Long userId, String distinctId) {
-    super(idMap);
+    this.identityMap = idMap;
     this.schema = schema;
     this.itemId = itemId;
     this.properties = properties;
@@ -79,11 +82,6 @@ public class UserItemSchema extends SensorsAnalyticsIdentity {
 
     public UISBuilder setSchema(@NonNull String schema) {
       this.schema = schema;
-      return this;
-    }
-
-    public UISBuilder setUserId(@NonNull Long userId) {
-      this.userId = userId;
       return this;
     }
 

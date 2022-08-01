@@ -26,7 +26,7 @@ public class SchemaUserItemTest extends SensorsBaseTest {
     UserItemSchema userItemSchema = UserItemSchema.init()
         .setSchema(SCHEMA)
         .setItemId(ITEM_ID)
-        .setUserId(USER_ID)
+        .addIdentityProperty("user1", "value1")
         .addProperty("key1", "value1")
         .start();
     sa.itemSet(userItemSchema);
@@ -38,7 +38,7 @@ public class SchemaUserItemTest extends SensorsBaseTest {
     UserItemSchema userItemSchema = UserItemSchema.init()
         .setSchema(SCHEMA)
         .setItemId(ITEM_ID)
-        .setUserId(USER_ID)
+        .addIdentityProperty("user1", "value1")
         .addProperty("key1", "value1")
         .addProperty(SensorsConst.TRACK_ID, 12)
         .start();
@@ -52,7 +52,7 @@ public class SchemaUserItemTest extends SensorsBaseTest {
       UserItemSchema userItemSchema = UserItemSchema.init()
           .setSchema(SCHEMA)
           .setItemId(ITEM_ID)
-          .setUserId(USER_ID)
+          .addIdentityProperty("user1", "value1")
           .addProperty("11age", "22")
           .start();
       sa.itemSet(userItemSchema);

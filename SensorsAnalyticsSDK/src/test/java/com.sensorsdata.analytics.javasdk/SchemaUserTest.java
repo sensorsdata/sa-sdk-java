@@ -26,7 +26,7 @@ public class SchemaUserTest extends SensorsBaseTest {
   @Test
   public void checkProfileSetTest() throws InvalidArgumentException {
     UserSchema userSchema = UserSchema.init()
-        .setUserId(USER_ID)
+        .addIdentityProperty("user1", "value1")
         .addProperty("key1", "value1")
         .addProperty("key2", 22)
         .setDistinctId("aaa")
@@ -85,14 +85,19 @@ public class SchemaUserTest extends SensorsBaseTest {
    */
   @Test
   public void checkProfileDeleteByUserId() throws InvalidArgumentException {
-    sa.profileDelete(123L);
-    assertUSData(data);
-
     sa.profileDelete("key1", "value1");
     assertUSData(data);
   }
 
+  @Test
+  public void checkPreDefineProperties() throws InvalidArgumentException {
+    UserSchema userSchema = UserSchema.init()
+        .addIdentityProperty("key1", "value1")
+        .addProperty("$project", "abc")
+        .start();
+    sa.profileSet(userSchema);
+    assertUSData(data);
 
-
+  }
 
 }

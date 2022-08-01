@@ -1,9 +1,9 @@
 package com.sensorsdata.analytics.javasdk.bean.schema;
 
-import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
+import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Date;
@@ -18,15 +18,26 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2022/06/13 15:49
  */
-public class UserSchema extends IDMUserRecord {
+@Getter
+public class UserSchema {
 
   private Long userId;
 
+  private Map<String, Object> propertyMap;
+
+  private String distinctId;
+
+  private Integer trackId;
+
+  private Map<String, String> identityMap;
+
   protected UserSchema(Map<String, String> identityMap, Map<String, Object> propertyMap, String distinctId,
       Integer trackId, Long userId) {
-    super(identityMap, propertyMap, distinctId, trackId);
     this.userId = userId;
-
+    this.propertyMap = propertyMap;
+    this.distinctId = distinctId;
+    this.trackId = trackId;
+    this.identityMap = identityMap;
   }
 
   public static USBuilder init() {
@@ -48,11 +59,6 @@ public class UserSchema extends IDMUserRecord {
       this.trackId =
           SensorsAnalyticsUtil.getTrackId(properties, String.format("[distinct_id=%s,user_id=%s]", distinctId, userId));
       return new UserSchema(idMap, properties, distinctId, trackId, userId);
-    }
-
-    public USBuilder setUserId(@NonNull Long userId) {
-      this.userId = userId;
-      return this;
     }
 
     public USBuilder identityMap(@NonNull Map<String, String> identityMap) {

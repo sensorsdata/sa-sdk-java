@@ -136,7 +136,7 @@ class SensorsData {
     this(distinctId, null, identities, type, event, properties, null, itemId, trackId);
   }
 
-  private SensorsData(String distinctId, String originalId, Map<String, String> identities, String type, String event,
+  protected SensorsData(String distinctId, String originalId, Map<String, String> identities, String type, String event,
       Map<String, Object> properties, String itemType, String itemId, Integer trackId) {
     this.trackId = trackId;
     this.distinctId = distinctId;
@@ -146,14 +146,14 @@ class SensorsData {
     this.event = event;
     this.lib = SensorsAnalyticsUtil.generateLibInfo();
     this.time = properties.containsKey(SensorsConst.TIME_SYSTEM_ATTR) ?
-        (Date) properties.get(SensorsConst.TIME_SYSTEM_ATTR) : new Date();
+        (Date) properties.remove(SensorsConst.TIME_SYSTEM_ATTR) : new Date();
     this.properties = properties;
     this.itemType = itemType;
     this.itemId = itemId;
     this.project = properties.get(SensorsConst.PROJECT_SYSTEM_ATTR) == null ?
-        null : String.valueOf(properties.get(SensorsConst.PROJECT_SYSTEM_ATTR));
+        null : String.valueOf(properties.remove(SensorsConst.PROJECT_SYSTEM_ATTR));
     this.token = properties.get(SensorsConst.TOKEN_SYSTEM_ATTR) == null ?
-        null : String.valueOf(properties.get(SensorsConst.TOKEN_SYSTEM_ATTR));
+        null : String.valueOf(properties.remove(SensorsConst.TOKEN_SYSTEM_ATTR));
   }
 
 

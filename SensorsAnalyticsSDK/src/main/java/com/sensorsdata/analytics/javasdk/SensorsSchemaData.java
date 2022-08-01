@@ -35,7 +35,8 @@ class SensorsSchemaData extends SensorsData {
    * 构建 userEventSchema 数据，actionType:track/bind/unbind
    */
   protected SensorsSchemaData(UserEventSchema userEventSchema, String actionType) {
-    super(userEventSchema, actionType);
+    super(userEventSchema.getDistinctId(), null, userEventSchema.getIdentityMap(), actionType,
+        userEventSchema.getEventName(), userEventSchema.getPropertyMap(), null, null, userEventSchema.getTrackId());
     this.schema = SensorsConst.USER_EVENT_SCHEMA;
     this.userId = userEventSchema.getUserId();
     this.schemaTypeEnum = SchemaTypeEnum.USER_EVENT;
@@ -56,7 +57,8 @@ class SensorsSchemaData extends SensorsData {
   }
 
   protected SensorsSchemaData(UserSchema userSchema, String actionType) {
-    super(userSchema, actionType);
+    super(userSchema.getDistinctId(), actionType, userSchema.getIdentityMap(), userSchema.getPropertyMap(),
+        userSchema.getTrackId());
     this.schema = SensorsConst.USER_SCHEMA;
     this.userId = userSchema.getUserId();
     this.schemaTypeEnum = SchemaTypeEnum.USER;
@@ -79,6 +81,12 @@ class SensorsSchemaData extends SensorsData {
     data.put("schema", schema);
     data.put("lib", getLib());
     data.put("time", getTime().getTime());
+    if (getProject() != null && !"".equals(getProject())) {
+      data.put("project", getProject());
+    }
+    if (getToken() != null && !"".equals(getToken())) {
+      data.put("token", getToken());
+    }
     switch (schemaTypeEnum) {
       case ITEM:
         data.put("id", getItemId());
