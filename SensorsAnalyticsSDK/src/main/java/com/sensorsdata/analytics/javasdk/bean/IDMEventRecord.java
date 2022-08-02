@@ -30,7 +30,7 @@ import java.util.Map;
  * @since 2022/03/09 14:41
  */
 @Getter
-public class IDMEventRecord extends SensorsAnalyticsIdentity {
+public class IDMEventRecord {
   /**
    * 事件名称
    */
@@ -46,9 +46,12 @@ public class IDMEventRecord extends SensorsAnalyticsIdentity {
 
   private Integer trackId;
 
+  private Map<String, String> identityMap;
+
+
   protected IDMEventRecord(Map<String, String> identityMap, String eventName, String distinctId,
       Map<String, Object> propertyMap, Integer trackId) {
-    super(identityMap);
+    this.identityMap = identityMap;
     this.eventName = eventName;
     this.distinctId = distinctId;
     this.propertyMap = propertyMap;

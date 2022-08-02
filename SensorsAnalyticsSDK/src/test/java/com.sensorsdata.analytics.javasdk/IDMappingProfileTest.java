@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
@@ -205,7 +206,7 @@ public class IDMappingProfileTest extends SensorsBaseTest {
     assertIDM3UserData(data);
   }
 
-  //------------------------------------bug fix 3.5.0-------------------------------
+  //------------------------------------bug fix 3.5.0 begin-------------------------------
 
   /**
    * bug fix : 修复解绑可以传入多个用户ID
@@ -237,5 +238,5 @@ public class IDMappingProfileTest extends SensorsBaseTest {
       assertTrue(e.getMessage().contains("unbind user operation cannot input multiple or none identifiers"));
     }
   }
-
+  //------------------------------------bug fix 3.5.0 end-------------------------------
 }

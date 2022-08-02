@@ -3,6 +3,7 @@ package com.sensorsdata.analytics.javasdk.bean.schema;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
+import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Date;
@@ -17,6 +18,7 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2022/06/13 16:53
  */
+@Getter
 public class ItemSchema {
 
   private String schema;

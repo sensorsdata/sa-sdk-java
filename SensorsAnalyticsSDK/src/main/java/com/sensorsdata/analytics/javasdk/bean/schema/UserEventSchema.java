@@ -1,10 +1,10 @@
 package com.sensorsdata.analytics.javasdk.bean.schema;
 
 import com.sensorsdata.analytics.javasdk.SensorsConst;
-import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
+import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Date;
@@ -19,13 +19,33 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2022/06/13 15:28
  */
-public class UserEventSchema extends IDMEventRecord {
+@Getter
+public class UserEventSchema {
+
+  private Integer trackId;
 
   private Long userId;
 
+  private String eventName;
+  /**
+   * distinctId 标识，在 IDM3.0 里面，该参数可传可不传
+   */
+  private String distinctId;
+  /**
+   * 事件携带的属性集合
+   */
+  private Map<String, Object> propertyMap;
+
+  private Map<String, String> identityMap;
+
+
   protected UserEventSchema(Map<String, String> identityMap, String eventName, String distinctId,
       Map<String, Object> propertyMap, Integer trackId, Long userId) {
-    super(identityMap, eventName, distinctId, propertyMap, trackId);
+    this.eventName = eventName;
+    this.distinctId = distinctId;
+    this.propertyMap = propertyMap;
+    this.trackId = trackId;
+    this.identityMap = identityMap;
     this.userId = userId;
   }
 

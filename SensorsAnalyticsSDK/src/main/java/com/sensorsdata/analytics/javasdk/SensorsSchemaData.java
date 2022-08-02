@@ -5,6 +5,7 @@ import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
+import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.common.SchemaTypeEnum;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
@@ -29,13 +30,16 @@ class SensorsSchemaData extends SensorsData {
 
   private Long userId;
 
+  private Pair<String, String> itemEventPair;
+
   private SchemaTypeEnum schemaTypeEnum;
 
   /**
    * 构建 userEventSchema 数据，actionType:track/bind/unbind
    */
   protected SensorsSchemaData(UserEventSchema userEventSchema, String actionType) {
-    super(userEventSchema, actionType);
+    super(userEventSchema.getDistinctId(), null, userEventSchema.getIdentityMap(), actionType,
+        userEventSchema.getEventName(), userEventSchema.getPropertyMap(), null, null, userEventSchema.getTrackId());
     this.schema = SensorsConst.USER_EVENT_SCHEMA;
     this.userId = userEventSchema.getUserId();
     this.schemaTypeEnum = SchemaTypeEnum.USER_EVENT;
@@ -52,11 +56,13 @@ class SensorsSchemaData extends SensorsData {
         itemEventSchema.getEventName(),
         itemEventSchema.getProperties());
     this.schema = itemEventSchema.getSchema();
+    this.itemEventPair = itemEventSchema.getItemPair();
     this.schemaTypeEnum = SchemaTypeEnum.ITEM_EVENT;
   }
 
   protected SensorsSchemaData(UserSchema userSchema, String actionType) {
-    super(userSchema, actionType);
+    super(userSchema.getDistinctId(), actionType, userSchema.getIdentityMap(), userSchema.getPropertyMap(),
+        userSchema.getTrackId());
     this.schema = SensorsConst.USER_SCHEMA;
     this.userId = userSchema.getUserId();
     this.schemaTypeEnum = SchemaTypeEnum.USER;
@@ -79,11 +85,18 @@ class SensorsSchemaData extends SensorsData {
     data.put("schema", schema);
     data.put("lib", getLib());
     data.put("time", getTime().getTime());
+    if (getProject() != null && !"".equals(getProject())) {
+      data.put("project", getProject());
+    }
+    if (getToken() != null && !"".equals(getToken())) {
+      data.put("token", getToken());
+    }
     switch (schemaTypeEnum) {
       case ITEM:
         data.put("id", getItemId());
         break;
       case ITEM_EVENT:
+        getProperties().put(itemEventPair.getKey(), itemEventPair.getValue());
         data.put("event", getEvent());
         break;
       case USER:

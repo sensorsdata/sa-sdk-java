@@ -4,6 +4,7 @@ import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
+import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Date;
@@ -18,6 +19,7 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2022/06/13 17:03
  */
+@Getter
 public class ItemEventSchema {
 
   private String schema;
@@ -28,12 +30,15 @@ public class ItemEventSchema {
 
   private Integer trackId;
 
-  protected ItemEventSchema(Integer trackId, String schema, String eventName,
+  private Pair<String, String> itemPair;
+
+  protected ItemEventSchema(Integer trackId, String schema, String eventName, Pair<String, String> itemPair,
       Map<String, Object> properties) {
     this.trackId = trackId;
     this.schema = schema;
     this.eventName = eventName;
     this.properties = properties;
+    this.itemPair = itemPair;
   }
 
   public static IEBuilder init() {
@@ -46,14 +51,17 @@ public class ItemEventSchema {
     private String eventName;
     private Integer trackId;
     private Map<String, Object> properties = new HashMap<>();
+    private Pair<String, String> itemPair;
 
     public ItemEventSchema start() throws InvalidArgumentException {
-      SensorsAnalyticsUtil.assertKey("event_name", eventName);
       SensorsAnalyticsUtil.assertSchema(schema);
+      SensorsAnalyticsUtil.assertEventItemPair(itemPair);
+      SensorsAnalyticsUtil.assertKey("event_name", eventName);
       SensorsAnalyticsUtil.assertSchemaProperties(properties, null);
       this.trackId = SensorsAnalyticsUtil.getTrackId(properties, String.format("[event=%s,schema=%s]",
-         eventName, schema));
-      return new ItemEventSchema(trackId, schema, eventName, properties);
+          eventName, schema));
+
+      return new ItemEventSchema(trackId, schema, eventName, itemPair, properties);
     }
 
     public IEBuilder setSchema(@NonNull String schema) {
@@ -63,6 +71,11 @@ public class ItemEventSchema {
 
     public IEBuilder setEventName(@NonNull String eventName) {
       this.eventName = eventName;
+      return this;
+    }
+
+    public IEBuilder setItemPair(@NonNull String itemId, @NonNull String value) {
+      this.itemPair = Pair.of(itemId, value);
       return this;
     }
 
