@@ -127,7 +127,7 @@ public class FastBatchConsumer implements Consumer {
       } catch (Exception e) {
         log.error("Failed to send data:{}.", sendingData, e);
         callback.onFailed(new FailedData(String.format("failed to send data,message:%s.", e.getMessage()),
-            SensorsAnalyticsUtil.deepCopy(results)));
+            SensorsAnalyticsUtil.deepCopy(sendList)));
       }
       sendList.clear();
     }
