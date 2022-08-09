@@ -1,13 +1,21 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+
 import org.junit.Test;
 
-import java.util.*;
-
-import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 普通模式校验
@@ -99,6 +107,18 @@ public class NormalModelTest extends SensorsBaseTest {
   public void checkTrackSignUp() throws InvalidArgumentException {
     sa.trackSignUp("123", "345");
     assertEventData(data);
+  }
+
+  @Test
+  public void checkCommonProperties() throws InvalidArgumentException {
+    Map<String, Object> map = new HashMap<>();
+    map.put("key1", "value1");
+    sa.registerSuperProperties(map);
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("key1", "value2");
+    sa.track("123", true, "test1", properties);
+    assertEventData(data);
+    assertEquals("value2", ((Map) data.get("properties")).get("key1").toString());
   }
 
 }

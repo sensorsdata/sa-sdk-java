@@ -1,11 +1,21 @@
 package com.sensorsdata.analytics.javasdk;
 
-import com.sensorsdata.analytics.javasdk.bean.*;
+import com.sensorsdata.analytics.javasdk.bean.EventRecord;
+import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
+import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
+import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
+import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
+import com.sensorsdata.analytics.javasdk.bean.UserRecord;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 迁移 idMapping 1.0 逻辑和支持自定义 _track_id 单元测试

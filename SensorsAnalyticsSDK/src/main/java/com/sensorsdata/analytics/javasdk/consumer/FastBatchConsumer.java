@@ -116,7 +116,7 @@ public class FastBatchConsumer implements Consumer {
         sendingData = jsonMapper.writeValueAsString(sendList);
       } catch (JsonProcessingException e) {
         callback.onFailed(new FailedData(String.format("can't process json,message:%s.", e.getMessage()),
-            SensorsAnalyticsUtil.deepCopy(results)));
+            SensorsAnalyticsUtil.deepCopy(sendList)));
         sendList.clear();
         log.error("Failed to process json.", e);
         continue;
@@ -127,7 +127,7 @@ public class FastBatchConsumer implements Consumer {
       } catch (Exception e) {
         log.error("Failed to send data:{}.", sendingData, e);
         callback.onFailed(new FailedData(String.format("failed to send data,message:%s.", e.getMessage()),
-            SensorsAnalyticsUtil.deepCopy(results)));
+            SensorsAnalyticsUtil.deepCopy(sendList)));
       }
       sendList.clear();
     }

@@ -1,5 +1,7 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.fail;
+
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
 import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
@@ -7,12 +9,15 @@ import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.ConcurrentLoggingConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.DebugConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
-
-import static org.junit.Assert.fail;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *  适用于 v3.4.4+ 版本
