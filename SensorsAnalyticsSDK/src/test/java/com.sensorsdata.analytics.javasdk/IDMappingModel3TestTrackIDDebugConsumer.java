@@ -1,19 +1,20 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertNotNull;
+
 import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.consumer.BatchConsumer;
 import com.sensorsdata.analytics.javasdk.consumer.DebugConsumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.assertNotNull;
 
 /**
  *  适用于 v3.4.4+ 版本

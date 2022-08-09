@@ -1,19 +1,23 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import sun.misc.BASE64Decoder;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * 模拟服务端接收数据
