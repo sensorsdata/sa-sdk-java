@@ -10,6 +10,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
@@ -32,24 +33,36 @@ class HttpConsumer implements Closeable {
     final RequestConfig requestConfig;
 
     public HttpConsumer(String serverUrl, int timeoutSec) {
-        this(serverUrl, null, timeoutSec);
+        this(HttpClients.custom(), serverUrl, null, timeoutSec);
     }
 
     public HttpConsumer(String serverUrl, Map<String, String> httpHeaders) {
-        this(serverUrl, httpHeaders, 3);
+        this(HttpClients.custom(), serverUrl, httpHeaders, 3);
     }
 
     HttpConsumer(String serverUrl, Map<String, String> httpHeaders, int timeoutSec) {
+        this(HttpClients.custom(), serverUrl, httpHeaders, timeoutSec);
+    }
+
+    public HttpConsumer(HttpClientBuilder httpClientBuilder, String serverUrl, Map<String, String> httpHeaders) {
+        this(httpClientBuilder, serverUrl, httpHeaders, 3);
+    }
+
+    public HttpConsumer(HttpClientBuilder httpClientBuilder, String serverUrl, int timeoutSec) {
+        this(httpClientBuilder, serverUrl, null, timeoutSec);
+    }
+
+    HttpConsumer(HttpClientBuilder httpClientBuilder, String serverUrl, Map<String, String> httpHeaders, int timeoutSec) {
         this.serverUrl = serverUrl.trim();
         this.httpHeaders = httpHeaders;
         this.compressData = true;
         int timeout = timeoutSec * 1000;
         this.requestConfig = RequestConfig.custom().setConnectionRequestTimeout(timeout)
-            .setConnectTimeout(timeout).setSocketTimeout(timeout).build();
-        this.httpClient = HttpClients.custom()
-            .setUserAgent(String.format("SensorsAnalytics Java SDK %s", SensorsConst.SDK_VERSION))
-            .setDefaultRequestConfig(requestConfig)
-            .build();
+                .setConnectTimeout(timeout).setSocketTimeout(timeout).build();
+        this.httpClient = httpClientBuilder
+                .setUserAgent(String.format("SensorsAnalytics Java SDK %s", SensorsConst.SDK_VERSION))
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
     void consume(final String data) throws IOException, HttpConsumerException {

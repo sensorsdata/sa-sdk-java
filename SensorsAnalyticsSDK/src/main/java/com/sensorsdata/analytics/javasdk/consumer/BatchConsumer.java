@@ -5,6 +5,8 @@ import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -50,9 +52,14 @@ public class BatchConsumer implements Consumer {
     }
 
     public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
-        final boolean throwException, final int timeoutSec) {
+                         final boolean throwException, final int timeoutSec) {
+        this(HttpClients.custom(), serverUrl, bulkSize, maxCacheSize, throwException, timeoutSec);
+    }
+
+    public BatchConsumer(HttpClientBuilder httpClientBuilder, final String serverUrl, final int bulkSize, final int maxCacheSize,
+                         final boolean throwException, final int timeoutSec) {
         this.messageList = new LinkedList<>();
-        this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec, 1));
+        this.httpConsumer = new HttpConsumer(httpClientBuilder, serverUrl, Math.max(timeoutSec, 1));
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
         this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, Math.max(1, bulkSize));
         if (maxCacheSize > MAX_CACHE_SIZE) {
