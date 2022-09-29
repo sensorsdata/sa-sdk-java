@@ -6,6 +6,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;

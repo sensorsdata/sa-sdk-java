@@ -1,18 +1,19 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.sensorsdata.analytics.javasdk.bean.FailedData;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * 工具类测试

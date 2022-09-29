@@ -84,43 +84,14 @@ class SensorsAnalyticsWorker {
     }
     // 只有 track 和 track_signup 事件才需要设置公共属性
     if (sensorsData.getType().startsWith(TRACK_ACTION_TYPE)) {
-      properties.putAll(superProperties);
-    }
-    //event or profile
-    this.consumer.send(SensorsData.generateData(sensorsData));
-  }
-
-
-  void doAddItem(String itemType, String itemId, String actionType, Map<String, Object> properties) {
-    Map<String, Object> item = new HashMap<>();
-    item.put("item_type", itemType);
-    item.put("item_id", itemId);
-    item.put("type", actionType);
-    item.put("time", System.currentTimeMillis());
-    item.put("lib", getLibProperties());
-    Map<String, Object> itemProperties = new HashMap<>();
-    if (properties != null && !properties.isEmpty()) {
-      for (Map.Entry<String, Object> entry : properties.entrySet()) {
-        switch (entry.getKey()) {
-          case PROJECT_SYSTEM_ATTR:
-            item.put("project", entry.getValue());
-            break;
-          case TOKEN_SYSTEM_ATTR:
-            item.put("token", entry.getValue());
-            break;
-          default:
-            itemProperties.put(entry.getKey(), entry.getValue());
-            break;
+      for (Map.Entry<String, Object> entry : superProperties.entrySet()) {
+        if (!properties.containsKey(entry.getKey())) {
+          properties.put(entry.getKey(), entry.getValue());
         }
       }
     }
-    item.put("properties", itemProperties);
-    this.consumer.send(item);
-  }
-
-  void doAddEventIdentity(Map<String, String> identity, String actionType, String eventName,
-      Map<String, Object> properties) {
-    this.consumer.send(generateEventMap(null, null, null, identity, actionType, eventName, properties));
+    //event or profile
+    this.consumer.send(SensorsData.generateData(sensorsData));
   }
 
   void flush() {
