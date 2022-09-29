@@ -15,11 +15,24 @@ public class SensorsConst {
     /**
      * 当前JDK版本号，注意要和pom文件里面的version保持一致
      */
-    public static final String SDK_VERSION = "3.4.5";
+    public static final String SDK_VERSION = "3.5.0";
     /**
      * 当前语言类型
      */
     public static final String LIB = "Java";
+    /**
+     * 当前数据协议版本
+     */
+    public static final String PROTOCOL_VERSION = "2.0";
+    /**
+     * user events 所属 schema
+     */
+    public static final String USER_EVENT_SCHEMA = "events";
+    /**
+     * user 所属 schema
+     */
+    public static final String USER_SCHEMA = "users";
+
     /**
      * 事件上报类型
      */
@@ -65,6 +78,5 @@ public class SensorsConst {
     public static final String LIB_METHOD_SYSTEM_ATTR = "$lib_method";
     public static final String LIB_DETAIL_SYSTEM_ATTR = "$lib_detail";
     public static final String SIGN_UP_SYSTEM_ATTR = "$SignUp";
-
 
 }
