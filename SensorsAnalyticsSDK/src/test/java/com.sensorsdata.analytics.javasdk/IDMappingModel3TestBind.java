@@ -129,7 +129,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
         }
     }
 
-    @Test
+   /* @Test
     public void testBindInvalidIdentityNull() throws InvalidArgumentException{
         try{
             saTmp.bind(null);
@@ -138,7 +138,7 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
             assertEquals("identities is marked non-null but is null", e.getMessage());
         }
 
-    }
+    }*/
 
     @Test
     public void testBindInvalidIdentityEmpty() throws InvalidArgumentException{
@@ -336,17 +336,6 @@ public class IDMappingModel3TestBind extends SensorsBaseTest {
         Map<?, ?> result = (Map<?, ?>) messageList.get(0).get("identities");
         assertEquals("id_value1", result.get("id_test1"));
         assertEquals("track_id_unbind", messageList.get(0).get("type"));
-    }
-
-    @Test
-    public void testUnBindInvalidIdentityNull() throws InvalidArgumentException{
-        try{
-            saTmp.unbind(null);
-        }catch (NullPointerException e){
-            e.printStackTrace();
-            assertEquals("analyticsIdentity is marked non-null but is null", e.getMessage());
-        }
-
     }
 
     @Test

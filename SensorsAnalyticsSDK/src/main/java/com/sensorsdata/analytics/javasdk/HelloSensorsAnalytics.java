@@ -102,7 +102,7 @@ public class HelloSensorsAnalytics {
 
         //2.6 移除用户属性
         UserRecord unsetRecord = UserRecord.builder().setDistinctId(registerId).isLoginId(Boolean.TRUE)
-                                     .addProperty("age", 1)
+            .addProperty("age", true)
                                      .build();
         sa.profileUnset(unsetRecord);
 

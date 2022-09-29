@@ -23,6 +23,7 @@ import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.bean.FailedData;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.common.Pair;
+import com.sensorsdata.analytics.javasdk.common.SensorsDataTypeEnum;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -183,15 +184,28 @@ public class SensorsAnalyticsUtil {
   public static Integer getTrackId(Map<String, Object> propertyMap, String message) {
     try {
       if (propertyMap.containsKey(SensorsConst.TRACK_ID)) {
-        return Integer.parseInt((String.valueOf(propertyMap.get(SensorsConst.TRACK_ID))));
+        return Integer.parseInt((String.valueOf(propertyMap.remove(SensorsConst.TRACK_ID))));
       }
       return new Random().nextInt();
     } catch (Exception e) {
-      log.error("Failed Get Track ID. {} ", message ,e);
+      log.error("Failed Get Track ID. {} ", message, e);
       return new Random().nextInt();
     }
 
   }
+
+  public static String checkUserInfo(Long userId, Map<String, String> identities, String distinctId)
+      throws InvalidArgumentException {
+    if (identities.isEmpty() && null == userId) {
+      throw new InvalidArgumentException("missing user info node(identities/user_id).");
+    }
+    if (!identities.isEmpty()) {
+      Pair<String, Boolean> userPair = checkIdentitiesAndGenerateDistinctId(distinctId, identities);
+      return userPair.getKey();
+    }
+    return null;
+  }
+
 
   /**
    * IDM3.0 校验 distinctId 和 identities 集合，并生成最终 distinctId
@@ -340,4 +354,99 @@ public class SensorsAnalyticsUtil {
     return map == null || !map.containsKey(key) || map.get(key) == null;
   }
 
+  public static void assertSchema(String schema) throws InvalidArgumentException {
+    if (null == schema || "".equals(schema)) {
+      throw new InvalidArgumentException("The schema can not set null or empty.");
+    }
+    if (!KEY_PATTERN.matcher(schema).matches()) {
+      throw new InvalidArgumentException(String.format("Thr schema '%s' is invalid.", schema));
+    }
+  }
+
+  public static void assertSchemaProperties(Map<String, Object> properties, String actionType)
+      throws InvalidArgumentException {
+    if (properties.isEmpty()) {
+      return;
+    }
+    for (Map.Entry<String, Object> entry : properties.entrySet()) {
+      assertKey("property", entry.getKey());
+      Object value = entry.getValue();
+      if (SensorsConst.TIME_SYSTEM_ATTR.equals(entry.getKey()) && !(value instanceof Date)) {
+        throw new InvalidArgumentException("The property '$time' should be a java.util.Date.");
+      }
+      switch (SensorsDataTypeEnum.getDataType(value)) {
+        case NUMBER:
+        case BOOLEAN:
+        case DATE:
+          break;
+        case LIST:
+          List<Object> valueList = (List<Object>) value;
+          ListIterator<Object> listIterator = valueList.listIterator();
+          while (listIterator.hasNext()) {
+            Object next = listIterator.next();
+            if (!(next instanceof String)) {
+              throw new InvalidArgumentException(
+                  String.format("The property '%s' should be a list of String.", entry.getKey()));
+            }
+            if (((String) next).length() > 8192) {
+              listIterator.set(((String) next).substring(0, 8192));
+            }
+          }
+          break;
+        case STRING:
+          if (((String) value).length() > 8192) {
+            entry.setValue(((String) value).substring(0, 8192));
+          }
+          break;
+        default:
+          throw new InvalidArgumentException(String.format(
+              "The property '%s' should be a basic type: Number, String, Date, Boolean, List<String>.The current type is %s.",
+              entry.getKey(), value.getClass().getName()));
+      }
+      //处理 profileIncrement
+      if (PROFILE_INCREMENT_ACTION_TYPE.equals(actionType)) {
+        if ((!SensorsConst.PROJECT_SYSTEM_ATTR.equals(entry.getKey())
+            && !SensorsConst.TOKEN_SYSTEM_ATTR.equals(entry.getKey())) && !(value instanceof Number)) {
+          throw new InvalidArgumentException(
+              String.format("The property value of PROFILE_INCREMENT should be a Number.The current type is %s.",
+                  value.getClass().getName()));
+        }
+      }
+      //处理 profileAppend
+      if (PROFILE_APPEND_ACTION_TYPE.equals(actionType)) {
+        if ((!SensorsConst.PROJECT_SYSTEM_ATTR.equals(entry.getKey())
+            && !SensorsConst.TOKEN_SYSTEM_ATTR.equals(entry.getKey())) && !(value instanceof List<?>)) {
+          throw new InvalidArgumentException(
+              String.format("The property value of PROFILE_APPEND should be a List<String>.The current type is %s.",
+                  value.getClass().getName()));
+        }
+      }
+      //处理 profile_unset
+      if (PROFILE_UNSET_ACTION_TYPE.equals(actionType)) {
+        if (!(value instanceof Boolean) || !Boolean.parseBoolean(value.toString())) {
+          throw new InvalidArgumentException("The property value of " + entry.getKey() + " should be true.");
+        }
+      }
+    }
+  }
+
+
+  public static String toString(Map<String, String> identities) {
+    if (identities == null) {
+      return null;
+    }
+    StringBuilder res = new StringBuilder("");
+    for (Map.Entry<String, String> entry : identities.entrySet()) {
+      res.append("{").append(entry.getKey()).append(":").append(entry.getValue()).append("},");
+    }
+    return res.toString();
+  }
+
+  public static void assertEventItemPair(Pair<String, String> itemPair) throws InvalidArgumentException {
+    if (itemPair == null) {
+      throw new InvalidArgumentException("item event record must be set item id info");
+    }
+    assertKey("item event id", itemPair.getKey());
+    assertValue("item event value", itemPair.getValue());
+  }
 }

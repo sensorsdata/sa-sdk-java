@@ -24,11 +24,18 @@ import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.schema.IdentitySchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.ItemEventSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
+import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +45,7 @@ import java.util.Map;
 /**
  * Sensors Analytics SDK
  */
+@Slf4j
 public class SensorsAnalytics implements ISensorsAnalytics {
 
     private final SensorsAnalyticsWorker worker;
@@ -268,12 +276,21 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         if (identityMap.size() < 2) {
             throw new InvalidArgumentException("The identities is invalid，you should have at least two identities.");
         }
-        addEventIdentity(identityMap, BIND_ID_ACTION_TYPE, BIND_ID, null);
+        addEventIdentity(identityMap, BIND_ID_ACTION_TYPE, BIND_ID);
     }
 
     @Override
     public void unbind(@NonNull SensorsAnalyticsIdentity analyticsIdentity) throws InvalidArgumentException {
-        addEventIdentity(analyticsIdentity.getIdentityMap(), UNBIND_ID_ACTION_TYPE, UNBIND_ID, null);
+        if (analyticsIdentity.getIdentityMap().size() != 1) {
+            throw new InvalidArgumentException("unbind user operation cannot input multiple or none identifiers.");
+        }
+        addEventIdentity(analyticsIdentity.getIdentityMap(), UNBIND_ID_ACTION_TYPE, UNBIND_ID);
+    }
+
+    @Override
+    public void unbind(@NonNull String key, @NonNull String value) throws InvalidArgumentException {
+        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder().addIdentityProperty(key, value).build();
+        addEventIdentity(identity.getIdentityMap(), UNBIND_ID_ACTION_TYPE, UNBIND_ID);
     }
 
     @Override
@@ -375,6 +392,16 @@ public class SensorsAnalytics implements ISensorsAnalytics {
 
     @Override
     public void profileDeleteById(@NonNull SensorsAnalyticsIdentity analyticsIdentity) throws InvalidArgumentException {
+        if (analyticsIdentity.getIdentityMap().size() != 1) {
+            throw new InvalidArgumentException("delete user operation cannot input multiple or none identifiers.");
+        }
+        addProfileIdentity(analyticsIdentity, PROFILE_DELETE_ACTION_TYPE, null);
+    }
+
+    @Override
+    public void profileDeleteById(@NonNull String key, @NonNull String value) throws InvalidArgumentException {
+        SensorsAnalyticsIdentity analyticsIdentity =
+            SensorsAnalyticsIdentity.builder().addIdentityProperty(key, value).build();
         addProfileIdentity(analyticsIdentity, PROFILE_DELETE_ACTION_TYPE, null);
     }
 
@@ -427,6 +454,96 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         worker.doAddData(new SensorsData(idmUserRecord, PROFILE_UNSET_ACTION_TYPE));
     }
 
+
+    @Override
+    public void track(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(userEventSchema, TRACK_ACTION_TYPE));
+    }
+
+    @Override
+    public void track(@NonNull ItemEventSchema itemEventSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(itemEventSchema, TRACK_ACTION_TYPE));
+    }
+
+    @Override
+    public void bind(@NonNull IdentitySchema identitySchema) throws InvalidArgumentException {
+        if (identitySchema.getIdMap().size() < 2) {
+            throw new InvalidArgumentException("The identities is invalid，you should have at least two identities.");
+        }
+        UserEventSchema userEventSchema = UserEventSchema.init()
+            .setEventName(BIND_ID)
+            .identityMap(identitySchema.getIdMap())
+            .start();
+        worker.doSchemaData(new SensorsSchemaData(userEventSchema, BIND_ID_ACTION_TYPE));
+    }
+
+    @Override
+    public void unbind(@NonNull IdentitySchema identitySchema) throws InvalidArgumentException {
+        if (identitySchema.getIdMap().size() != 1) {
+            throw new InvalidArgumentException("unbind user operation cannot input multiple or none identifiers.");
+        }
+        UserEventSchema userEventSchema = UserEventSchema.init()
+            .setEventName(UNBIND_ID)
+            .identityMap(identitySchema.getIdMap())
+            .start();
+        worker.doSchemaData(new SensorsSchemaData(userEventSchema, UNBIND_ID_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileSet(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_SET_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_SET_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileSetOnce(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_SET_ONCE_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_SET_ONCE_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileIncrement(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_INCREMENT_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_INCREMENT_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileAppend(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_APPEND_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_APPEND_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileUnset(@NonNull UserSchema userSchema) throws InvalidArgumentException {
+        SensorsAnalyticsUtil.assertSchemaProperties(userSchema.getPropertyMap(), PROFILE_UNSET_ACTION_TYPE);
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_UNSET_ACTION_TYPE));
+    }
+
+    @Override
+    public void profileDelete(@NonNull String key, @NonNull String value) throws InvalidArgumentException {
+        UserSchema userSchema = UserSchema.init().addIdentityProperty(key, value).start();
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_DELETE_ACTION_TYPE));
+    }
+
+    @Override
+    public void itemSet(@NonNull ItemSchema itemSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(itemSchema, ITEM_SET_ACTION_TYPE));
+    }
+
+    @Override
+    public void itemDelete(@NonNull ItemSchema itemSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(itemSchema, ITEM_DELETE_ACTION_TYPE));
+    }
+
+    @Override
+    public void itemSet(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(userItemSchema, ITEM_SET_ACTION_TYPE));
+    }
+
+    @Override
+    public void itemDelete(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(userItemSchema, ITEM_DELETE_ACTION_TYPE));
+    }
 
     @Override
     public void flush() {
@@ -496,17 +613,16 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         worker.doAddData(new SensorsData(idmUserRecord, actionType));
     }
 
-    private void addEventIdentity(Map<String, String> identityMap, String actionType, String eventName,
-        Map<String, Object> properties) throws InvalidArgumentException {
+    private void addEventIdentity(Map<String, String> identityMap, String actionType, String eventName)
+        throws InvalidArgumentException {
         if (identityMap.isEmpty()) {
             throw new InvalidArgumentException("The identity is empty.");
         }
         assertIdentityMap(actionType, identityMap);
-        SensorsAnalyticsUtil.assertProperties(actionType, properties);
+        SensorsAnalyticsUtil.assertProperties(actionType, null);
         IDMEventRecord idmEventRecord = IDMEventRecord.starter()
             .setEventName(eventName)
             .identityMap(identityMap)
-            .addProperties(properties)
             .build();
         worker.doAddData(new SensorsData(idmEventRecord, actionType));
     }

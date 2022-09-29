@@ -29,17 +29,20 @@ import java.util.Map;
  * @since 2022/03/09 14:44
  */
 @Getter
-public class IDMUserRecord extends SensorsAnalyticsIdentity {
+public class IDMUserRecord {
 
-  private final Map<String, Object> propertyMap;
+  private Map<String, Object> propertyMap;
 
-  private final String distinctId;
+  private String distinctId;
 
-  private final Integer trackId;
+  private Integer trackId;
 
-  private IDMUserRecord(Map<String, String> identityMap, Map<String, Object> propertyMap, String distinctId,
+  private Map<String, String> identityMap;
+
+
+  protected IDMUserRecord(Map<String, String> identityMap, Map<String, Object> propertyMap, String distinctId,
       Integer trackId) {
-    super(identityMap);
+    this.identityMap = identityMap;
     this.propertyMap = propertyMap;
     this.distinctId = distinctId;
     this.trackId = trackId;

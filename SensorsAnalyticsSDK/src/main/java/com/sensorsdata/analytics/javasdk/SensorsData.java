@@ -79,31 +79,34 @@ class SensorsData {
    */
   private String itemId;
 
+  protected SensorsData() {
+  }
+
   protected SensorsData(EventRecord eventRecord, String actionType) {
     this(eventRecord.getDistinctId(), eventRecord.getOriginalId(), null, actionType, eventRecord.getEventName(),
         eventRecord.getPropertyMap(), null, null, eventRecord.getTrackId());
   }
 
-  protected SensorsData(ItemRecord itemRecord, String actionType ) {
-    this(null,null,null,actionType,null,itemRecord.getPropertyMap(),
-        itemRecord.getItemType(),itemRecord.getItemId(), itemRecord.getTrackId());
+  protected SensorsData(ItemRecord itemRecord, String actionType) {
+    this(null, null, null, actionType, null, itemRecord.getPropertyMap(),
+        itemRecord.getItemType(), itemRecord.getItemId(), itemRecord.getTrackId());
   }
 
-  protected SensorsData (UserRecord userRecord, String actionType) {
+  protected SensorsData(UserRecord userRecord, String actionType) {
     this(userRecord.getDistinctId(), actionType, null, userRecord.getPropertyMap(), userRecord.getTrackId());
   }
 
-  protected SensorsData(IDMUserRecord userRecord, String actionType) {
+  protected <T extends IDMUserRecord> SensorsData(T userRecord, String actionType) {
     this(userRecord.getDistinctId(), actionType, userRecord.getIdentityMap(), userRecord.getPropertyMap(),
         userRecord.getTrackId());
   }
 
-  protected SensorsData(IDMEventRecord eventRecord) {
+  protected <T extends IDMEventRecord> SensorsData(T eventRecord) {
     this(eventRecord.getDistinctId(), eventRecord.getIdentityMap(), eventRecord.getEventName(),
         eventRecord.getPropertyMap(), eventRecord.getTrackId());
   }
-  
-  protected SensorsData(IDMEventRecord eventRecord, String actionType) {
+
+  protected <T extends IDMEventRecord> SensorsData(T eventRecord, String actionType) {
     this(eventRecord.getDistinctId(), null, eventRecord.getIdentityMap(), actionType,
         eventRecord.getEventName(), eventRecord.getPropertyMap(), null, null, eventRecord.getTrackId());
   }
@@ -125,7 +128,15 @@ class SensorsData {
     this(distinctId, null, identities, TRACK_ACTION_TYPE, event, properties, null, null, trackId);
   }
 
-  private SensorsData(String distinctId, String originalId, Map<String, String> identities, String type, String event,
+  /**
+   * 专用于 item 相关 schema 构建
+   */
+  protected SensorsData(Integer trackId, String distinctId, Map<String, String> identities, String itemId, String type,
+      String event, Map<String, Object> properties) {
+    this(distinctId, null, identities, type, event, properties, null, itemId, trackId);
+  }
+
+  protected SensorsData(String distinctId, String originalId, Map<String, String> identities, String type, String event,
       Map<String, Object> properties, String itemType, String itemId, Integer trackId) {
     this.trackId = trackId;
     this.distinctId = distinctId;
@@ -134,10 +145,15 @@ class SensorsData {
     this.type = type;
     this.event = event;
     this.lib = SensorsAnalyticsUtil.generateLibInfo();
-    this.time = new Date();
+    this.time = properties.containsKey(SensorsConst.TIME_SYSTEM_ATTR) ?
+        (Date) properties.remove(SensorsConst.TIME_SYSTEM_ATTR) : new Date();
     this.properties = properties;
     this.itemType = itemType;
     this.itemId = itemId;
+    this.project = properties.get(SensorsConst.PROJECT_SYSTEM_ATTR) == null ?
+        null : String.valueOf(properties.remove(SensorsConst.PROJECT_SYSTEM_ATTR));
+    this.token = properties.get(SensorsConst.TOKEN_SYSTEM_ATTR) == null ?
+        null : String.valueOf(properties.remove(SensorsConst.TOKEN_SYSTEM_ATTR));
   }
 
 
@@ -179,9 +195,6 @@ class SensorsData {
       eventMap.put("item_type", sensorsData.getItemType());
     }
     if (sensorsData.getProperties() != null) {
-      if (sensorsData.getTrackId() != null) {
-        sensorsData.getProperties().remove(SensorsConst.TRACK_ID);
-      }
       eventMap.put("properties", sensorsData.getProperties());
     }
     return eventMap;

@@ -30,26 +30,28 @@ import java.util.Map;
  * @since 2022/03/09 14:41
  */
 @Getter
-public class IDMEventRecord extends SensorsAnalyticsIdentity {
+public class IDMEventRecord {
   /**
    * 事件名称
    */
-  private final String eventName;
+  private String eventName;
   /**
    * distinctId 标识，在 IDM3.0 里面，该参数可传可不传
    */
-  private final String distinctId;
+  private String distinctId;
   /**
    * 事件携带的属性集合
    */
-  private final Map<String, Object> propertyMap;
+  private Map<String, Object> propertyMap;
 
-  private final Integer trackId;
+  private Integer trackId;
+
+  private Map<String, String> identityMap;
 
 
-  private IDMEventRecord(Map<String, String> identityMap, String eventName, String distinctId,
+  protected IDMEventRecord(Map<String, String> identityMap, String eventName, String distinctId,
       Map<String, Object> propertyMap, Integer trackId) {
-    super(identityMap);
+    this.identityMap = identityMap;
     this.eventName = eventName;
     this.distinctId = distinctId;
     this.propertyMap = propertyMap;
