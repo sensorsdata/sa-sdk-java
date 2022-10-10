@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
+
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 
@@ -46,7 +47,6 @@ public class DebugConsumer implements Consumer {
         if (!writeData) {
             headers.put("Dry-Run", "true");
         }
-
         this.httpConsumer = new HttpConsumer(httpClientBuilder, debugUrl, headers);
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
         log.info("Initialize DebugConsumer with params:[writeData:{}].", writeData);
