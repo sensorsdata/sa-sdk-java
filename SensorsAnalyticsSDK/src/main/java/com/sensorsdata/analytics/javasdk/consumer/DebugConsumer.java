@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -23,6 +25,10 @@ public class DebugConsumer implements Consumer {
     final ObjectMapper jsonMapper;
 
     public DebugConsumer(final String serverUrl, final boolean writeData) {
+        this(HttpClients.custom(), serverUrl, writeData);
+    }
+
+    public DebugConsumer(HttpClientBuilder httpClientBuilder, String serverUrl, final boolean writeData) {
         String debugUrl;
         try {
             // 将 URI Path 替换成 Debug 模式的 '/debug'
@@ -41,7 +47,7 @@ public class DebugConsumer implements Consumer {
             headers.put("Dry-Run", "true");
         }
 
-        this.httpConsumer = new HttpConsumer(debugUrl, headers);
+        this.httpConsumer = new HttpConsumer(httpClientBuilder, debugUrl, headers);
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
         log.info("Initialize DebugConsumer with params:[writeData:{}].", writeData);
     }

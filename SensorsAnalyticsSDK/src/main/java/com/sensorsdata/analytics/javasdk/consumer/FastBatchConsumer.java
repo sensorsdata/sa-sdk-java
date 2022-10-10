@@ -8,6 +8,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,9 +64,14 @@ public class FastBatchConsumer implements Consumer {
 
   public FastBatchConsumer(@NonNull String serverUrl, final boolean timing, final int bulkSize, int maxCacheSize,
       int flushSec, int timeoutSec, @NonNull Callback callback) {
+    this(HttpClients.custom(), serverUrl, timing, bulkSize, maxCacheSize, flushSec, timeoutSec, callback);
+  }
+
+  public FastBatchConsumer(HttpClientBuilder httpClientBuilder, @NonNull String serverUrl, final boolean timing, final int bulkSize, int maxCacheSize,
+                           int flushSec, int timeoutSec, @NonNull Callback callback) {
     this.buffer =
         new LinkedBlockingQueue<>(Math.min(Math.max(MIN_CACHE_SIZE, maxCacheSize), MAX_CACHE_SIZE));
-    this.httpConsumer = new HttpConsumer(serverUrl, Math.max(timeoutSec, 1));
+    this.httpConsumer = new HttpConsumer(httpClientBuilder, serverUrl, Math.max(timeoutSec, 1));
     this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
     this.callback = callback;
     this.bulkSize = Math.min(MIN_CACHE_SIZE, Math.max(bulkSize, MIN_BULK_SIZE));
