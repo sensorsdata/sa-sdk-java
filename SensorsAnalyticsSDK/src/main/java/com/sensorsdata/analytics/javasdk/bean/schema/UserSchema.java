@@ -61,6 +61,12 @@ public class UserSchema {
       return new UserSchema(idMap, properties, distinctId, trackId, userId);
     }
 
+
+    public USBuilder setUserId(@NonNull Long userId) {
+      this.userId = userId;
+      return this;
+    }
+
     public USBuilder identityMap(@NonNull Map<String, String> identityMap) {
       this.idMap.putAll(identityMap);
       return this;
