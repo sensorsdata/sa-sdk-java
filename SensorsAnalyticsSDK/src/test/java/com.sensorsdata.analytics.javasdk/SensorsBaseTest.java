@@ -223,7 +223,7 @@ public class SensorsBaseTest {
     assertTrue("数据节点 properties 类型不正确！", properties instanceof Map);
     Map<String, String> proMap = (Map<String, String>) properties;
     assertTrue("数据中用户信息节点（identities+distinct_id/user_id）丢失！",
-        (proMap.containsKey("identities") && proMap.containsKey("distinct_id")) || proMap.containsKey("user_id"));
+        (proMap.containsKey("identities") || proMap.containsKey("user_id")) && proMap.containsKey("distinct_id"));
   }
 
   protected void assertEventIdentitiesInfo(Map<String, Object> data, String expectDistinctId) {
@@ -259,7 +259,7 @@ public class SensorsBaseTest {
   protected void assertUSData(Map<String, Object> data) {
     assertSchemaDataNode(data);
     assertTrue("数据中用户信息节点（identities+distinct_id/user_id）丢失！",
-        (data.containsKey("identities") && data.containsKey("distinct_id")) || data.containsKey("user_id"));
+        (data.containsKey("identities") || data.containsKey("id")) && data.containsKey("distinct_id"));
   }
 
   /**
@@ -272,7 +272,7 @@ public class SensorsBaseTest {
     assertTrue("数据节点 properties 类型不正确！", properties instanceof Map);
     Map<String, String> proMap = (Map<String, String>) properties;
     assertTrue("数据中用户信息节点（identities+distinct_id/user_id）丢失！",
-        (proMap.containsKey("identities") && proMap.containsKey("distinct_id")) || proMap.containsKey("user_id"));
+        (proMap.containsKey("identities") || proMap.containsKey("user_id")) && proMap.containsKey("distinct_id"));
     assertTrue("数据节点 properties 内节点个数不正常！", proMap.size() >= 2);
   }
 
