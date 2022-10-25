@@ -526,6 +526,12 @@ public class SensorsAnalytics implements ISensorsAnalytics {
     }
 
     @Override
+    public void profileDelete(@NonNull Long userId) throws InvalidArgumentException {
+        UserSchema userSchema = UserSchema.init().setUserId(userId).start();
+        worker.doSchemaData(new SensorsSchemaData(userSchema, PROFILE_DELETE_ACTION_TYPE));
+    }
+
+    @Override
     public void itemSet(@NonNull ItemSchema itemSchema) throws InvalidArgumentException {
         worker.doSchemaData(new SensorsSchemaData(itemSchema, ITEM_SET_ACTION_TYPE));
     }
