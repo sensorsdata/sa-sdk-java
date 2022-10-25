@@ -199,11 +199,15 @@ public class SensorsAnalyticsUtil {
     if (identities.isEmpty() && null == userId) {
       throw new InvalidArgumentException("missing user info node(identities/user_id).");
     }
-    if (!identities.isEmpty()) {
-      Pair<String, Boolean> userPair = checkIdentitiesAndGenerateDistinctId(distinctId, identities);
-      return userPair.getKey();
+    if (userId != null) {
+      if (distinctId != null) {
+        assertValue("distinct_id", distinctId);
+        return distinctId;
+      } else
+        return SensorsConst.USER_ID_PREFIX + userId;
     }
-    return null;
+    Pair<String, Boolean> userPair = checkIdentitiesAndGenerateDistinctId(distinctId, identities);
+    return userPair.getKey();
   }
 
 

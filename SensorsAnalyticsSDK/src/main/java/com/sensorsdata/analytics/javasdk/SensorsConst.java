@@ -33,6 +33,8 @@ public class SensorsConst {
      */
     public static final String USER_SCHEMA = "users";
 
+    public static final String USER_ID_PREFIX = "SENSORS_ID:";
+
     /**
      * 事件上报类型
      */
