@@ -1,5 +1,7 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -131,5 +133,13 @@ public class SchemaUserItemTest extends SensorsBaseTest {
     assertUSData(data);
     Assert.assertTrue(data.containsKey("distinct_id"));
     Assert.assertEquals("test", data.get("distinct_id"));
+  }
+
+  @Test
+  public void checkProfileDeleteUserId() throws InvalidArgumentException {
+    sa.profileDelete(123L);
+    assertUSData(data);
+    assertEquals(123L, data.get("id"));
+    assertNotNull(data.get("distinct_id"));
   }
 }
