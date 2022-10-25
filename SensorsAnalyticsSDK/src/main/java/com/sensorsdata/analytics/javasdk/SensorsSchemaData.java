@@ -7,7 +7,6 @@ import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
 import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.common.SchemaTypeEnum;
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -100,15 +99,15 @@ class SensorsSchemaData extends SensorsData {
         data.put("event", getEvent());
         break;
       case USER:
-        checkUserIdAndAddUser(data, userId, getDistinctId(), getIdentities());
+        checkUserIdAndAddUser(data, "id");
         break;
       case USER_EVENT:
         data.put("event", getEvent());
-        checkUserIdAndAddUser(getProperties(), userId, getDistinctId(), getIdentities());
+        checkUserIdAndAddUser(getProperties(), "user_id");
         break;
       case USER_ITEM:
         data.put("id", getItemId());
-        checkUserIdAndAddUser(getProperties(), userId, getDistinctId(), getIdentities());
+        checkUserIdAndAddUser(getProperties(), "user_id");
         break;
       default:
         break;
@@ -140,18 +139,12 @@ class SensorsSchemaData extends SensorsData {
   }
 
 
-  private void checkUserIdAndAddUser(Map<String, Object> data, Long userId, String distinctId,
-      Map<String, String> identities) {
-    if (null != userId) {
-      if (null != distinctId || (null != identities && !identities.isEmpty())) {
-        log.warn(
-            "data record found userId,so (distinct_id/identities) node expired.[userId:{},distinctId:{},identities:{}]",
-            userId, distinctId, SensorsAnalyticsUtil.toString(identities));
-      }
-      data.put("user_id", userId);
+  private void checkUserIdAndAddUser(Map<String, Object> data, String key) {
+    if (null != getUserId()) {
+      data.put(key, getUserId());
     } else {
       data.put("identities", getIdentities());
-      data.put("distinct_id", getDistinctId());
     }
+    data.put("distinct_id", getDistinctId());
   }
 }

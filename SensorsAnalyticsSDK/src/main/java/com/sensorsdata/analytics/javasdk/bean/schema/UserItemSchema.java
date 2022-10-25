@@ -75,6 +75,11 @@ public class UserItemSchema {
       return new UserItemSchema(idMap, schema, itemId, properties, trackId, userId, distinctId);
     }
 
+    public UISBuilder setUserId(@NonNull Long userId) {
+      this.userId = userId;
+      return this;
+    }
+
     public UISBuilder setItemId(@NonNull String itemId) {
       this.itemId = itemId;
       return this;
