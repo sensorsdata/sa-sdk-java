@@ -600,6 +600,8 @@ public interface ISensorsAnalytics {
 
     void profileDelete(@NonNull String key, @NonNull String value) throws InvalidArgumentException;
 
+    void profileDelete(@NonNull Long userId) throws InvalidArgumentException;
+
     void itemSet(@NonNull ItemSchema itemSchema) throws InvalidArgumentException;
 
     void itemDelete(@NonNull ItemSchema itemSchema) throws InvalidArgumentException;
