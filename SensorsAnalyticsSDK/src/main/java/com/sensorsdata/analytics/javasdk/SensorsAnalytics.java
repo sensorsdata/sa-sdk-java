@@ -4,6 +4,9 @@ import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_DELETE_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_SET_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_VERSION_SYSTEM_ATTR;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_APPEND_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_DELETE_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_INCREMENT_ACTION_TYPE;
@@ -11,6 +14,7 @@ import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ACTION_
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ONCE_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_UNSET_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROJECT_SYSTEM_ATTR;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.SDK_VERSION;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.SIGN_UP_SYSTEM_ATTR;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
@@ -41,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Sensors Analytics SDK
@@ -54,7 +59,26 @@ public class SensorsAnalytics implements ISensorsAnalytics {
     private static final String EVENT_NAME = "event name";
     private static final String ORIGINAL_DISTINCT_ID = "Original Distinct Id";
 
+    private final Map<String, Object> superProperties = new ConcurrentHashMap<>();
+
+    void setSuperProperties(Map<String, Object> superProperties) {
+        for (Map.Entry<String, Object> entry : superProperties.entrySet()) {
+            if (SensorsAnalyticsUtil.KEY_PATTERN.matcher(entry.getKey()).matches() &&
+                !"$track_id".equals(entry.getKey())) {
+                this.superProperties.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    void clearSuperProper() {
+        this.superProperties.clear();
+        this.superProperties.put(LIB_SYSTEM_ATTR, LIB);
+        this.superProperties.put(LIB_VERSION_SYSTEM_ATTR, SDK_VERSION);
+        log.info("Call clearSuperProperties method.");
+    }
+
     public SensorsAnalytics(final Consumer consumer) {
+        clearSuperProper();
         worker = new SensorsAnalyticsWorker(consumer);
     }
 
@@ -65,23 +89,23 @@ public class SensorsAnalytics implements ISensorsAnalytics {
 
     @Override
     public void registerSuperProperties(@NonNull SuperPropertiesRecord propertiesRecord) {
-        worker.setSuperProperties(propertiesRecord.getPropertyMap());
+        setSuperProperties(propertiesRecord.getPropertyMap());
     }
 
     @Override
     public void registerSuperProperties(@NonNull Map<String, Object> superPropertiesMap) {
-        worker.setSuperProperties(superPropertiesMap);
+        setSuperProperties(superPropertiesMap);
     }
 
     @Override
     public void clearSuperProperties() {
-        worker.clearSuperProperties();
+        clearSuperProper();
     }
 
     @Override
     public void track(@NonNull EventRecord eventRecord) throws InvalidArgumentException {
-        addEvent(eventRecord.getDistinctId(), eventRecord.getIsLoginId(), null, TRACK_ACTION_TYPE,
-            eventRecord.getEventName(), eventRecord.getPropertyMap());
+        eventRecord.getPropertyMap().putAll(putAllSuperPro(eventRecord.getPropertyMap(), superProperties));
+        worker.doAddData(new SensorsData(eventRecord, TRACK_ACTION_TYPE));
     }
 
     @Override
@@ -296,6 +320,10 @@ public class SensorsAnalytics implements ISensorsAnalytics {
     @Override
     public void trackById(@NonNull SensorsAnalyticsIdentity analyticsIdentity, @NonNull String eventName,
         Map<String, Object> properties) throws InvalidArgumentException {
+        if (properties == null) {
+            properties = new HashMap<>();
+        }
+        properties.putAll(superProperties);
         IDMEventRecord eventRecord = IDMEventRecord.starter()
             .identityMap(analyticsIdentity.getIdentityMap())
             .setEventName(eventName)
@@ -407,6 +435,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
 
     @Override
     public void trackById(@NonNull IDMEventRecord idmEventRecord) throws InvalidArgumentException {
+        idmEventRecord.getPropertyMap().putAll(putAllSuperPro(idmEventRecord.getPropertyMap(), superProperties));
         worker.doAddData(new SensorsData(idmEventRecord));
     }
 
@@ -457,11 +486,13 @@ public class SensorsAnalytics implements ISensorsAnalytics {
 
     @Override
     public void track(@NonNull UserEventSchema userEventSchema) throws InvalidArgumentException {
+        userEventSchema.getPropertyMap().putAll(putAllSuperPro(userEventSchema.getPropertyMap(), superProperties));
         worker.doSchemaData(new SensorsSchemaData(userEventSchema, TRACK_ACTION_TYPE));
     }
 
     @Override
     public void track(@NonNull ItemEventSchema itemEventSchema) throws InvalidArgumentException {
+        itemEventSchema.getProperties().putAll(putAllSuperPro(itemEventSchema.getProperties(), superProperties));
         worker.doSchemaData(new SensorsSchemaData(itemEventSchema, TRACK_ACTION_TYPE));
     }
 
@@ -473,6 +504,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         UserEventSchema userEventSchema = UserEventSchema.init()
             .setEventName(BIND_ID)
             .identityMap(identitySchema.getIdMap())
+            .addProperties(superProperties)
             .start();
         worker.doSchemaData(new SensorsSchemaData(userEventSchema, BIND_ID_ACTION_TYPE));
     }
@@ -485,6 +517,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         UserEventSchema userEventSchema = UserEventSchema.init()
             .setEventName(UNBIND_ID)
             .identityMap(identitySchema.getIdMap())
+            .addProperties(superProperties)
             .start();
         worker.doSchemaData(new SensorsSchemaData(userEventSchema, UNBIND_ID_ACTION_TYPE));
     }
@@ -598,7 +631,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
             .setEventName(eventName)
             .setDistinctId(distinctId)
             .isLoginId(isLoginId)
-            .addProperties(properties)
+            .addProperties(putAllSuperPro(properties, superProperties))
             .build();
         SensorsData sensorsData = new SensorsData(eventRecord, actionType);
         sensorsData.setOriginalId(originDistinctId);
@@ -629,6 +662,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         IDMEventRecord idmEventRecord = IDMEventRecord.starter()
             .setEventName(eventName)
             .identityMap(identityMap)
+            .addProperties(superProperties)
             .build();
         worker.doAddData(new SensorsData(idmEventRecord, actionType));
     }
@@ -640,6 +674,18 @@ public class SensorsAnalytics implements ISensorsAnalytics {
             SensorsAnalyticsUtil.assertKey(actionType, entry.getKey());
             SensorsAnalyticsUtil.assertValue(actionType, entry.getValue());
         }
+    }
+
+    private Map<String, Object> putAllSuperPro(Map<String, Object> pro, Map<String, Object> superPro) {
+        if (pro == null) {
+            pro = new HashMap<>();
+        }
+        for (Map.Entry<String, Object> entry : superPro.entrySet()) {
+            if (!pro.containsKey(entry.getKey())) {
+                pro.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return pro;
     }
 
 }

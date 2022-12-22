@@ -1,6 +1,7 @@
 package com.sensorsdata.analytics.javasdk;
 
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
 
 import com.sensorsdata.analytics.javasdk.bean.EventRecord;
 import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
@@ -79,6 +80,8 @@ class SensorsData {
    */
   private String itemId;
 
+  private boolean timeFree = false;
+
   protected SensorsData() {
   }
 
@@ -154,6 +157,8 @@ class SensorsData {
         null : String.valueOf(properties.remove(SensorsConst.PROJECT_SYSTEM_ATTR));
     this.token = properties.get(SensorsConst.TOKEN_SYSTEM_ATTR) == null ?
         null : String.valueOf(properties.remove(SensorsConst.TOKEN_SYSTEM_ATTR));
+    this.timeFree = properties.containsKey(SensorsConst.TIME_FREE_ATTR)
+        && Boolean.parseBoolean(properties.remove(SensorsConst.TIME_FREE_ATTR).toString());
   }
 
 
@@ -196,6 +201,10 @@ class SensorsData {
     }
     if (sensorsData.getProperties() != null) {
       eventMap.put("properties", sensorsData.getProperties());
+    }
+    if (sensorsData.isTimeFree() && (TRACK_ACTION_TYPE.equals(sensorsData.getType())
+        || TRACK_SIGN_UP_ACTION_TYPE.equals(sensorsData.getType()))) {
+      eventMap.put("time_free", true);
     }
     return eventMap;
   }
