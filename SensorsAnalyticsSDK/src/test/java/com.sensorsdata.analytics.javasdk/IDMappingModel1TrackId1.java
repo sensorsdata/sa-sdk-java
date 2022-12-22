@@ -413,46 +413,6 @@ public class IDMappingModel1TrackId1 extends SensorsBaseTest {
     assertFalse(props.containsKey("$track_id")); // properties 不包含 $track_id
   }
 
-  @Test
-  public void testProfileAppendByIdEventBuilder() throws InvalidArgumentException{
-    List<String> list = new ArrayList<>();
-    list.add("aaa");
-    list.add("bbb");
-    UserRecord userRecord = UserRecord.builder()
-            .setDistinctId("123")
-            .isLoginId(true)
-            .addProperty("list1", list)
-            .addProperty("$track_id", 111)
-            .build();
-    try {
-      sa.profileAppend(userRecord);
-      fail("profileAppend should throw InvalidArgumentException");
-    }catch (InvalidArgumentException e){
-      assertEquals("The property value of PROFILE_APPEND should be a List<String>.", e.getMessage());
-    }
-
-  }
-
-  // profileUnsetById
-  @Test
-  public void testProfileUnsetByIdEventBuilder() {
-    List<String> list = new ArrayList<>();
-    list.add("aaa");
-    list.add("bbb");
-    UserRecord userRecord = null;
-    try {
-      userRecord = UserRecord.builder()
-              .setDistinctId("123")
-              .isLoginId(true)
-              .addProperty("$track_id", 111)
-              .build();
-      sa.profileUnset(userRecord);
-      fail("[ERROR] profileUnset should throw InvalidArgumentException.");
-    }catch (InvalidArgumentException e){
-      assertEquals("The property value of $track_id should be true.", e.getMessage());
-    }
-
-  }
 
   // profileDeleteById
   @Test
