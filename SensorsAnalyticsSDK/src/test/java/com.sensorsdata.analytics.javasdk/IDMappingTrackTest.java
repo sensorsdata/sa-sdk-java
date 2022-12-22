@@ -340,7 +340,6 @@ public class IDMappingTrackTest extends SensorsBaseTest {
   @Test
   public void checkEventRecordUnbindWithLoginId() throws InvalidArgumentException {
     SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
-        .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "fz@163.com")
         .addIdentityProperty(SensorsAnalyticsIdentity.LOGIN_ID, "fz123")
         .build();
     sa.unbind(identity);
@@ -358,7 +357,6 @@ public class IDMappingTrackTest extends SensorsBaseTest {
   public void checkEventRecordUnbindWithoutLoginId() throws InvalidArgumentException {
     SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder()
         .addIdentityProperty("login_id", "fz123")
-        .addIdentityProperty(SensorsAnalyticsIdentity.EMAIL, "fz@163.com")
         .build();
     sa.unbind(identity);
     assertIDM3EventData(data);
