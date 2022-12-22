@@ -15,7 +15,7 @@
     <groupId>com.sensorsdata.analytics.javasdk</groupId>
     <name>SensorsAnalyticsSDK</name>
     <artifactId>SensorsAnalyticsSDK</artifactId>
-    <version>3.5.2</version>
+    <version>3.5.3</version>
     <description>The official Java SDK of Sensors Analytics</description>
     <url>http://sensorsdata.cn</url>
 
