@@ -1,5 +1,8 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
+
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemEventSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
@@ -96,12 +99,14 @@ class SensorsSchemaData extends SensorsData {
         break;
       case ITEM_EVENT:
         getProperties().put(itemEventPair.getKey(), itemEventPair.getValue());
+        addTimeFree(data);
         data.put("event", getEvent());
         break;
       case USER:
         checkUserIdAndAddUser(data, "id");
         break;
       case USER_EVENT:
+        addTimeFree(data);
         data.put("event", getEvent());
         checkUserIdAndAddUser(getProperties(), "user_id");
         break;
@@ -138,6 +143,12 @@ class SensorsSchemaData extends SensorsData {
     return schemaTypeEnum;
   }
 
+  private void addTimeFree(Map<String, Object> data) {
+    if (isTimeFree() && (TRACK_ACTION_TYPE.equals(getType())
+        || TRACK_SIGN_UP_ACTION_TYPE.equals(getType()))) {
+      data.put("time_free", true);
+    }
+  }
 
   private void checkUserIdAndAddUser(Map<String, Object> data, String key) {
     if (null != getUserId()) {
