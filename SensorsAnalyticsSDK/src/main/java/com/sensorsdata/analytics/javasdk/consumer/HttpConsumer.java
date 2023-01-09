@@ -104,6 +104,12 @@ class HttpConsumer implements Closeable {
     }
 
     UrlEncodedFormEntity getHttpEntry(final String data) throws IOException {
+        List<NameValuePair> nameValuePairs = getNameValuePairs(data);
+        return new UrlEncodedFormEntity(nameValuePairs);
+    }
+
+    List<NameValuePair> getNameValuePairs(String data) throws IOException {
+
         byte[] bytes = data.getBytes(Charset.forName("UTF-8"));
 
         List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
@@ -118,14 +124,14 @@ class HttpConsumer implements Closeable {
 
             nameValuePairs.add(new BasicNameValuePair("gzip", "1"));
             nameValuePairs.add(new BasicNameValuePair("data_list", new String(Base64Coder.encode
-                    (compressed))));
+                (compressed))));
         } else {
             nameValuePairs.add(new BasicNameValuePair("gzip", "0"));
             nameValuePairs.add(new BasicNameValuePair("data_list", new String(Base64Coder.encode
-                    (bytes))));
+                (bytes))));
         }
 
-        return new UrlEncodedFormEntity(nameValuePairs);
+        return nameValuePairs;
     }
 
     @Override

@@ -77,6 +77,8 @@ public class SensorsBaseTest {
     ServletContextHandler handler = new ServletContextHandler();
     handler.addServlet(new ServletHolder(new TestServlet()), "/debug");
     handler.addServlet(new ServletHolder(new TestServlet()), "/sa");
+    handler.addServlet(new ServletHolder(new InstantServlet()), "/instant");
+
     server.setHandler(handler);
     server.start();
     actionTypeSet.add(SensorsConst.TRACK_ACTION_TYPE);

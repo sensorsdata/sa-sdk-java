@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +22,13 @@ public class BatchConsumer implements Consumer {
 
     private final List<Map<String, Object>> messageList;
     private final HttpConsumer httpConsumer;
+    private final InstantHttpConsumer instantHttpConsumer;
     private final ObjectMapper jsonMapper;
     private final int bulkSize;
     private final boolean throwException;
     private final int maxCacheSize;
+    private List<String> instantEvents;
+    private boolean isInstantStatus;
 
     public BatchConsumer(final String serverUrl) {
         this(serverUrl, 50);
@@ -58,8 +63,22 @@ public class BatchConsumer implements Consumer {
 
     public BatchConsumer(HttpClientBuilder httpClientBuilder, final String serverUrl, final int bulkSize, final int maxCacheSize,
                          final boolean throwException, final int timeoutSec) {
+        this(httpClientBuilder, serverUrl, bulkSize, maxCacheSize, throwException, timeoutSec, new ArrayList<String>());
+    }
+
+
+    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
+        final boolean throwException, final int timeoutSec, List<String> instantEvents) {
+        this(HttpClients.custom(), serverUrl, bulkSize, maxCacheSize, throwException, timeoutSec, instantEvents);
+    }
+
+    public BatchConsumer(HttpClientBuilder httpClientBuilder, final String serverUrl, final int bulkSize, final int maxCacheSize,
+        final boolean throwException, final int timeoutSec, List<String> instantEvents) {
         this.messageList = new LinkedList<>();
+        this.isInstantStatus = false;
+        this.instantEvents = instantEvents;
         this.httpConsumer = new HttpConsumer(httpClientBuilder, serverUrl, Math.max(timeoutSec, 1));
+        this.instantHttpConsumer = new InstantHttpConsumer(httpClientBuilder, serverUrl, Math.max(timeoutSec, 1));
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
         this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, Math.max(1, bulkSize));
         if (maxCacheSize > MAX_CACHE_SIZE) {
@@ -78,6 +97,7 @@ public class BatchConsumer implements Consumer {
     @Override
     public void send(Map<String, Object> message) {
         synchronized (messageList) {
+            dealInstantSignal(message);
             int size = messageList.size();
             if (maxCacheSize <= 0 || size < maxCacheSize) {
                 messageList.add(message);
@@ -110,7 +130,11 @@ public class BatchConsumer implements Consumer {
                 }
                 log.debug("Will be send data:{}.", sendingData);
                 try {
-                    this.httpConsumer.consume(sendingData);
+                    if (isInstantStatus) {
+                        this.instantHttpConsumer.consume(sendingData);
+                    } else {
+                        this.httpConsumer.consume(sendingData);
+                    }
                     sendList.clear();
                 } catch (Exception e) {
                     log.error("Failed to send data:{}.", sendingData, e);
@@ -130,5 +154,24 @@ public class BatchConsumer implements Consumer {
         flush();
         httpConsumer.close();
         log.info("Call close method.");
+    }
+
+    private void dealInstantSignal(Map<String, Object> message) {
+
+        /*
+         * 如果当前是「instant」状态，且（message中不包含event 或者 event 不是「instant」的，则刷新，设置 「非instant」状态
+         */
+        if (isInstantStatus && (!message.containsKey("event") || !instantEvents.contains(message.get("event")))) {
+            flush();
+            isInstantStatus = false;
+        }
+
+        /*
+         * 如果当前是 「非instant」状态，且（message中包含event 且 event 是「instant」的，则刷新，设置 「instant」状态
+         */
+        if (!isInstantStatus && message.containsKey("event") && instantEvents.contains(message.get("event"))) {
+            flush();
+            isInstantStatus = true;
+        }
     }
 }
