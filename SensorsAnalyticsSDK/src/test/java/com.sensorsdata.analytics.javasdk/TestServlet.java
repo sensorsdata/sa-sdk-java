@@ -54,7 +54,7 @@ public class TestServlet extends HttpServlet {
     response.setStatus(200);
   }
 
-  private byte[] decompressGzip(byte[] gzipData) throws IOException {
+  protected byte[] decompressGzip(byte[] gzipData) throws IOException {
     byte[] bytes1 = new byte[1024];
     GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(gzipData));
     ByteArrayOutputStream bos = new ByteArrayOutputStream();

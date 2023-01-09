@@ -36,10 +36,13 @@ public class FastBatchConsumer implements Consumer {
 
   private final LinkedBlockingQueue<Map<String, Object>> buffer;
   private final HttpConsumer httpConsumer;
+  private final InstantHttpConsumer instantHttpConsumer;
   private final ObjectMapper jsonMapper;
   private final Callback callback;
   private final int bulkSize;
   private final ScheduledExecutorService executorService;
+  private List<String> instantEvents;
+  private boolean isInstantStatus;
 
   public FastBatchConsumer(@NonNull String serverUrl, @NonNull Callback callback) {
     this(serverUrl, false, callback);
@@ -69,12 +72,21 @@ public class FastBatchConsumer implements Consumer {
 
   public FastBatchConsumer(HttpClientBuilder httpClientBuilder, @NonNull String serverUrl, final boolean timing, final int bulkSize, int maxCacheSize,
                            int flushSec, int timeoutSec, @NonNull Callback callback) {
+    this(httpClientBuilder, serverUrl, timing, bulkSize, maxCacheSize, flushSec, timeoutSec, callback, new ArrayList<String>());
+  }
+
+  public FastBatchConsumer(HttpClientBuilder httpClientBuilder, @NonNull String serverUrl, final boolean timing, final int bulkSize, int maxCacheSize,
+      int flushSec, int timeoutSec, @NonNull Callback callback, List<String> instantEvents) {
     this.buffer =
         new LinkedBlockingQueue<>(Math.min(Math.max(MIN_CACHE_SIZE, maxCacheSize), MAX_CACHE_SIZE));
     this.httpConsumer = new HttpConsumer(httpClientBuilder, serverUrl, Math.max(timeoutSec, 1));
+    this.instantHttpConsumer = new InstantHttpConsumer(httpClientBuilder, serverUrl, Math.max(timeoutSec, 1));
+
     this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
     this.callback = callback;
     this.bulkSize = Math.min(MIN_CACHE_SIZE, Math.max(bulkSize, MIN_BULK_SIZE));
+    this.instantEvents = instantEvents;
+
     executorService = new ScheduledThreadPoolExecutor(1);
     executorService.scheduleWithFixedDelay(new Runnable() {
       @Override
@@ -95,13 +107,31 @@ public class FastBatchConsumer implements Consumer {
 
   @Override
   public void send(Map<String, Object> message) {
-    if (!buffer.offer(message)) {
-      List<Map<String, Object>> res = new ArrayList<>(1);
-      res.add(message);
-      callback.onFailed(new FailedData("can't offer to buffer.", res));
-      log.error("Failed to load data into the cache.The cache current size is {}.", buffer.size());
+    dealInstantSignal(message);
+    if (buffer.remainingCapacity() == 0) {
+      flush();
     }
+    buffer.offer(message);
     log.info("Successfully save data to cache.The cache current size is {}.", buffer.size());
+  }
+
+  private void dealInstantSignal(Map<String, Object> message) {
+
+    /*
+     * 如果当前是「instant」状态，且（message中不包含event 或者 event 不是「instant」的，则刷新，设置 「非instant」状态
+     */
+    if (isInstantStatus && (!message.containsKey("event") || !instantEvents.contains(message.get("event")))) {
+      flush();
+      isInstantStatus = false;
+    }
+
+    /*
+     * 如果当前是 「非instant」状态，且（message中包含event 且 event 是「instant」的，则刷新，设置 「instant」状态
+     */
+    if (!isInstantStatus && message.containsKey("event") && instantEvents.contains(message.get("event"))) {
+      flush();
+      isInstantStatus = true;
+    }
   }
 
   /**
@@ -130,7 +160,11 @@ public class FastBatchConsumer implements Consumer {
       }
       log.debug("Data will be sent.{}", sendingData);
       try {
-        this.httpConsumer.consume(sendingData);
+        if (isInstantStatus) {
+          this.instantHttpConsumer.consume(sendingData);
+        } else {
+          this.httpConsumer.consume(sendingData);
+        }
       } catch (Exception e) {
         log.error("Failed to send data:{}.", sendingData, e);
         callback.onFailed(new FailedData(String.format("failed to send data,message:%s.", e.getMessage()),
