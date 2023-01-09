@@ -10,8 +10,7 @@ SensorsAnalytics SDK 是国内第一家开源商用版用户行为采集 SDK，�
 
 # 使用说明
 
-1. 使用方法请参考文档 http://www.sensorsdata.cn/manual/java_sdk.html
-2. 如有疑问请联系邮箱 dengshiwei@sensorsdata.cn
+1. 使用方法请参考文档 https://manual.sensorsdata.cn/sa/latest/java-sdk-1573929.html
 
 ## 讨论
 
@@ -34,7 +33,7 @@ SensorsAnalytics SDK 是国内第一家开源商用版用户行为采集 SDK，�
 
 ## License
 
-Copyright 2015－2020 Sensors Data Inc.
+Copyright 2015－2023 Sensors Data Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
