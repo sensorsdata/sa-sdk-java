@@ -3,18 +3,12 @@ package com.sensorsdata.analytics.javasdk.util;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_DELETE_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_SET_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_DETAIL_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_METHOD_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_SYSTEM_ATTR;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_VERSION_SYSTEM_ATTR;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_APPEND_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_DELETE_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_INCREMENT_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_SET_ONCE_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.PROFILE_UNSET_ACTION_TYPE;
-import static com.sensorsdata.analytics.javasdk.SensorsConst.SDK_VERSION;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TYPE;
@@ -321,24 +315,7 @@ public class SensorsAnalyticsUtil {
       if (!dataMap.containsKey("time")) {
         dataMap.put("time", System.currentTimeMillis());
       }
-      //重置 lib,后台获取该数据时能根据 $lib_method 区分通过重发送接口上报到服务端
-      dataMap.put("lib", generateLibInfo());
     }
-  }
-
-  public static Map<String, String> generateLibInfo() {
-    Map<String, String> libProperties = new HashMap<>();
-    libProperties.put(LIB_SYSTEM_ATTR, LIB);
-    libProperties.put(LIB_VERSION_SYSTEM_ATTR, SDK_VERSION);
-    libProperties.put(LIB_METHOD_SYSTEM_ATTR, "code");
-    StackTraceElement[] trace = (new Exception()).getStackTrace();
-    if (trace.length > 3) {
-      StackTraceElement traceElement = trace[3];
-      libProperties.put(LIB_DETAIL_SYSTEM_ATTR,
-          String.format("%s##%s##%s##%s", traceElement.getClassName(), traceElement.getMethodName(),
-              traceElement.getFileName(), traceElement.getLineNumber()));
-    }
-    return libProperties;
   }
 
   public static List<Map<String, Object>> deepCopy(List<Map<String, Object>> source) {

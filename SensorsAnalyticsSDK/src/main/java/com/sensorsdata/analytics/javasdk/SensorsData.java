@@ -8,7 +8,6 @@ import com.sensorsdata.analytics.javasdk.bean.IDMEventRecord;
 import com.sensorsdata.analytics.javasdk.bean.IDMUserRecord;
 import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -147,7 +146,6 @@ class SensorsData {
     this.identities = identities;
     this.type = type;
     this.event = event;
-    this.lib = SensorsAnalyticsUtil.generateLibInfo();
     this.time = properties.containsKey(SensorsConst.TIME_SYSTEM_ATTR) ?
         (Date) properties.remove(SensorsConst.TIME_SYSTEM_ATTR) : new Date();
     this.properties = properties;
@@ -181,9 +179,6 @@ class SensorsData {
     }
     if (sensorsData.getEvent() != null) {
       eventMap.put("event", sensorsData.getEvent());
-    }
-    if (sensorsData.getLib() != null) {
-      eventMap.put("lib", sensorsData.getLib());
     }
     // fix 【SDK-4709】time 类型保持为时间戳类型
     eventMap.put("time", sensorsData.getTime().getTime());

@@ -15,7 +15,7 @@ public class SensorsConst {
     /**
      * 当前JDK版本号，注意要和pom文件里面的version保持一致
      */
-    public static final String SDK_VERSION = "3.6.1";
+    public static final String SDK_VERSION = "3.6.2";
     /**
      * 当前语言类型
      */
@@ -82,4 +82,5 @@ public class SensorsConst {
     public static final String SIGN_UP_SYSTEM_ATTR = "$SignUp";
     public static final String TIME_FREE_ATTR = "$time_free";
 
+    public static final String DEFAULT_LIB_DETAIL="JavaSDK##generateLibInfo";
 }
