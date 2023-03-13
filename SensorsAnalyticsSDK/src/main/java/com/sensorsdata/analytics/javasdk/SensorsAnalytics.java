@@ -77,6 +77,11 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         log.info("Call clearSuperProperties method.");
     }
 
+    @Override
+    public void setGlobalEnableCollectMethodStack(boolean enableCollectLibDetail) {
+        worker.setEnableCollectMethodStack(enableCollectLibDetail);
+    }
+
     public SensorsAnalytics(final Consumer consumer) {
         clearSuperProper();
         worker = new SensorsAnalyticsWorker(consumer);

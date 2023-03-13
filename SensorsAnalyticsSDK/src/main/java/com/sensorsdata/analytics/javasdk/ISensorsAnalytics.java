@@ -63,6 +63,13 @@ public interface ISensorsAnalytics {
     void clearSuperProperties();
 
     /**
+     * 全局接口；是否开启 $lib_detail 收集调用者信息，默认开启；在完成初始化之后，调用一次进行关闭
+     *
+     * @param enableCollectLibDetail -true:开启收集调用者信息；false 关闭收集信息，置为常量
+     */
+    void setGlobalEnableCollectMethodStack(boolean enableCollectLibDetail);
+
+    /**
      * 记录事件
      *
      * @param eventRecord 事件消息对象
