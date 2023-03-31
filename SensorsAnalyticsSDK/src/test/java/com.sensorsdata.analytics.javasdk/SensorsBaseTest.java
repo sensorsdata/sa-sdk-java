@@ -93,6 +93,9 @@ public class SensorsBaseTest {
     actionTypeSet.add(SensorsConst.PROFILE_DELETE_ACTION_TYPE);
     actionTypeSet.add(SensorsConst.ITEM_SET_ACTION_TYPE);
     actionTypeSet.add(SensorsConst.ITEM_DELETE_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.DETAIL_SET_ACTION_TYPE);
+    actionTypeSet.add(SensorsConst.DETAIL_DELETE_ACTION_TYPE);
+
   }
 
   @Test

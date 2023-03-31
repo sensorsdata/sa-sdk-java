@@ -67,7 +67,7 @@ public class DebugConsumer implements Consumer {
             synchronized (httpConsumer) {
                 httpConsumer.consume(sendingData);
             }
-            log.info("Successfully send data:[{}].", sendingData);
+            log.debug("Successfully send data:[{}].", sendingData);
         } catch (IOException e) {
             log.error("Failed to send message with DebugConsumer,message:[{}].", sendingData, e);
             throw new DebugModeException("Failed to send message with DebugConsumer.", e);

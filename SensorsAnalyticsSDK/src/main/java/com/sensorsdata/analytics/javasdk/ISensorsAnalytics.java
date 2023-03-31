@@ -7,11 +7,11 @@ import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.schema.DetailSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.IdentitySchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemEventSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
-import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 
@@ -613,9 +613,21 @@ public interface ISensorsAnalytics {
 
     void itemDelete(@NonNull ItemSchema itemSchema) throws InvalidArgumentException;
 
-    void itemSet(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException;
+    /**
+     * 添加一条明细数据
+     *
+     * @param detailSchema 明细数据参数
+     * @throws InvalidArgumentException 参数不合法异常
+     */
+    void detailSet(@NonNull DetailSchema detailSchema) throws InvalidArgumentException;
 
-    void itemDelete(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException;
+    /**
+     * 删除一条明细数据
+     *
+     * @param detailSchema -明细数据参数
+     * @throws InvalidArgumentException - 参数不合法异常
+     */
+    void detailDelete(@NonNull DetailSchema detailSchema) throws InvalidArgumentException;
 
     /**
      * 立即发送缓存中的所有日志
