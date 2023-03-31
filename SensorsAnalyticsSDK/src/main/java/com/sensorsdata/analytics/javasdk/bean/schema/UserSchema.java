@@ -8,6 +8,7 @@ import lombok.NonNull;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public class UserSchema {
   }
 
   public static class USBuilder {
-    private Map<String, String> idMap = new HashMap<>();
+    private Map<String, String> idMap = new LinkedHashMap<>();
     private String distinctId;
     private Integer trackId;
     private Long userId;

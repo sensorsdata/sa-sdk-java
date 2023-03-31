@@ -3,6 +3,7 @@ package com.sensorsdata.analytics.javasdk.bean.schema;
 import lombok.Getter;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -15,7 +16,7 @@ import java.util.Map;
 @Getter
 public class IdentitySchema {
 
-  private Map<String, String> idMap = new HashMap<>();
+  private Map<String, String> idMap;
 
   protected IdentitySchema(Map<String, String> idMap) {
     this.idMap = idMap;
@@ -28,7 +29,7 @@ public class IdentitySchema {
 
   public static class Builder {
 
-    private Map<String, String> idMap = new HashMap<>();
+    private Map<String, String> idMap = new LinkedHashMap<>();
 
     public Builder identityMap(Map<String, String> identityMap) {
       if (identityMap != null) {

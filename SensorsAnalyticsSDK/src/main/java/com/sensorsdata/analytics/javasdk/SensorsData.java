@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 神策数据格式
+ * 神策数据格式(IDM2.0 和 IDM3.0 格式的数据)
  *
  * @author fangzhuo
  * @version 1.0.0

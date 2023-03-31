@@ -112,7 +112,7 @@ public class FastBatchConsumer implements Consumer {
       flush();
     }
     buffer.offer(message);
-    log.info("Successfully save data to cache.The cache current size is {}.", buffer.size());
+    log.debug("Successfully save data to cache.The cache current size is {}.", buffer.size());
   }
 
   private void dealInstantSignal(Map<String, Object> message) {
@@ -145,7 +145,7 @@ public class FastBatchConsumer implements Consumer {
       log.info("The Data of cache is empty when flush.");
       return;
     }
-    log.info("Successfully get [{}] messages from the cache.", results.size());
+    log.debug("Successfully get [{}] messages from the cache.", results.size());
     while (!results.isEmpty()) {
       String sendingData;
       List<Map<String, Object>> sendList = results.subList(0, Math.min(bulkSize, results.size()));
@@ -172,7 +172,7 @@ public class FastBatchConsumer implements Consumer {
       }
       sendList.clear();
     }
-    log.info("Finish flush.");
+    log.debug("Finish flush.");
   }
 
   @Override

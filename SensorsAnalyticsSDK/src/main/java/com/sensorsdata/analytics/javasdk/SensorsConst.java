@@ -48,6 +48,9 @@ public class SensorsConst {
     public static final String PROFILE_DELETE_ACTION_TYPE = "profile_delete";
     public static final String ITEM_SET_ACTION_TYPE = "item_set";
     public static final String ITEM_DELETE_ACTION_TYPE = "item_delete";
+    public static final String DETAIL_SET_ACTION_TYPE = "detail_set";
+    public static final String DETAIL_DELETE_ACTION_TYPE = "detail_delete";
+
     /**
      * ID-Mapping
      */

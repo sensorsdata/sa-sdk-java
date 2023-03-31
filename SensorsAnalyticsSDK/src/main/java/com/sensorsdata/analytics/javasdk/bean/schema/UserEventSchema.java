@@ -9,6 +9,7 @@ import lombok.NonNull;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +59,7 @@ public class UserEventSchema {
   }
 
   public static class UESBuilder {
-    private Map<String, String> idMap = new HashMap<>();
+    private Map<String, String> idMap = new LinkedHashMap<>();
     private Long userId;
     private String distinctId;
     private String eventName;
