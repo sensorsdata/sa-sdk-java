@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * TODO
+ * 神策数据类型枚举
  *
  * @author fangzhuo
  * @version 1.0.0

@@ -59,7 +59,7 @@ class InnerLoggingConsumer implements Consumer {
                 messageBuffer.length());
             throw new RuntimeException("logging buffer exceeded the allowed limitation.");
         }
-        log.info("Successfully save data to cache,The cache current size is {}.", messageBuffer.length());
+        log.debug("Successfully save data to cache,The cache current size is {}.", messageBuffer.length());
         if (messageBuffer.length() >= bufferSize) {
             log.info("Flush triggered because logging cache size reached the threshold,cache size:{},bulkSize:{}.",
                 messageBuffer.length(), bufferSize);

@@ -3,10 +3,10 @@ package com.sensorsdata.analytics.javasdk;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
 
+import com.sensorsdata.analytics.javasdk.bean.schema.DetailSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemEventSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
-import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
 import com.sensorsdata.analytics.javasdk.common.Pair;
 import com.sensorsdata.analytics.javasdk.common.SchemaTypeEnum;
@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * TODO
+ * 神策多实体数据
  *
  * @author fangzhuo
  * @version 1.0.0
@@ -31,6 +31,8 @@ class SensorsSchemaData extends SensorsData {
   private String schema;
 
   private Long userId;
+
+  private String detailId;
 
   private Pair<String, String> itemEventPair;
 
@@ -70,13 +72,14 @@ class SensorsSchemaData extends SensorsData {
     this.schemaTypeEnum = SchemaTypeEnum.USER;
   }
 
-
-  protected SensorsSchemaData(UserItemSchema userItemSchema, String actionType) {
-    super(userItemSchema.getTrackId(), userItemSchema.getDistinctId(), userItemSchema.getIdentityMap(),
-        userItemSchema.getItemId(), actionType, null, userItemSchema.getProperties());
-    this.schema = userItemSchema.getSchema();
-    this.userId = userItemSchema.getUserId();
-    this.schemaTypeEnum = SchemaTypeEnum.USER_ITEM;
+  protected SensorsSchemaData(DetailSchema detailSchema, String actionType) {
+    super(detailSchema.getTrackId(), detailSchema.getDistinctId(), detailSchema.getIdentities(),
+        null, actionType, null,
+        detailSchema.getProperties());
+    this.schema = detailSchema.getSchema();
+    this.itemEventPair = detailSchema.getItemPair();
+    this.detailId = detailSchema.getDetailId();
+    this.schemaTypeEnum = SchemaTypeEnum.DETAIL;
   }
 
   public Map<String, Object> generateData() {
@@ -114,6 +117,14 @@ class SensorsSchemaData extends SensorsData {
         data.put("id", getItemId());
         checkUserIdAndAddUser(getProperties(), "user_id");
         break;
+      case DETAIL:
+        data.put("id", detailId);
+        if (itemEventPair != null) {
+          getProperties().put(itemEventPair.getKey(), itemEventPair.getValue());
+        }
+        if (!getIdentities().isEmpty()) {
+          checkUserIdAndAddUser(getProperties(), "user_id");
+        }
       default:
         break;
     }
@@ -153,9 +164,11 @@ class SensorsSchemaData extends SensorsData {
   private void checkUserIdAndAddUser(Map<String, Object> data, String key) {
     if (null != getUserId()) {
       data.put(key, getUserId());
-    } else {
+    } else if (null != getIdentities() && !getIdentities().isEmpty()) {
       data.put("identities", getIdentities());
     }
-    data.put("distinct_id", getDistinctId());
+    if (null != getDistinctId()) {
+      data.put("distinct_id", getDistinctId());
+    }
   }
 }

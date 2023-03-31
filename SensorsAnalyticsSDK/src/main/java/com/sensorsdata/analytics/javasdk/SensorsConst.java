@@ -15,7 +15,7 @@ public class SensorsConst {
     /**
      * 当前JDK版本号，注意要和pom文件里面的version保持一致
      */
-    public static final String SDK_VERSION = "3.6.2";
+    public static final String SDK_VERSION = "3.6.3";
     /**
      * 当前语言类型
      */
@@ -48,6 +48,9 @@ public class SensorsConst {
     public static final String PROFILE_DELETE_ACTION_TYPE = "profile_delete";
     public static final String ITEM_SET_ACTION_TYPE = "item_set";
     public static final String ITEM_DELETE_ACTION_TYPE = "item_delete";
+    public static final String DETAIL_SET_ACTION_TYPE = "detail_set";
+    public static final String DETAIL_DELETE_ACTION_TYPE = "detail_delete";
+
     /**
      * ID-Mapping
      */

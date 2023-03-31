@@ -1,7 +1,7 @@
 package com.sensorsdata.analytics.javasdk.common;
 
 /**
- * TODO
+ * schema 类型枚举
  *
  * @author fangzhuo
  * @version 1.0.0
@@ -12,6 +12,7 @@ public enum SchemaTypeEnum {
   ITEM_EVENT,
   USER,
   USER_ITEM,
-  ITEM
+  ITEM,
+  DETAIL
 
 }

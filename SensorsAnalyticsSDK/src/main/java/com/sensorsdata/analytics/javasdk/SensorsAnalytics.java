@@ -2,6 +2,8 @@ package com.sensorsdata.analytics.javasdk;
 
 import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.DETAIL_DELETE_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.DETAIL_SET_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_DELETE_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_SET_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB;
@@ -28,11 +30,11 @@ import com.sensorsdata.analytics.javasdk.bean.ItemRecord;
 import com.sensorsdata.analytics.javasdk.bean.SensorsAnalyticsIdentity;
 import com.sensorsdata.analytics.javasdk.bean.SuperPropertiesRecord;
 import com.sensorsdata.analytics.javasdk.bean.UserRecord;
+import com.sensorsdata.analytics.javasdk.bean.schema.DetailSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.IdentitySchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemEventSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserEventSchema;
-import com.sensorsdata.analytics.javasdk.bean.schema.UserItemSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
@@ -580,13 +582,13 @@ public class SensorsAnalytics implements ISensorsAnalytics {
     }
 
     @Override
-    public void itemSet(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException {
-        worker.doSchemaData(new SensorsSchemaData(userItemSchema, ITEM_SET_ACTION_TYPE));
+    public void detailSet(@NonNull DetailSchema detailSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(detailSchema, DETAIL_SET_ACTION_TYPE));
     }
 
     @Override
-    public void itemDelete(@NonNull UserItemSchema userItemSchema) throws InvalidArgumentException {
-        worker.doSchemaData(new SensorsSchemaData(userItemSchema, ITEM_DELETE_ACTION_TYPE));
+    public void detailDelete(@NonNull DetailSchema detailSchema) throws InvalidArgumentException {
+        worker.doSchemaData(new SensorsSchemaData(detailSchema, DETAIL_DELETE_ACTION_TYPE));
     }
 
     @Override

@@ -9,7 +9,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +101,7 @@ public class BatchConsumer implements Consumer {
             if (maxCacheSize <= 0 || size < maxCacheSize) {
                 messageList.add(message);
                 ++size;
-                log.info("Successfully save data to cache,The cache current size is {}.", size);
+                log.debug("Successfully save data to cache,The cache current size is {}.", size);
             }
             if (size >= bulkSize) {
                 log.info("Flush was triggered because the cache size reached the threshold,cache size:{},bulkSize:{}.",
