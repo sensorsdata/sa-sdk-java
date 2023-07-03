@@ -37,7 +37,7 @@
         <project.reporting.outputEncoding>utf-8</project.reporting.outputEncoding>
         <jdk.version>1.7</jdk.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <jackson-databind.version>2.9.10.8</jackson-databind.version>
+        <jackson-databind.version>2.12.7.1</jackson-databind.version>
         <lombok.version>1.18.20</lombok.version>
         <junit.version>4.11</junit.version>
         <slf4j.version>1.7.25</slf4j.version>
