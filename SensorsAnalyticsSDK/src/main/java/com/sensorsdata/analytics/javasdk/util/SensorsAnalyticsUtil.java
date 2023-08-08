@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class SensorsAnalyticsUtil {
   public static final Pattern KEY_PATTERN = Pattern.compile(
-      "^((?!^distinct_id$|^original_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$|^user_group|^user_tag)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
+      "^((?!^distinct_id$|^original_id$|^event_id$|^device_id$|^time$|^properties$|^id$|^first_id$|^second_id$|^users$|^events$|^event$|^user_id$|^date$|^datetime$|^user_group|^user_tag)[a-zA-Z_$][a-zA-Z\\d_$]{0,99})$",
       Pattern.CASE_INSENSITIVE);
 
   public static String strJoin(String[] arr, String sep) {
