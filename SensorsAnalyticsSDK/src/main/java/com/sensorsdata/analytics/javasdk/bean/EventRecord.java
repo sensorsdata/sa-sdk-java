@@ -99,6 +99,7 @@ public class EventRecord implements Serializable {
                 throw new InvalidArgumentException("The isLoginId is empty.");
             }
             SensorsAnalyticsUtil.assertKey("event_name",eventName);
+            SensorsAnalyticsUtil.assertProperties("property", propertyMap);
             SensorsAnalyticsUtil.assertValue("distinct_id", distinctId);
             String message = String.format("[distinct_id=%s,event_name=%s,is_login_id=%s]",distinctId,eventName,isLoginId);
             trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
