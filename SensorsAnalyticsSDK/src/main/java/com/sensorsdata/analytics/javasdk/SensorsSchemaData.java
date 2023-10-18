@@ -1,7 +1,9 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TYPE;
 
 import com.sensorsdata.analytics.javasdk.bean.schema.DetailSchema;
 import com.sensorsdata.analytics.javasdk.bean.schema.ItemEventSchema;
@@ -156,7 +158,9 @@ class SensorsSchemaData extends SensorsData {
 
   private void addTimeFree(Map<String, Object> data) {
     if (isTimeFree() && (TRACK_ACTION_TYPE.equals(getType())
-        || TRACK_SIGN_UP_ACTION_TYPE.equals(getType()))) {
+        || TRACK_SIGN_UP_ACTION_TYPE.equals(getType())
+        || BIND_ID_ACTION_TYPE.equals(getType())
+        || UNBIND_ID_ACTION_TYPE.equals(getType()))) {
       data.put("time_free", true);
     }
   }

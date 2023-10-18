@@ -300,14 +300,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
 
     @Override
     public void bind(@NonNull SensorsAnalyticsIdentity... identities) throws InvalidArgumentException {
-        Map<String, String> identityMap = new HashMap<>();
-        for (SensorsAnalyticsIdentity identity : identities) {
-            identityMap.putAll(identity.getIdentityMap());
-        }
-        if (identityMap.size() < 2) {
-            throw new InvalidArgumentException("The identities is invalid，you should have at least two identities.");
-        }
-        addEventIdentity(identityMap, BIND_ID_ACTION_TYPE, BIND_ID);
+       bind(null,identities);
     }
 
     @Override
@@ -315,13 +308,33 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         if (analyticsIdentity.getIdentityMap().size() != 1) {
             throw new InvalidArgumentException("unbind user operation cannot input multiple or none identifiers.");
         }
-        addEventIdentity(analyticsIdentity.getIdentityMap(), UNBIND_ID_ACTION_TYPE, UNBIND_ID);
+        addEventIdentity(analyticsIdentity.getIdentityMap(), null, UNBIND_ID_ACTION_TYPE, UNBIND_ID);
     }
 
     @Override
     public void unbind(@NonNull String key, @NonNull String value) throws InvalidArgumentException {
         SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder().addIdentityProperty(key, value).build();
-        addEventIdentity(identity.getIdentityMap(), UNBIND_ID_ACTION_TYPE, UNBIND_ID);
+        addEventIdentity(identity.getIdentityMap(), null, UNBIND_ID_ACTION_TYPE, UNBIND_ID);
+    }
+
+    @Override
+    public void bind(Map<String, Object> properties, @NonNull SensorsAnalyticsIdentity... analyticsIdentity)
+        throws InvalidArgumentException {
+        Map<String, String> identityMap = new HashMap<>();
+        for (SensorsAnalyticsIdentity identity : analyticsIdentity) {
+            identityMap.putAll(identity.getIdentityMap());
+        }
+        if (identityMap.size() < 2) {
+            throw new InvalidArgumentException("The identities is invalid，you should have at least two identities.");
+        }
+        addEventIdentity(identityMap, properties, BIND_ID_ACTION_TYPE, BIND_ID);
+    }
+
+    @Override
+    public void unbind(@NonNull String key, @NonNull String value, Map<String, Object> properties)
+        throws InvalidArgumentException {
+        SensorsAnalyticsIdentity identity = SensorsAnalyticsIdentity.builder().addIdentityProperty(key, value).build();
+        addEventIdentity(identity.getIdentityMap(), properties, UNBIND_ID_ACTION_TYPE, UNBIND_ID);
     }
 
     @Override
@@ -511,7 +524,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         UserEventSchema userEventSchema = UserEventSchema.init()
             .setEventName(BIND_ID)
             .identityMap(identitySchema.getIdMap())
-            .addProperties(superProperties)
+            .addProperties(putAllSuperPro(identitySchema.getProperties(), superProperties))
             .start();
         worker.doSchemaData(new SensorsSchemaData(userEventSchema, BIND_ID_ACTION_TYPE));
     }
@@ -524,7 +537,7 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         UserEventSchema userEventSchema = UserEventSchema.init()
             .setEventName(UNBIND_ID)
             .identityMap(identitySchema.getIdMap())
-            .addProperties(superProperties)
+            .addProperties(putAllSuperPro(identitySchema.getProperties(), superProperties))
             .start();
         worker.doSchemaData(new SensorsSchemaData(userEventSchema, UNBIND_ID_ACTION_TYPE));
     }
@@ -659,17 +672,18 @@ public class SensorsAnalytics implements ISensorsAnalytics {
         worker.doAddData(new SensorsData(idmUserRecord, actionType));
     }
 
-    private void addEventIdentity(Map<String, String> identityMap, String actionType, String eventName)
+    private void addEventIdentity(Map<String, String> identityMap, Map<String, Object> properties, String actionType,
+        String eventName)
         throws InvalidArgumentException {
         if (identityMap.isEmpty()) {
             throw new InvalidArgumentException("The identity is empty.");
         }
         assertIdentityMap(actionType, identityMap);
-        SensorsAnalyticsUtil.assertProperties(actionType, null);
+        SensorsAnalyticsUtil.assertProperties(actionType, properties);
         IDMEventRecord idmEventRecord = IDMEventRecord.starter()
             .setEventName(eventName)
             .identityMap(identityMap)
-            .addProperties(superProperties)
+            .addProperties(putAllSuperPro(properties, superProperties))
             .build();
         worker.doAddData(new SensorsData(idmEventRecord, actionType));
     }

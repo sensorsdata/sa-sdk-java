@@ -1,5 +1,6 @@
 package com.sensorsdata.analytics.javasdk;
 
+import static com.sensorsdata.analytics.javasdk.SensorsConst.BIND_ID_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.DEFAULT_LIB_DETAIL;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_DETAIL_SYSTEM_ATTR;
@@ -9,6 +10,7 @@ import static com.sensorsdata.analytics.javasdk.SensorsConst.LIB_VERSION_SYSTEM_
 import static com.sensorsdata.analytics.javasdk.SensorsConst.SDK_VERSION;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_ACTION_TYPE;
 import static com.sensorsdata.analytics.javasdk.SensorsConst.TRACK_SIGN_UP_ACTION_TYPE;
+import static com.sensorsdata.analytics.javasdk.SensorsConst.UNBIND_ID_ACTION_TYPE;
 
 import com.sensorsdata.analytics.javasdk.consumer.Consumer;
 
@@ -41,8 +43,10 @@ class SensorsAnalyticsWorker {
   void doAddData(@NonNull SensorsData sensorsData) {
     Map<String, Object> data = SensorsData.generateData(sensorsData);
     data.put("lib", generateLibInfo());
-    if (timeFree && (TRACK_ACTION_TYPE.equals(sensorsData.getType()))
-        || TRACK_SIGN_UP_ACTION_TYPE.equals(sensorsData.getType())) {
+    if (timeFree && (TRACK_ACTION_TYPE.equals(sensorsData.getType())
+        || TRACK_SIGN_UP_ACTION_TYPE.equals(sensorsData.getType()))
+        || BIND_ID_ACTION_TYPE.equals(sensorsData.getType())
+        || UNBIND_ID_ACTION_TYPE.equals(sensorsData.getType())) {
       data.put("time_free", true);
     }
     this.consumer.send(data);
@@ -60,8 +64,10 @@ class SensorsAnalyticsWorker {
   public void doSchemaData(@NonNull SensorsSchemaData schemaData) {
     Map<String, Object> sensorsData = schemaData.generateData();
     sensorsData.put("lib", generateLibInfo());
-    if (timeFree && (TRACK_ACTION_TYPE.equals(schemaData.getType()))
-        || TRACK_SIGN_UP_ACTION_TYPE.equals(schemaData.getType())) {
+    if (timeFree && (TRACK_ACTION_TYPE.equals(schemaData.getType())
+        || TRACK_SIGN_UP_ACTION_TYPE.equals(schemaData.getType())
+        || BIND_ID_ACTION_TYPE.equals(schemaData.getType())
+        || UNBIND_ID_ACTION_TYPE.equals(schemaData.getType()))) {
       sensorsData.put("time_free", true);
     }
     this.consumer.send(sensorsData);
