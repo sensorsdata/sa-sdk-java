@@ -390,6 +390,27 @@ public interface ISensorsAnalytics {
     void unbind(@NonNull String key, @NonNull String value) throws InvalidArgumentException;
 
     /**
+     * 用户标识绑定
+     *
+     * @param properties        自定义属性，可以传递 $project $token time_free等一系列的预制属性
+     * @param analyticsIdentity 用户纬度信息
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void bind(Map<String, Object> properties, @NonNull SensorsAnalyticsIdentity... analyticsIdentity)
+        throws InvalidArgumentException;
+
+    /**
+     * 用户标识解绑
+     *
+     * @param key        用户标识 key
+     * @param value      用户标识值
+     * @param properties 自定义属性
+     * @throws InvalidArgumentException 不合法参数异常
+     */
+    void unbind(@NonNull String key, @NonNull String value, Map<String, Object> properties)
+        throws InvalidArgumentException;
+
+    /**
      * 使用用户标识 3.0 系统埋点事件
      *
      * @param analyticsIdentity 用户标识 ID
