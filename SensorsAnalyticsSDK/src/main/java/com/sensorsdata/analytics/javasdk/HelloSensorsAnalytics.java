@@ -158,6 +158,5 @@ public class HelloSensorsAnalytics {
         sa.profileIncrementById(identity, "age", 1);
         sa.profileAppendById(identity, "sport", "ball");
         sa.profileUnsetById(identity,"sport");
-        sa.profileDeleteById(identity);
     }
 }
