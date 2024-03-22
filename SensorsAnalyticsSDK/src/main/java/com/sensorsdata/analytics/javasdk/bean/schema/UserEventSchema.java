@@ -31,10 +31,10 @@ public class UserEventSchema {
     /** 事件携带的属性集合 */
     private Map<String, Object> propertyMap;
 
-    private Map<String, String> identityMap;
+    private Map<String, Object> identityMap;
 
     protected UserEventSchema(
-            Map<String, String> identityMap,
+            Map<String, Object> identityMap,
             String eventName,
             String distinctId,
             Map<String, Object> propertyMap,
@@ -57,7 +57,7 @@ public class UserEventSchema {
     }
 
     public static class UESBuilder {
-        private Map<String, String> idMap = new LinkedHashMap<>();
+        private Map<String, Object> idMap = new LinkedHashMap<>();
         private Long userId;
         private String distinctId;
         private String eventName;

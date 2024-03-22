@@ -28,10 +28,10 @@ public class UserSchema {
 
     private Integer trackId;
 
-    private Map<String, String> identityMap;
+    private Map<String, Object> identityMap;
 
     protected UserSchema(
-            Map<String, String> identityMap,
+            Map<String, Object> identityMap,
             Map<String, Object> propertyMap,
             String distinctId,
             Integer trackId,
@@ -48,7 +48,7 @@ public class UserSchema {
     }
 
     public static class USBuilder {
-        private Map<String, String> idMap = new LinkedHashMap<>();
+        private Map<String, Object> idMap = new LinkedHashMap<>();
         private String distinctId;
         private Integer trackId;
         private Long userId;
@@ -76,6 +76,11 @@ public class UserSchema {
         }
 
         public USBuilder addIdentityProperty(@NonNull String key, @NonNull String value) {
+            this.idMap.put(key, value);
+            return this;
+        }
+
+        public USBuilder addIdentityProperty(@NonNull String key, @NonNull List<String> value) {
             this.idMap.put(key, value);
             return this;
         }

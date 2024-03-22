@@ -43,7 +43,7 @@ public class DetailSchema {
      *
      * <p>非必传参数,跟 itemId 节点互斥，若同时传入，则会抛出 InvalidArgumentException 异常；
      */
-    private Map<String, String> identities;
+    private Map<String, Object> identities;
     /**
      * 只有传入 identities 节点信息，再设置该节点才会生效，否则设置该值无效；
      *
@@ -63,7 +63,7 @@ public class DetailSchema {
             String schema,
             String detailId,
             Map<String, Object> properties,
-            Map<String, String> identities,
+            Map<String, Object> identities,
             String distinctId,
             Pair<String, String> itemPair,
             Integer trackId) {
@@ -84,7 +84,7 @@ public class DetailSchema {
         private String schema;
         private String detailId;
         private Map<String, Object> properties = new HashMap<>();
-        private Map<String, String> identities = new LinkedHashMap<>();
+        private Map<String, Object> identities = new LinkedHashMap<>();
         private String distinctId;
         private Pair<String, String> itemPair;
         private Integer trackId;

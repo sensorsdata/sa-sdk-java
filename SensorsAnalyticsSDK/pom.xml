@@ -11,7 +11,7 @@
 
     <groupId>com.sensorsdata.analytics.javasdk</groupId>
     <artifactId>SensorsAnalyticsSDK</artifactId>
-    <version>3.6.7</version>
+    <version>3.6.8-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>SensorsAnalyticsSDK</name>
@@ -87,8 +87,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
-                    <source>${jdk.version}</source>
-                    <target>${jdk.version}</target>
+                    <source>8</source>
+                    <target>8</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>

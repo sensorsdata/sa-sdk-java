@@ -33,7 +33,7 @@ class SensorsData {
     /** 数据用户匿名标识 */
     private String originalId;
     /** IDM3.0 用户维度标识 */
-    private Map<String, String> identities;
+    private Map<String, Object> identities;
     /** 事件类型 */
     private String type;
     /** 事件名称 */
@@ -126,7 +126,7 @@ class SensorsData {
     protected SensorsData(
             String distinctId,
             String type,
-            Map<String, String> identities,
+            Map<String, Object> identities,
             Map<String, Object> properties,
             Integer trackId) {
         this(distinctId, null, identities, type, null, properties, null, null, trackId);
@@ -141,7 +141,7 @@ class SensorsData {
      */
     protected SensorsData(
             String distinctId,
-            Map<String, String> identities,
+            Map<String, Object> identities,
             String event,
             Map<String, Object> properties,
             Integer trackId) {
@@ -161,7 +161,7 @@ class SensorsData {
     protected SensorsData(
             Integer trackId,
             String distinctId,
-            Map<String, String> identities,
+            Map<String, Object> identities,
             String itemId,
             String type,
             String event,
@@ -172,7 +172,7 @@ class SensorsData {
     protected SensorsData(
             String distinctId,
             String originalId,
-            Map<String, String> identities,
+            Map<String, Object> identities,
             String type,
             String event,
             Map<String, Object> properties,

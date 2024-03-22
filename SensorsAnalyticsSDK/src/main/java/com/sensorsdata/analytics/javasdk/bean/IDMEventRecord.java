@@ -36,10 +36,10 @@ public class IDMEventRecord {
 
     private Integer trackId;
 
-    private Map<String, String> identityMap;
+    private Map<String, Object> identityMap;
 
     protected IDMEventRecord(
-            Map<String, String> identityMap,
+            Map<String, Object> identityMap,
             String eventName,
             String distinctId,
             Map<String, Object> propertyMap,
@@ -57,7 +57,7 @@ public class IDMEventRecord {
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class IDMBuilder {
-        private final Map<String, String> idMap = new LinkedHashMap<>();
+        private final Map<String, Object> idMap = new LinkedHashMap<>();
         private final Map<String, Object> propertyMap = new HashMap<>();
         private String eventName;
         private String distinctId;

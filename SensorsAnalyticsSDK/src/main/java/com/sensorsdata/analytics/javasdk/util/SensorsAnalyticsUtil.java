@@ -184,6 +184,22 @@ public class SensorsAnalyticsUtil {
         }
     }
 
+    public static void assertValue(String type, Object value) throws InvalidArgumentException {
+        if (value instanceof String) {
+            assertValue(type, (String) value);
+        } else if (value instanceof List) {
+            if (((List<?>) value).size() == 0) {
+                throw new InvalidArgumentException(String.format("%s value is empty.", type));
+            }
+            for (Object o : (List<?>) value) {
+                assertValue(type, (String) o);
+            }
+        } else {
+            throw new InvalidArgumentException(
+                    String.format("Unsupported data type for the %s value", type));
+        }
+    }
+
     public static void assertKey(String type, String key) throws InvalidArgumentException {
         if (null == key || key.length() < 1) {
             throw new InvalidArgumentException(String.format("The %s key is empty or null.", type));
@@ -208,7 +224,7 @@ public class SensorsAnalyticsUtil {
     }
 
     public static String checkUserInfo(
-            Long userId, Map<String, String> identities, String distinctId)
+            Long userId, Map<String, Object> identities, String distinctId)
             throws InvalidArgumentException {
         if (identities.isEmpty() && null == userId) {
             throw new InvalidArgumentException("missing user info node(identities/user_id).");
@@ -232,13 +248,13 @@ public class SensorsAnalyticsUtil {
      * @return 返回最终 distinctId 值和 isLoginId
      */
     public static Pair<String, Boolean> checkIdentitiesAndGenerateDistinctId(
-            String distinctId, Map<String, String> identities) throws InvalidArgumentException {
+            String distinctId, Map<String, Object> identities) throws InvalidArgumentException {
         if (distinctId != null) {
             assertValue("distinct_id", distinctId);
         }
         String tmpId = null;
         // 校验 idMap 是否正确，并尝试组装 distinct
-        for (Map.Entry<String, String> entry : identities.entrySet()) {
+        for (Map.Entry<String, Object> entry : identities.entrySet()) {
             assertKey(TRACK_ACTION_TYPE, entry.getKey());
             assertValue(TRACK_ACTION_TYPE, entry.getValue());
             if (tmpId == null && distinctId == null) {
@@ -254,10 +270,16 @@ public class SensorsAnalyticsUtil {
         if (distinctId == null) {
             // 循环完毕,查看一下 map 中是否存在 $identity_login_id
             if (identities.containsKey(SensorsAnalyticsIdentity.LOGIN_ID)) {
-                id = identities.get(SensorsAnalyticsIdentity.LOGIN_ID);
+                id = (String) identities.get(SensorsAnalyticsIdentity.LOGIN_ID);
                 isLoginId = true;
             } else if (tmpId == null) { // 不存在 $identity_login_id，并且 key+value 超长，使用第一个 value
-                id = identities.get(identities.keySet().iterator().next());
+                Object obj = identities.get(identities.keySet().iterator().next());
+                if (obj instanceof String) {
+                    id = (String) obj;
+                } else if (obj instanceof List) {
+                    // the list is not empty, otherwise there is a check fail before
+                    id = (String) ((List<?>) obj).get(0);
+                }
             } else { // 否则使用 key+value
                 id = tmpId;
             }

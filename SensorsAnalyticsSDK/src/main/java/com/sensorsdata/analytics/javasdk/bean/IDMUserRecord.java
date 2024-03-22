@@ -32,10 +32,10 @@ public class IDMUserRecord {
 
     private Integer trackId;
 
-    private Map<String, String> identityMap;
+    private Map<String, Object> identityMap;
 
     protected IDMUserRecord(
-            Map<String, String> identityMap,
+            Map<String, Object> identityMap,
             Map<String, Object> propertyMap,
             String distinctId,
             Integer trackId) {
@@ -51,7 +51,7 @@ public class IDMUserRecord {
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class IDMBuilder {
-        private final Map<String, String> idMap = new LinkedHashMap<>();
+        private final Map<String, Object> idMap = new LinkedHashMap<>();
         private String distinctId;
         private final Map<String, Object> propertyMap = new HashMap<>();
         private Integer trackId;

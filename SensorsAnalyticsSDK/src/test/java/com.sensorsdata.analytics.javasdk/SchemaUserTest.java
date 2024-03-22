@@ -3,6 +3,7 @@ package com.sensorsdata.analytics.javasdk;
 import com.sensorsdata.analytics.javasdk.bean.schema.UserSchema;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,19 @@ public class SchemaUserTest extends SensorsBaseTest {
         UserSchema userSchema =
                 UserSchema.init()
                         .addIdentityProperty("user1", "value1")
+                        .addProperty("key1", "value1")
+                        .addProperty("key2", 22)
+                        .setDistinctId("aaa")
+                        .start();
+        sa.profileSet(userSchema);
+        assertUSData(data);
+    }
+
+    @Test
+    public void checkProfileSetTest2() throws InvalidArgumentException {
+        UserSchema userSchema =
+                UserSchema.init()
+                        .addIdentityProperty("user1", Arrays.asList("value1", "value2"))
                         .addProperty("key1", "value1")
                         .addProperty("key2", 22)
                         .setDistinctId("aaa")
