@@ -9,36 +9,24 @@ package com.sensorsdata.analytics.javasdk;
  */
 public class SensorsConst {
 
-    private SensorsConst() {
-    }
+    private SensorsConst() {}
 
-    /**
-     * 当前JDK版本号，注意要和pom文件里面的version保持一致
-     */
+    /** 当前JDK版本号，注意要和pom文件里面的version保持一致 */
     public static final String SDK_VERSION = "3.6.7";
-    /**
-     * 当前语言类型
-     */
+    /** 当前语言类型 */
     public static final String LIB = "Java";
-    /**
-     * 当前数据协议版本
-     */
+    /** 当前数据协议版本 */
     public static final String PROTOCOL_VERSION = "2.0";
-    /**
-     * user events 所属 schema
-     */
+    /** user events 所属 schema */
     public static final String USER_EVENT_SCHEMA = "events";
-    /**
-     * user 所属 schema
-     */
+    /** user 所属 schema */
     public static final String USER_SCHEMA = "users";
 
     public static final String USER_ID_PREFIX = "SENSORS_ID:";
 
-    /**
-     * 事件上报类型
-     */
+    /** 事件上报类型 */
     public static final String TRACK_ACTION_TYPE = "track";
+
     public static final String TRACK_SIGN_UP_ACTION_TYPE = "track_signup";
     public static final String PROFILE_SET_ACTION_TYPE = "profile_set";
     public static final String PROFILE_SET_ONCE_ACTION_TYPE = "profile_set_once";
@@ -51,28 +39,22 @@ public class SensorsConst {
     public static final String DETAIL_SET_ACTION_TYPE = "detail_set";
     public static final String DETAIL_DELETE_ACTION_TYPE = "detail_delete";
 
-    /**
-     * ID-Mapping
-     */
+    /** ID-Mapping */
     public static final String BIND_ID_ACTION_TYPE = "track_id_bind";
+
     public static final String UNBIND_ID_ACTION_TYPE = "track_id_unbind";
 
     public static final String ITEM_TYPE = "Item Type";
     public static final String ITEM_ID = "Item Id";
-    /**
-     * 绑定事件名称
-     */
+    /** 绑定事件名称 */
     public static final String BIND_ID = "$BindID";
-    /**
-     * 解绑事件名称
-     */
+    /** 解绑事件名称 */
     public static final String UNBIND_ID = "$UnbindID";
 
     public static final String PROPERTIES = "properties";
-    /**
-     * 系统预置属性
-     */
+    /** 系统预置属性 */
     public static final String TRACK_ID = "$track_id";
+
     public static final String PROJECT_SYSTEM_ATTR = "$project";
     public static final String TIME_SYSTEM_ATTR = "$time";
     public static final String TOKEN_SYSTEM_ATTR = "$token";
@@ -85,5 +67,5 @@ public class SensorsConst {
     public static final String SIGN_UP_SYSTEM_ATTR = "$SignUp";
     public static final String TIME_FREE_ATTR = "$time_free";
 
-    public static final String DEFAULT_LIB_DETAIL="JavaSDK##generateLibInfo";
+    public static final String DEFAULT_LIB_DETAIL = "JavaSDK##generateLibInfo";
 }
