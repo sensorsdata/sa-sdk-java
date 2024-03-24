@@ -6,12 +6,12 @@ import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Assertions;
-import sun.misc.BASE64Decoder;
 
 /**
  * 模拟服务端接收数据
@@ -28,8 +28,7 @@ public class TestServlet extends HttpServlet {
         String gzip = request.getParameter("gzip");
         Assertions.assertEquals("1", gzip);
         String dataList = request.getParameter("data_list");
-        BASE64Decoder base64Decoder = new BASE64Decoder();
-        byte[] bytes = base64Decoder.decodeBuffer(dataList);
+        byte[] bytes = Base64.getDecoder().decode(dataList);
         byte[] data = decompressGzip(bytes);
         ArrayNode arrayNode = (ArrayNode) SensorsAnalyticsUtil.getJsonObjectMapper().readTree(data);
         for (JsonNode jsonNode : arrayNode) {
