@@ -70,7 +70,7 @@ public class UserSchema {
             return this;
         }
 
-        public USBuilder identityMap(@NonNull Map<String, String> identityMap) {
+        public USBuilder identityMap(@NonNull Map<String, Object> identityMap) {
             this.idMap.putAll(identityMap);
             return this;
         }
@@ -82,11 +82,6 @@ public class UserSchema {
 
         public USBuilder addIdentityProperty(@NonNull String key, @NonNull List<String> value) {
             this.idMap.put(key, value);
-            return this;
-        }
-
-        public USBuilder addIdentities(@NonNull Map<String, Object> identities) {
-            this.idMap.putAll(identities);
             return this;
         }
 
