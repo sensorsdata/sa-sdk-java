@@ -85,6 +85,11 @@ public class UserSchema {
             return this;
         }
 
+        public USBuilder addIdentities(@NonNull Map<String, Object> identities) {
+            this.idMap.putAll(identities);
+            return this;
+        }
+
         public USBuilder setDistinctId(@NonNull String distinctId) {
             this.distinctId = distinctId;
             // IDM3.0 设置 distinctId,设置 $is_login_id = false,其实也可不设置
