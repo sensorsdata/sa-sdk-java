@@ -66,3 +66,6 @@ profile
 
 # AppCode
 .idea
+
+lock.log
+test.log*

@@ -1,15 +1,13 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class InnerLoggingConsumer implements Consumer {
@@ -26,9 +24,10 @@ class InnerLoggingConsumer implements Consumer {
     private LoggingFileWriter fileWriter;
 
     InnerLoggingConsumer(
-        LoggingFileWriterFactory fileWriterFactory,
-        String filenamePrefix,
-        int bufferSize, LogSplitMode splitMode) {
+            LoggingFileWriterFactory fileWriterFactory,
+            String filenamePrefix,
+            int bufferSize,
+            LogSplitMode splitMode) {
         this.fileWriterFactory = fileWriterFactory;
         this.filenamePrefix = filenamePrefix;
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
@@ -40,8 +39,10 @@ class InnerLoggingConsumer implements Consumer {
             this.simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         }
         log.info(
-            "Initialize LoggingConsumer with params:[filenamePrefix:{},bufferSize:{},splitMode:{}].",
-            filenamePrefix, bufferSize, splitMode);
+                "Initialize LoggingConsumer with params:[filenamePrefix:{},bufferSize:{},splitMode:{}].",
+                filenamePrefix,
+                bufferSize,
+                splitMode);
     }
 
     @Override
@@ -55,14 +56,19 @@ class InnerLoggingConsumer implements Consumer {
                 throw new RuntimeException("fail to process json", e);
             }
         } else {
-            log.error("Logging cache exceeded the allowed limitation,current cache size is {}.",
-                messageBuffer.length());
+            log.error(
+                    "Logging cache exceeded the allowed limitation,current cache size is {}.",
+                    messageBuffer.length());
             throw new RuntimeException("logging buffer exceeded the allowed limitation.");
         }
-        log.debug("Successfully save data to cache,The cache current size is {}.", messageBuffer.length());
+        log.debug(
+                "Successfully save data to cache,The cache current size is {}.",
+                messageBuffer.length());
         if (messageBuffer.length() >= bufferSize) {
-            log.info("Flush triggered because logging cache size reached the threshold,cache size:{},bulkSize:{}.",
-                messageBuffer.length(), bufferSize);
+            log.info(
+                    "Flush triggered because logging cache size reached the threshold,cache size:{},bulkSize:{}.",
+                    messageBuffer.length(),
+                    bufferSize);
             flush();
         }
     }
@@ -82,7 +88,9 @@ class InnerLoggingConsumer implements Consumer {
 
         if (fileWriter != null && !fileWriter.isValid(filename)) {
             this.fileWriterFactory.closeFileWriter(fileWriter);
-            log.info("The new file name [{}] is different from current file name,so update file writer.", filename);
+            log.info(
+                    "The new file name [{}] is different from current file name,so update file writer.",
+                    filename);
             fileWriter = null;
         }
 
@@ -111,7 +119,6 @@ class InnerLoggingConsumer implements Consumer {
         }
         log.info("Call close method.");
     }
-
 }
 
 interface LoggingFileWriter {
@@ -128,5 +135,4 @@ interface LoggingFileWriterFactory {
             throws FileNotFoundException;
 
     void closeFileWriter(LoggingFileWriter writer);
-
 }

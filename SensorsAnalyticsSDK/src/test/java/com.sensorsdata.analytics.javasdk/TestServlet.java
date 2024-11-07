@@ -1,23 +1,17 @@
 package com.sensorsdata.analytics.javasdk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import sun.misc.BASE64Decoder;
-
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.zip.GZIPInputStream;
-
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.Assertions;
 
 /**
  * 模拟服务端接收数据
@@ -28,41 +22,43 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class TestServlet extends HttpServlet {
 
-  @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String gzip = request.getParameter("gzip");
-    assertEquals("1", gzip);
-    String dataList = request.getParameter("data_list");
-    BASE64Decoder base64Decoder = new BASE64Decoder();
-    byte[] bytes = base64Decoder.decodeBuffer(dataList);
-    byte[] data = decompressGzip(bytes);
-    ArrayNode arrayNode = (ArrayNode) SensorsAnalyticsUtil.getJsonObjectMapper().readTree(data);
-    for (JsonNode jsonNode : arrayNode) {
-      assertNotNull("数据为空！", jsonNode);
-      assertTrue("数据中没有 type 节点！", jsonNode.has("type"));
-      assertTrue("数据中没有 actionType 节点！", jsonNode.has("event"));
-      if (jsonNode.get("event").asText().startsWith("item")) {
-        assertTrue("item 数据没有 item_id 节点！", jsonNode.has("item_id"));
-        assertTrue("item 数据没有 item_type 节点！", jsonNode.has("item_type"));
-      } else {
-        assertTrue("event or profile 数据没有 _track_id 节点！", jsonNode.has("_track_id"));
-        assertTrue("event or profile 数据没有 lib 节点！", jsonNode.has("lib"));
-        assertTrue("event or profile 数据没有 time 节点！", jsonNode.has("time"));
-        assertTrue("event or profile 数据没有 distinct_id 节点！", jsonNode.has("distinct_id"));
-      }
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String gzip = request.getParameter("gzip");
+        Assertions.assertEquals("1", gzip);
+        String dataList = request.getParameter("data_list");
+        byte[] bytes = Base64.getDecoder().decode(dataList);
+        byte[] data = decompressGzip(bytes);
+        ArrayNode arrayNode = (ArrayNode) SensorsAnalyticsUtil.getJsonObjectMapper().readTree(data);
+        for (JsonNode jsonNode : arrayNode) {
+            Assertions.assertNotNull(jsonNode, "数据为空！");
+            Assertions.assertTrue(jsonNode.has("type"), "数据中没有 type 节点！");
+            Assertions.assertTrue(jsonNode.has("event"), "数据中没有 actionType 节点！");
+            if (jsonNode.get("event").asText().startsWith("item")) {
+                Assertions.assertTrue(jsonNode.has("item_id"), "item 数据没有 item_id 节点！");
+                Assertions.assertTrue(jsonNode.has("item_type"), "item 数据没有 item_type 节点！");
+            } else {
+                Assertions.assertTrue(
+                        jsonNode.has("_track_id"), "event or profile 数据没有 _track_id 节点！");
+                Assertions.assertTrue(jsonNode.has("lib"), "event or profile 数据没有 lib 节点！");
+                Assertions.assertTrue(jsonNode.has("time"), "event or profile 数据没有 time 节点！");
+                Assertions.assertTrue(
+                        jsonNode.has("distinct_id"), "event or profile 数据没有 distinct_id 节点！");
+            }
+        }
+        response.setStatus(200);
     }
-    response.setStatus(200);
-  }
 
-  protected byte[] decompressGzip(byte[] gzipData) throws IOException {
-    byte[] bytes1 = new byte[1024];
-    GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(gzipData));
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    int n;
-    while ((n = gis.read(bytes1)) != -1) {
-      bos.write(bytes1, 0, n);
+    protected byte[] decompressGzip(byte[] gzipData) throws IOException {
+        byte[] bytes1 = new byte[1024];
+        GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(gzipData));
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        int n;
+        while ((n = gis.read(bytes1)) != -1) {
+            bos.write(bytes1, 0, n);
+        }
+        bos.close();
+        return bos.toByteArray();
     }
-    bos.close();
-    return bos.toByteArray();
-  }
 }

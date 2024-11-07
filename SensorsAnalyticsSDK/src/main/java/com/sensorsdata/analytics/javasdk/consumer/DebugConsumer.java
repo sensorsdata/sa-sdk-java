@@ -1,16 +1,9 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
-import com.sensorsdata.analytics.javasdk.exceptions.DebugModeException;
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
-
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-
+import com.sensorsdata.analytics.javasdk.exceptions.DebugModeException;
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -19,6 +12,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 
 @Slf4j
 public class DebugConsumer implements Consumer {
@@ -29,7 +26,8 @@ public class DebugConsumer implements Consumer {
         this(HttpClients.custom(), serverUrl, writeData);
     }
 
-    public DebugConsumer(HttpClientBuilder httpClientBuilder, String serverUrl, final boolean writeData) {
+    public DebugConsumer(
+            HttpClientBuilder httpClientBuilder, String serverUrl, final boolean writeData) {
         String debugUrl;
         try {
             // 将 URI Path 替换成 Debug 模式的 '/debug'

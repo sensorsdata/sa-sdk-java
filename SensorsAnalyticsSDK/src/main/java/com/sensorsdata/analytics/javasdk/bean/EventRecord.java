@@ -3,16 +3,13 @@ package com.sensorsdata.analytics.javasdk.bean;
 import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 事件表信息实体对象
- */
+/** 事件表信息实体对象 */
 public class EventRecord implements Serializable {
     private static final long serialVersionUID = -2327319579147636283L;
 
@@ -28,8 +25,13 @@ public class EventRecord implements Serializable {
 
     private final String originalId;
 
-    private EventRecord(String eventName, String distinctId, Boolean isLoginId, Map<String, Object> propertyMap,
-            Integer trackId, String originalId) {
+    private EventRecord(
+            String eventName,
+            String distinctId,
+            Boolean isLoginId,
+            Map<String, Object> propertyMap,
+            Integer trackId,
+            String originalId) {
         this.eventName = eventName;
         this.distinctId = distinctId;
         this.isLoginId = isLoginId;
@@ -43,12 +45,19 @@ public class EventRecord implements Serializable {
 
     @Override
     public String toString() {
-        return "EventRecord{" +
-                   "propertyMap=" + propertyMap +
-                   ", eventName='" + eventName + '\'' +
-                   ", distinctId='" + distinctId + '\'' +
-                   ", isLoginId='" + isLoginId + '\'' +
-                   '}';
+        return "EventRecord{"
+                + "propertyMap="
+                + propertyMap
+                + ", eventName='"
+                + eventName
+                + '\''
+                + ", distinctId='"
+                + distinctId
+                + '\''
+                + ", isLoginId='"
+                + isLoginId
+                + '\''
+                + '}';
     }
 
     public static Builder builder() {
@@ -75,7 +84,9 @@ public class EventRecord implements Serializable {
         return originalId;
     }
 
-    public Integer getTrackId() {return trackId; }
+    public Integer getTrackId() {
+        return trackId;
+    }
 
     public static class Builder {
         private final Map<String, Object> propertyMap = new HashMap<>();
@@ -85,8 +96,8 @@ public class EventRecord implements Serializable {
         private Integer trackId;
         private String originalId;
 
-        private Builder() {
-        }
+        private Builder() {}
+
         public EventRecord build() throws InvalidArgumentException {
 
             if (eventName == null) {
@@ -98,12 +109,16 @@ public class EventRecord implements Serializable {
             if (isLoginId == null) {
                 throw new InvalidArgumentException("The isLoginId is empty.");
             }
-            SensorsAnalyticsUtil.assertKey("event_name",eventName);
+            SensorsAnalyticsUtil.assertKey("event_name", eventName);
             SensorsAnalyticsUtil.assertProperties("property", propertyMap);
             SensorsAnalyticsUtil.assertValue("distinct_id", distinctId);
-            String message = String.format("[distinct_id=%s,event_name=%s,is_login_id=%s]",distinctId,eventName,isLoginId);
+            String message =
+                    String.format(
+                            "[distinct_id=%s,event_name=%s,is_login_id=%s]",
+                            distinctId, eventName, isLoginId);
             trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
-            return new EventRecord(eventName, distinctId, isLoginId, propertyMap,trackId, originalId);
+            return new EventRecord(
+                    eventName, distinctId, isLoginId, propertyMap, trackId, originalId);
         }
 
         public EventRecord.Builder setOriginalId(String originalId) {

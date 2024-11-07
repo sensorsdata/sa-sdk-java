@@ -1,17 +1,15 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 
 @Slf4j
 public class BatchConsumer implements Consumer {
@@ -45,39 +43,79 @@ public class BatchConsumer implements Consumer {
         this(serverUrl, bulkSize, throwException, 3);
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize, final boolean throwException,
-        final int timeoutSec) {
+    public BatchConsumer(
+            final String serverUrl,
+            final int bulkSize,
+            final boolean throwException,
+            final int timeoutSec) {
         this(serverUrl, bulkSize, 0, throwException, timeoutSec);
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
-        final boolean throwException) {
+    public BatchConsumer(
+            final String serverUrl,
+            final int bulkSize,
+            final int maxCacheSize,
+            final boolean throwException) {
         this(serverUrl, bulkSize, maxCacheSize, throwException, 3);
     }
 
-    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
-                         final boolean throwException, final int timeoutSec) {
+    public BatchConsumer(
+            final String serverUrl,
+            final int bulkSize,
+            final int maxCacheSize,
+            final boolean throwException,
+            final int timeoutSec) {
         this(HttpClients.custom(), serverUrl, bulkSize, maxCacheSize, throwException, timeoutSec);
     }
 
-    public BatchConsumer(HttpClientBuilder httpClientBuilder, final String serverUrl, final int bulkSize, final int maxCacheSize,
-                         final boolean throwException, final int timeoutSec) {
-        this(httpClientBuilder, serverUrl, bulkSize, maxCacheSize, throwException, timeoutSec, new ArrayList<String>());
+    public BatchConsumer(
+            HttpClientBuilder httpClientBuilder,
+            final String serverUrl,
+            final int bulkSize,
+            final int maxCacheSize,
+            final boolean throwException,
+            final int timeoutSec) {
+        this(
+                httpClientBuilder,
+                serverUrl,
+                bulkSize,
+                maxCacheSize,
+                throwException,
+                timeoutSec,
+                new ArrayList<String>());
     }
 
-
-    public BatchConsumer(final String serverUrl, final int bulkSize, final int maxCacheSize,
-        final boolean throwException, final int timeoutSec, List<String> instantEvents) {
-        this(HttpClients.custom(), serverUrl, bulkSize, maxCacheSize, throwException, timeoutSec, instantEvents);
+    public BatchConsumer(
+            final String serverUrl,
+            final int bulkSize,
+            final int maxCacheSize,
+            final boolean throwException,
+            final int timeoutSec,
+            List<String> instantEvents) {
+        this(
+                HttpClients.custom(),
+                serverUrl,
+                bulkSize,
+                maxCacheSize,
+                throwException,
+                timeoutSec,
+                instantEvents);
     }
 
-    public BatchConsumer(HttpClientBuilder httpClientBuilder, final String serverUrl, final int bulkSize, final int maxCacheSize,
-        final boolean throwException, final int timeoutSec, List<String> instantEvents) {
+    public BatchConsumer(
+            HttpClientBuilder httpClientBuilder,
+            final String serverUrl,
+            final int bulkSize,
+            final int maxCacheSize,
+            final boolean throwException,
+            final int timeoutSec,
+            List<String> instantEvents) {
         this.messageList = new LinkedList<>();
         this.isInstantStatus = false;
         this.instantEvents = instantEvents;
         this.httpConsumer = new HttpConsumer(httpClientBuilder, serverUrl, Math.max(timeoutSec, 1));
-        this.instantHttpConsumer = new InstantHttpConsumer(httpClientBuilder, serverUrl, Math.max(timeoutSec, 1));
+        this.instantHttpConsumer =
+                new InstantHttpConsumer(httpClientBuilder, serverUrl, Math.max(timeoutSec, 1));
         this.jsonMapper = SensorsAnalyticsUtil.getJsonObjectMapper();
         this.bulkSize = Math.min(MAX_FLUSH_BULK_SIZE, Math.max(1, bulkSize));
         if (maxCacheSize > MAX_CACHE_SIZE) {
@@ -89,8 +127,11 @@ public class BatchConsumer implements Consumer {
         }
         this.throwException = throwException;
         log.info(
-            "Initialize BatchConsumer with params:[bulkSize:{},timeoutSec:{},maxCacheSize:{},throwException:{}]",
-            bulkSize, timeoutSec, maxCacheSize, throwException);
+                "Initialize BatchConsumer with params:[bulkSize:{},timeoutSec:{},maxCacheSize:{},throwException:{}]",
+                bulkSize,
+                timeoutSec,
+                maxCacheSize,
+                throwException);
     }
 
     @Override
@@ -104,8 +145,10 @@ public class BatchConsumer implements Consumer {
                 log.debug("Successfully save data to cache,The cache current size is {}.", size);
             }
             if (size >= bulkSize) {
-                log.info("Flush was triggered because the cache size reached the threshold,cache size:{},bulkSize:{}.",
-                    size, bulkSize);
+                log.info(
+                        "Flush was triggered because the cache size reached the threshold,cache size:{},bulkSize:{}.",
+                        size,
+                        bulkSize);
                 flush();
             }
         }
@@ -116,7 +159,8 @@ public class BatchConsumer implements Consumer {
         synchronized (messageList) {
             while (!messageList.isEmpty()) {
                 String sendingData;
-                List<Map<String, Object>> sendList = messageList.subList(0, Math.min(bulkSize, messageList.size()));
+                List<Map<String, Object>> sendList =
+                        messageList.subList(0, Math.min(bulkSize, messageList.size()));
                 try {
                     sendingData = jsonMapper.writeValueAsString(sendList);
                 } catch (JsonProcessingException e) {
@@ -160,7 +204,9 @@ public class BatchConsumer implements Consumer {
         /*
          * 如果当前是「instant」状态，且（message中不包含event 或者 event 不是「instant」的，则刷新，设置 「非instant」状态
          */
-        if (isInstantStatus && (!message.containsKey("event") || !instantEvents.contains(message.get("event")))) {
+        if (isInstantStatus
+                && (!message.containsKey("event")
+                        || !instantEvents.contains(message.get("event")))) {
             flush();
             isInstantStatus = false;
         }
@@ -168,7 +214,9 @@ public class BatchConsumer implements Consumer {
         /*
          * 如果当前是 「非instant」状态，且（message中包含event 且 event 是「instant」的，则刷新，设置 「instant」状态
          */
-        if (!isInstantStatus && message.containsKey("event") && instantEvents.contains(message.get("event"))) {
+        if (!isInstantStatus
+                && message.containsKey("event")
+                && instantEvents.contains(message.get("event"))) {
             flush();
             isInstantStatus = true;
         }

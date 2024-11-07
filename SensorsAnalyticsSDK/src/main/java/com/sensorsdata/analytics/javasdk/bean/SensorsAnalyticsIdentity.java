@@ -1,13 +1,12 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Getter
 @Setter(AccessLevel.PROTECTED)
@@ -20,9 +19,7 @@ public class SensorsAnalyticsIdentity {
     public static final String MOBILE = "$identity_mobile";
     // 邮箱
     public static final String EMAIL = "$identity_email";
-    /**
-     * 用户纬度标识集合
-     */
+    /** 用户纬度标识集合 */
     protected Map<String, String> identityMap;
 
     public static Builder builder() {
