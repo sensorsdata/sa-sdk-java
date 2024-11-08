@@ -5,7 +5,6 @@ import static com.sensorsdata.analytics.javasdk.SensorsConst.ITEM_TYPE;
 
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,7 +30,8 @@ public class ItemRecord implements Serializable {
 
     private final Integer trackId;
 
-    private ItemRecord(Map<String, Object> propertyMap, String itemId, String itemType, Integer trackId) {
+    private ItemRecord(
+            Map<String, Object> propertyMap, String itemId, String itemType, Integer trackId) {
         this.propertyMap = propertyMap;
         this.itemId = itemId;
         this.itemType = itemType;
@@ -50,7 +50,9 @@ public class ItemRecord implements Serializable {
         return itemType;
     }
 
-    public Integer getTrackId() { return trackId; }
+    public Integer getTrackId() {
+        return trackId;
+    }
 
     public static Builder builder() {
         return new Builder();
@@ -66,8 +68,7 @@ public class ItemRecord implements Serializable {
 
         private Integer trackId;
 
-        private Builder() {
-        }
+        private Builder() {}
 
         public ItemRecord build() throws InvalidArgumentException {
             if (null == itemId) {

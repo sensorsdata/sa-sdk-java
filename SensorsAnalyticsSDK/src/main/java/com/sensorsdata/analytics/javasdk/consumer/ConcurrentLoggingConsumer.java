@@ -1,7 +1,5 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,6 +8,7 @@ import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
@@ -26,19 +25,17 @@ public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
         this(filenamePrefix, lockFileName, 8192);
     }
 
-    public ConcurrentLoggingConsumer(
-        String filenamePrefix,
-        String lockFileName,
-        int bufferSize) {
+    public ConcurrentLoggingConsumer(String filenamePrefix, String lockFileName, int bufferSize) {
         this(filenamePrefix, lockFileName, bufferSize, LogSplitMode.DAY);
     }
 
     public ConcurrentLoggingConsumer(
-        String filenamePrefix,
-        String lockFileName,
-        int bufferSize,
-        LogSplitMode splitMode) {
-        super(new InnerLoggingFileWriterFactory(lockFileName), filenamePrefix, bufferSize, splitMode);
+            String filenamePrefix, String lockFileName, int bufferSize, LogSplitMode splitMode) {
+        super(
+                new InnerLoggingFileWriterFactory(lockFileName),
+                filenamePrefix,
+                bufferSize,
+                splitMode);
     }
 
     static class InnerLoggingFileWriterFactory implements LoggingFileWriterFactory {
@@ -57,8 +54,8 @@ public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
 
         @Override
         public void closeFileWriter(LoggingFileWriter writer) {
-            ConcurrentLoggingConsumer.InnerLoggingFileWriter
-                    .removeInstance((ConcurrentLoggingConsumer.InnerLoggingFileWriter) writer);
+            ConcurrentLoggingConsumer.InnerLoggingFileWriter.removeInstance(
+                    (ConcurrentLoggingConsumer.InnerLoggingFileWriter) writer);
         }
     }
 
@@ -76,7 +73,8 @@ public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
             instances = new HashMap<>();
         }
 
-        static InnerLoggingFileWriter getInstance(final String fileName, final String lockFileName) throws FileNotFoundException {
+        static InnerLoggingFileWriter getInstance(final String fileName, final String lockFileName)
+                throws FileNotFoundException {
             synchronized (instances) {
                 if (!instances.containsKey(fileName)) {
                     instances.put(fileName, new InnerLoggingFileWriter(fileName, lockFileName));
@@ -98,7 +96,8 @@ public class ConcurrentLoggingConsumer extends InnerLoggingConsumer {
             }
         }
 
-        private InnerLoggingFileWriter(final String fileName, final String lockFileName) throws FileNotFoundException {
+        private InnerLoggingFileWriter(final String fileName, final String lockFileName)
+                throws FileNotFoundException {
             this.fileName = fileName;
             this.lockFileName = lockFileName;
             this.refCount = 0;

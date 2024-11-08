@@ -2,7 +2,15 @@ package com.sensorsdata.analytics.javasdk.consumer;
 
 import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.util.Base64Coder;
-
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -14,16 +22,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.zip.GZIPOutputStream;
 
 class HttpConsumer implements Closeable {
     CloseableHttpClient httpClient;
@@ -44,7 +42,10 @@ class HttpConsumer implements Closeable {
         this(HttpClients.custom(), serverUrl, httpHeaders, timeoutSec);
     }
 
-    public HttpConsumer(HttpClientBuilder httpClientBuilder, String serverUrl, Map<String, String> httpHeaders) {
+    public HttpConsumer(
+            HttpClientBuilder httpClientBuilder,
+            String serverUrl,
+            Map<String, String> httpHeaders) {
         this(httpClientBuilder, serverUrl, httpHeaders, 3);
     }
 
@@ -52,36 +53,58 @@ class HttpConsumer implements Closeable {
         this(httpClientBuilder, serverUrl, null, timeoutSec);
     }
 
-    HttpConsumer(HttpClientBuilder httpClientBuilder, String serverUrl, Map<String, String> httpHeaders, int timeoutSec) {
+    HttpConsumer(
+            HttpClientBuilder httpClientBuilder,
+            String serverUrl,
+            Map<String, String> httpHeaders,
+            int timeoutSec) {
         this.serverUrl = serverUrl.trim();
         this.httpHeaders = httpHeaders;
         this.compressData = true;
         int timeout = timeoutSec * 1000;
-        this.requestConfig = RequestConfig.custom().setConnectionRequestTimeout(timeout)
-                .setConnectTimeout(timeout).setSocketTimeout(timeout).build();
-        this.httpClient = httpClientBuilder
-                .setUserAgent(String.format("SensorsAnalytics Java SDK %s", SensorsConst.SDK_VERSION))
-                .setDefaultRequestConfig(requestConfig)
-                .build();
+        this.requestConfig =
+                RequestConfig.custom()
+                        .setConnectionRequestTimeout(timeout)
+                        .setConnectTimeout(timeout)
+                        .setSocketTimeout(timeout)
+                        .build();
+        this.httpClient =
+                httpClientBuilder
+                        .setUserAgent(
+                                String.format(
+                                        "SensorsAnalytics Java SDK %s", SensorsConst.SDK_VERSION))
+                        .setDefaultRequestConfig(requestConfig)
+                        .build();
     }
 
     void consume(final String data) throws IOException, HttpConsumerException {
         HttpUriRequest request = getHttpRequest(data);
         CloseableHttpResponse response = null;
         if (httpClient == null) {
-            httpClient = HttpClients.custom()
-                .setUserAgent(String.format("SensorsAnalytics Java SDK %s", SensorsConst.SDK_VERSION))
-                .setDefaultRequestConfig(requestConfig)
-                .build();
+            httpClient =
+                    HttpClients.custom()
+                            .setUserAgent(
+                                    String.format(
+                                            "SensorsAnalytics Java SDK %s",
+                                            SensorsConst.SDK_VERSION))
+                            .setDefaultRequestConfig(requestConfig)
+                            .build();
         }
         try {
             response = httpClient.execute(request);
             int httpStatusCode = response.getStatusLine().getStatusCode();
             if (httpStatusCode < 200 || httpStatusCode >= 300) {
-                String httpContent = new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8);
+                String httpContent =
+                        new String(
+                                EntityUtils.toByteArray(response.getEntity()),
+                                StandardCharsets.UTF_8);
                 throw new HttpConsumerException(
-                        String.format("Unexpected response %d from Sensors Analytics: %s", httpStatusCode, httpContent), data,
-                        httpStatusCode, httpContent);
+                        String.format(
+                                "Unexpected response %d from Sensors Analytics: %s",
+                                httpStatusCode, httpContent),
+                        data,
+                        httpStatusCode,
+                        httpContent);
             }
         } finally {
             if (response != null) {
@@ -123,12 +146,13 @@ class HttpConsumer implements Closeable {
             os.close();
 
             nameValuePairs.add(new BasicNameValuePair("gzip", "1"));
-            nameValuePairs.add(new BasicNameValuePair("data_list", new String(Base64Coder.encode
-                (compressed))));
+            nameValuePairs.add(
+                    new BasicNameValuePair(
+                            "data_list", new String(Base64Coder.encode(compressed))));
         } else {
             nameValuePairs.add(new BasicNameValuePair("gzip", "0"));
-            nameValuePairs.add(new BasicNameValuePair("data_list", new String(Base64Coder.encode
-                (bytes))));
+            nameValuePairs.add(
+                    new BasicNameValuePair("data_list", new String(Base64Coder.encode(bytes))));
         }
 
         return nameValuePairs;
@@ -148,8 +172,8 @@ class HttpConsumer implements Closeable {
 
     static class HttpConsumerException extends Exception {
 
-        HttpConsumerException(String error, String sendingData, int httpStatusCode, String
-                httpContent) {
+        HttpConsumerException(
+                String error, String sendingData, int httpStatusCode, String httpContent) {
             super(error);
             this.sendingData = sendingData;
             this.httpStatusCode = httpStatusCode;

@@ -1,10 +1,8 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
-
 import com.sensorsdata.analytics.javasdk.SensorsConst;
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
 import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
@@ -30,7 +28,11 @@ public class UserRecord implements Serializable {
 
     private final Integer trackId;
 
-    private UserRecord(Map<String, Object> propertyMap, String distinctId, Boolean isLoginId, Integer trackId) {
+    private UserRecord(
+            Map<String, Object> propertyMap,
+            String distinctId,
+            Boolean isLoginId,
+            Integer trackId) {
         this.propertyMap = propertyMap;
         if (isLoginId) {
             propertyMap.put(SensorsConst.LOGIN_SYSTEM_ATTR, true);
@@ -56,7 +58,9 @@ public class UserRecord implements Serializable {
         return propertyMap;
     }
 
-    public Integer getTrackId() {return trackId; }
+    public Integer getTrackId() {
+        return trackId;
+    }
 
     public static class Builder {
         private final Map<String, Object> propertyMap = new HashMap<>();
@@ -64,8 +68,7 @@ public class UserRecord implements Serializable {
         private Boolean isLoginId;
         private Integer trackId;
 
-        private Builder() {
-        }
+        private Builder() {}
 
         public UserRecord build() throws InvalidArgumentException {
             if (distinctId == null) {
@@ -75,7 +78,7 @@ public class UserRecord implements Serializable {
                 throw new InvalidArgumentException("The isLoginId is empty.");
             }
             SensorsAnalyticsUtil.assertValue("distinct_id", distinctId);
-            String message = String.format("[distinct_id=%s,target_table=user]",distinctId);
+            String message = String.format("[distinct_id=%s,target_table=user]", distinctId);
             trackId = SensorsAnalyticsUtil.getTrackId(propertyMap, message);
             return new UserRecord(propertyMap, distinctId, isLoginId, trackId);
         }
@@ -127,7 +130,5 @@ public class UserRecord implements Serializable {
                 propertyMap.put(key, property);
             }
         }
-
     }
-
 }
