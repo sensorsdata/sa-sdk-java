@@ -1,13 +1,11 @@
 package com.sensorsdata.analytics.javasdk.consumer;
 
-import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-
+import com.sensorsdata.analytics.javasdk.util.SensorsAnalyticsUtil;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ConsoleConsumer implements Consumer {

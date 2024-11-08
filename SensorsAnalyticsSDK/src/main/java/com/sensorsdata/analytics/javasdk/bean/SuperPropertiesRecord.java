@@ -1,7 +1,6 @@
 package com.sensorsdata.analytics.javasdk.bean;
 
 import com.sensorsdata.analytics.javasdk.exceptions.InvalidArgumentException;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,8 +35,7 @@ public class SuperPropertiesRecord implements Serializable {
     public static class Builder {
         private Map<String, Object> propertyMap = new HashMap<String, Object>();
 
-        private Builder() {
-        }
+        private Builder() {}
 
         public SuperPropertiesRecord build() throws InvalidArgumentException {
             if (propertyMap.size() == 0) {
@@ -45,7 +43,6 @@ public class SuperPropertiesRecord implements Serializable {
             }
             return new SuperPropertiesRecord(propertyMap);
         }
-
 
         public SuperPropertiesRecord.Builder addProperties(Map<String, Object> properties) {
             if (properties != null) {

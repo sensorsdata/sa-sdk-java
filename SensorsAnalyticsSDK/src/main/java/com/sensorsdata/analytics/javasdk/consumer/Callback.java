@@ -10,11 +10,10 @@ import com.sensorsdata.analytics.javasdk.bean.FailedData;
  * @since 2021/11/05 23:47
  */
 public interface Callback {
-  /**
-   * 返回发送失败的数据
-   *
-   * @param failedData 失败数据
-   */
-  void onFailed(FailedData failedData);
-
+    /**
+     * 返回发送失败的数据
+     *
+     * @param failedData 失败数据
+     */
+    void onFailed(FailedData failedData);
 }
