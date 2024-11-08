@@ -11,7 +11,7 @@
 
     <groupId>com.sensorsdata.analytics.javasdk</groupId>
     <artifactId>SensorsAnalyticsSDK</artifactId>
-    <version>3.6.8-SNAPSHOT</version>
+    <version>3.6.8</version>
 
     <packaging>jar</packaging>
     <name>SensorsAnalyticsSDK</name>
@@ -20,7 +20,6 @@
     <properties>
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>utf-8</project.reporting.outputEncoding>
-        <jdk.version>1.7</jdk.version>
         <httpclient.version>4.5.13</httpclient.version>
         <jackson-databind.version>2.12.7.1</jackson-databind.version>
         <lombok.version>1.18.20</lombok.version>
